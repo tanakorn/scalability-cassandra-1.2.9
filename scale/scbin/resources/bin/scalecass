@@ -8,4 +8,4 @@ else
     JAVA=java
 fi
 
-echo $JAVA -cp $CLASSPATH edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator $@ &
+$JAVA -cp $CLASSPATH edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator $@ &

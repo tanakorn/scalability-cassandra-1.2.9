@@ -44,14 +44,10 @@ sudo chown `whoami` $operating_dir
 mkdir -p $operating_dir/cassconf
 mkdir $operating_dir/log
 
-i=1
-while [ $i -le $num_sim ]; do
-  cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
-  cd $operating_dir/cassconf/conf$i
-  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$my_ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" > cassandra.yaml
-  cd $cwd
-  i=`expr $i + 1`
-done
+cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf
+cd $operating_dir/cassconf/conf$i
+sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$my_ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$my_id:g" > cassandra.yaml
+cd $cwd
 
 if [ ! $cassandra_home ]; then
   cassandra_home=$scriptdir/..

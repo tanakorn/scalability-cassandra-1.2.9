@@ -14,14 +14,67 @@ cd $cwd
 
 . $scriptdir/readconfig
 
-my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+#my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+#all_ip=`awk '{print $2}' $machinelist`
+#
+#for ip in $all_ip; do
+#  if [ $ip = $my_ip ]; then
+#    cd $operating_dir
+#    ./allnode_start &
+#  else
+#    ssh $ip "cd $operating_dir; ./allnode_start" &
+#  fi
+#done
+
 all_ip=`awk '{print $2}' $machinelist`
 
-for ip in $all_ip; do
-  if [ $ip = $my_ip ]; then
-    cd $operating_dir
-    ./allnode_start &
-  else
-    ssh $ip "cd $operating_dir; ./allnode_start" &
-  fi
-done
+i=1
+
+start_seed() {
+  seed=$1
+  shift
+  ssh $seed "cd $operating_dir; ./allnode_start" &
+  all_ip=$@
+  i=`expr $i + 1`
+  num_node=`expr $num_node - 1`
+}
+
+start_observers() {
+  j=0
+  while [ $j -lt $num_observers ]; do
+    node=$1
+    ssh $node "cd $operating_dir; ./allnode_start" &
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+start_observed_nodes() {
+  j=0
+  while [ $j -lt $num_observed_nodes ]; do
+    node=$1
+    ssh $node "cd $operating_dir; ./allnode_start" &
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+start_scalesim() {
+  scalesim=$1
+  ssh $scalesim "cd $operating_dir; ./scalesim_start" &
+  i=`expr $i + 1`
+  shift
+  all_ip=$@
+}
+
+start_seed $all_ip
+start_observers $all_ip
+start_observed_nodes $all_ip
+start_scalesim $all_ip
+
