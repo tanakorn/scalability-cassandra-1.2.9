@@ -1,0 +1,107 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+read_machinelist() {
+  num_node=0
+  while read line; do
+    id=`echo $line | awk '{print $1}'`
+    ip=`echo $line | awk '{print $2}'`
+    eval "id_$id=$ip"
+    dumb_ip=`echo $ip | sed 's/\./_/g'`
+    eval "ip_$dumb_ip=$id"
+    num_node=`expr $num_node + 1`
+  done < $1
+}
+
+getip() {
+  eval "echo \$id_$1"
+}
+
+getid() {
+  dumb_ip=`echo $1 | sed 's/\./_/g'`
+  eval "echo \$ip_$dumb_ip"
+}
+
+if [ $machinelist ]; then
+  read_machinelist $machinelist
+elif [ -f machinelist ]; then
+  read_machinelist machinelist
+fi
+
+seed_id() {
+  echo 1
+}
+
+observer_ids() {
+  i=1
+  observers=""
+  while [ $i -le $num_observers ]; do
+    id=`expr $i + 1`
+    observers="$observers $id"
+    i=`expr $i + 1`
+  done
+  echo $observers
+}
+
+observed_node_ids() {
+  i=1
+  observed_nodes=""
+  while [ $i -le $num_observers ]; do
+    id=`expr $i + 1 + $num_observers`
+    observed_nodes="$observed_nodes $id"
+    i=`expr $i + 1`
+  done
+  echo $observed_nodes
+}
+
+scalecheck_id() {
+  expr $num_observers + $num_observed_nodes + 2
+}
+
+real_seed_ip() {
+  echo 192.168.1.1
+}
+
+real_observer_ips() {
+  observers=""
+  for i in `observer_ids`; do
+    observers="$observers `getip $i`"
+  done
+  echo $observers
+}
+
+real_observed_node_ips() {
+  observed_nodes=""
+  for i in `observed_node_ids`; do
+    observed_nodes="$observed_nodes `getip $i`"
+  done
+  echo $observed_nodes
+}
+
+seed_ip() {
+  echo 192.168.1.1
+}
+
+real_scalecheck_ip() {
+  getip `scalecheck_id`
+}
+
+observer_ips() {
+  observers=""
+  for id in `observer_ids`; do
+    observers="$observers 192.168.$id.1"
+  done
+  echo $observers
+}
+
+observed_node_ips() {
+  observed_nodes=""
+  for id in `observed_node_ids`; do
+    observed_nodes="$observed_nodes 192.168.$id.1"
+  done
+  echo $observed_nodes
+}
+

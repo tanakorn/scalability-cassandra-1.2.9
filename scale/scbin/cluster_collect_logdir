@@ -3,15 +3,25 @@
 scriptdir=`dirname $0`
 
 . $scriptdir/readconfig
+. $scriptdir/ipman
 
 mkdir -p $cassandra_log_dir
 rm -r $cassandra_log_dir/*
 cp $machinelist $cassandra_log_dir/machinelist
-my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
-awk '{
-  if ("'$my_ip'" == $2)
-    system("cp -r '$operating_dir/log' '$cassandra_log_dir'/node"$1)
-  else
-    system("scp -r "$2":'$operating_dir/log' '$cassandra_log_dir'/node"$1)
-}' $machinelist
-
+for
+i=1
+for ip in `real_seed_ip`; do
+  scp -r $ip:$operating_dir/log $cassandra_log_dir/seed$i
+  i=`expr $i + 1`
+done
+i=1
+for ip in `real_observer_ips`; do
+  scp -r $ip:$operating_dir/log $cassandra_log_dir/observer$i
+  i=`expr $i + 1`
+done
+i=1
+for ip in `real_observed_node_ips`; do
+  scp -r $ip:$operating_dir/log $cassandra_log_dir/observed_node$i
+  i=`expr $i + 1`
+done
+scp -r `real_scalecheck_ip`:$operating_dir/log $cassandra_log_dir/scalecheck
