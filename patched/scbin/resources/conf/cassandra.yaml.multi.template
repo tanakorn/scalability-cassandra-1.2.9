@@ -75,5 +75,5 @@ client_encryption_options:
     enabled: false
     keystore: conf/.keystore
     keystore_password: cassandra
-internode_compression: all
+internode_compression: none
 inter_dc_tcp_nodelay: true
