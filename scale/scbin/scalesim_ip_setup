@@ -2,21 +2,24 @@
 
 os=`uname`
 if [ ! $os = Linux ]; then
-  echo Multi-machine IP setup script supports only Linux
+  echo Scalesim IP setup script supports only Linux
   exit 1
 fi
 
+my_id=$1
+num_sim=$2
+shift 2
 scriptdir=`dirname $0`
 
 . $scriptdir/readconfig
 
-my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
-my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
+#my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+#my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
 num_machine=`wc -l $machinelist | awk '{print $1}'`
 eval $(awk '{print "machine"$1"="$2}' $machinelist)
 
 i=1
-while [ $i -le $num_node ]; do
+while [ $i -le $num_sim ]; do
   ip=192.168.${my_id}.$i
   ifconfig | grep -q "\<$ip\>"
   if [ $? -ne 0 ]; then

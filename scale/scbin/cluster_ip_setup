@@ -8,14 +8,55 @@ cd $cwd
 
 . $scriptdir/readconfig
 
-my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 all_ip=`awk '{print $2}' $machinelist`
 
-for ip in $all_ip; do
-  if [ $ip = $my_ip ]; then
-    cd $scriptdir
-    sudo ./each_machine_ip_setup
-  else
-    ssh $ip "cd $scriptdir; sudo ./each_machine_ip_setup"
-  fi
-done
+i=1
+
+setup_seed() {
+  seed=$1
+  shift
+  ssh $seed "cd $scriptdir; sudo ./real_node_ip_setup $i"
+  all_ip=$@
+  i=`expr $i + 1`
+  num_node=`expr $num_node - 1`
+}
+
+setup_observers() {
+  j=0
+  while [ $j -lt $num_observers ]; do
+    node=$1
+    ssh $node "cd $scriptdir; sudo ./real_node_ip_setup $i"
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+setup_observed_nodes() {
+  j=0
+  while [ $j -lt $num_observed_nodes ]; do
+    node=$1
+    ssh $node "cd $scriptdir; sudo ./real_node_ip_setup $i"
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+setup_scalesim() {
+  scalesim=$1
+  ssh $scalesim "cd $scriptdir; sudo ./scalesim_ip_setup $i $num_node"
+  i=`expr $i + 1`
+  shift
+  all_ip=$@
+}
+
+setup_seed $all_ip
+setup_observers $all_ip
+setup_observed_nodes $all_ip
+setup_scalesim $all_ip
+
