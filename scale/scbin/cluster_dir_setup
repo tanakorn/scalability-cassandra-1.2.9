@@ -13,12 +13,53 @@ SSH_OPTION="StrictHostKeyChecking no"
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 all_ip=`awk '{print $2}' $machinelist`
 
-for ip in $all_ip; do
-  if [ $ip = $my_ip ]; then
-    cd $scriptdir
-    ./each_machine_dir_setup $1
-  else
-    now="`date`"
-    ssh -o "$SSH_OPTION" $ip "sudo date --set='$now' > /dev/null; cd $scriptdir; ./each_machine_dir_setup $1"
-  fi
-done
+i=1
+
+setup_seed() {
+  seed=$1
+  shift
+  ssh $seed "cd $scriptdir; sudo ./real_node_dir_setup $i"
+  all_ip=$@
+  i=`expr $i + 1`
+  num_node=`expr $num_node - 1`
+}
+
+setup_observers() {
+  j=0
+  while [ $j -lt $num_observers ]; do
+    node=$1
+    ssh $node "cd $scriptdir; sudo ./real_node_dir_setup $i"
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+setup_observed_nodes() {
+  j=0
+  while [ $j -lt $num_observed_nodes ]; do
+    node=$1
+    ssh $node "cd $scriptdir; sudo ./real_node_dir_setup $i"
+    shift
+    i=`expr $i + 1`
+    j=`expr $j + 1`
+    num_node=`expr $num_node - 1`
+  done
+  all_ip=$@
+}
+
+setup_scalesim() {
+  scalesim=$1
+  ssh $scalesim "cd $scriptdir; sudo ./scalesim_dir_setup $i $num_node"
+  i=`expr $i + 1`
+  shift
+  all_ip=$@
+}
+
+setup_seed $all_ip
+setup_observers $all_ip
+setup_observed_nodes $all_ip
+setup_scalesim $all_ip
+

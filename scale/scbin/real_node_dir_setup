@@ -1,0 +1,60 @@
+#!/bin/sh
+
+os=`uname`
+if [ ! $os = Linux ]; then
+  echo Multi-machine IP setup script supports only Linux
+  exit 1
+fi
+
+cwd=`pwd`
+scriptdir=`dirname $0`
+cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
+
+my_id=$1
+shift
+. $scriptdir/readconfig
+
+my_ip=192.168.$my_id.1
+observed_node_offset=`expr $num_observers + 1`
+observed_nodes=""
+j=1
+while [ $j -le $num_observed_nodes ]; do
+  id=`expr $observed_node_offset + $j`
+  observed_nodes=192.168.$id.1,$observed_nodes
+  j=`expr $j + 1`
+done
+observed_nodes=`echo $observed_nodes | sed 's/,$//'`
+
+rm -r $operating_dir/* 2> /dev/null
+
+sudo mkdir -p $operating_dir
+sudo chown `whoami` $operating_dir
+mkdir -p $operating_dir/cassconf
+mkdir $operating_dir/log
+
+cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf1
+cd $operating_dir/cassconf/conf1
+sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$my_ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:1:g" > cassandra.yaml
+cd $cwd
+
+if [ ! $cassandra_home ]; then
+  cassandra_home=$scriptdir/../../vanilla
+fi
+
+cp -r $scriptdir/resources/bin $operating_dir
+cp $scriptdir/resources/allnode_start $operating_dir
+cp $scriptdir/resources/onenode_start $operating_dir
+cp $scriptdir/resources/onenode_stop $operating_dir
+cp $scriptdir/resources/sc.properties $operating_dir
+
+echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
+echo num_node=1 >> $operating_dir/sc.conf
+echo property_file=$property_file >> $operating_dir/sc.conf
+echo aspectj=$aspectj >> $operating_dir/sc.conf
+echo id_offset=$my_id >> $operating_dir/sc.conf
+echo observed_nodes=$observed_nodes >> $operating_dir/sc.conf
+
+echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
+mkdir $rawdata_dir

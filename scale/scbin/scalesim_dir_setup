@@ -12,13 +12,30 @@ cd $scriptdir
 scriptdir=`pwd`
 cd $cwd
 
+my_id=$1
+num_sim=$2
+shift 2
 . $scriptdir/readconfig
 
-my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
-my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
-#if [ ! $my_id ]; then
-  #
-#fi
+observer_offset=1
+observers=""
+j=1
+while [ $j -le $num_observers ]; do
+  id=`expr $observer_offset + $j`
+  observers=192.168.$id.1,$observers
+  j=`expr $j + 1`
+done
+observers=`echo $observers | sed 's/,$//'`
+
+observed_node_offset=`expr $num_observers + 1`
+observed_nodes=""
+j=1
+while [ $j -le $num_observed_nodes ]; do
+  id=`expr $observed_node_offset + $j`
+  observed_nodes=192.168.$id.1,$observed_nodes
+  j=`expr $j + 1`
+done
+observed_nodes=`echo $observed_nodes | sed 's/,$//'`
 
 rm -r $operating_dir/* 2> /dev/null
 
@@ -28,7 +45,7 @@ mkdir -p $operating_dir/cassconf
 mkdir $operating_dir/log
 
 i=1
-while [ $i -le $num_node ]; do
+while [ $i -le $num_sim ]; do
   cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
   cd $operating_dir/cassconf/conf$i
   sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$my_ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" > cassandra.yaml
@@ -51,6 +68,7 @@ echo num_node=$num_node >> $operating_dir/sc.conf
 echo property_file=$property_file >> $operating_dir/sc.conf
 echo aspectj=$aspectj >> $operating_dir/sc.conf
 echo id_offset=$my_id >> $operating_dir/sc.conf
+echo observers=$observers >> $operating_dir/sc.conf
 echo observed_nodes=$observed_nodes >> $operating_dir/sc.conf
 
 echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
