@@ -3,9 +3,12 @@
 . `dirname $0`/cassandra.in.sh
 
 if [ -n "$JAVA_HOME" ]; then
-    JAVA="$JAVA_HOME/bin/java"
+  JAVA="$JAVA_HOME/bin/java"
 else
-    JAVA=java
+  JAVA=java
 fi
 
-$JAVA -cp $CLASSPATH edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator $@ &
+cassandra_parms="-Dlog4j.configuration=log4j-server.properties -Dlog4j.defaultInitOverride=true"
+
+$JAVA $JVM_OPTS $cassandra_parms -cp $CLASSPATH edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator $@ &
+

@@ -17,12 +17,11 @@ fi
 mkdir -p $operating_dir/pid
 
 base_jvm_opts="-Dcassandra.log.dir=$operating_dir/log"
-if [ $property_file ]; then
-  base_jvm_opts="$base_jvm_opts -Dbids.properties=$property_file"
-fi
 
+#export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
+export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=sc"
 export CASSANDRA_HOME=$cassandra_home
-export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
+export CASSANDRA_CONF=$operating_dir/cassconf/conf
 
 bin/scalecass $num_node $id_offset $observers $observed_nodes 
 
