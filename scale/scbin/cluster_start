@@ -64,5 +64,6 @@ start_scalesim() {
 start_seed $all_ip
 start_observers $all_ip
 start_observed_nodes $all_ip
+sleep 10
 start_scalesim $all_ip
 
