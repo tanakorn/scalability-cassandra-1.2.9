@@ -40,7 +40,7 @@ sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:
 cd $cwd
 
 if [ ! $cassandra_home ]; then
-  cassandra_home=$scriptdir/../../vanilla
+  cassandra_home=$scriptdir/../../$testing_cassandra
 fi
 
 cp -r $scriptdir/resources/bin $operating_dir
