@@ -58,9 +58,7 @@ if [ ! $cassandra_home ]; then
 fi
 
 cp -r $scriptdir/resources/bin $operating_dir
-cp $scriptdir/resources/allnode_start $operating_dir
-cp $scriptdir/resources/onenode_start $operating_dir
-cp $scriptdir/resources/onenode_stop $operating_dir
+cp $scriptdir/resources/scalesim_start $operating_dir
 cp $scriptdir/resources/sc.properties $operating_dir
 
 echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
