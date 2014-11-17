@@ -27,8 +27,9 @@ done
 i=1
 while [ $i -le $num_node ]; do
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i"
+  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i -Dcassandra.ring_delay_ms=10000"
   export NODE_ID=$i
   bin/cassandra -p $operating_dir/pid/n${i}.pid
   i=`expr $i + 1`
+  sleep 15
 done
