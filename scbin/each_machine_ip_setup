@@ -1,0 +1,39 @@
+#!/bin/sh
+
+os=`uname`
+if [ ! $os = Linux ]; then
+  echo Multi-machine IP setup script supports only Linux
+  exit 1
+fi
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
+num_machine=`wc -l $machinelist | awk '{print $1}'`
+eval $(awk '{print "machine"$1"="$2}' $machinelist)
+
+i=1
+while [ $i -le $num_node ]; do
+  ip=192.168.${my_id}.$i
+  ifconfig | grep -q "\<$ip\>"
+  if [ $? -ne 0 ]; then
+    echo Adding $ip
+    ifconfig eth0:$i $ip up
+  fi
+  i=`expr $i + 1`
+done
+
+i=1
+while [ $i -le $num_machine ]; do
+  if [ $i -eq $my_id ]; then
+    i=`expr $i + 1`
+    continue
+  fi
+  gw=$(eval echo \${machine$i})
+  echo Adding route 192.168.${i}.0
+  route add -net 192.168.${i}.0 netmask 255.255.255.0 gw $gw dev eth0
+  i=`expr $i + 1`
+done
