@@ -23,13 +23,14 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.concurrent.DebuggableScheduledThreadPoolExecutor;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Token;
@@ -40,6 +41,8 @@ import org.apache.cassandra.utils.FBUtilities;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction
@@ -170,6 +173,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private Gossiper()
     {
+    	StackTracePrinter.print(logger);
         // half of QUARATINE_DELAY, to ensure justRemovedEndpoints has enough leeway to prevent re-gossip
         FatClientTimeout = (long)(QUARANTINE_DELAY / 2);
         /* register with the Failure Detector for receiving Failure detector events */

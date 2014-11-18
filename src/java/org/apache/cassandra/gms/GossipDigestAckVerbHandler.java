@@ -75,5 +75,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
     }
 }
