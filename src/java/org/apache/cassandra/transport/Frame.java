@@ -27,8 +27,9 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.handler.codec.oneone.OneToOneDecoder;
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import org.jboss.netty.handler.codec.frame.*;
-
 import org.apache.cassandra.utils.ByteBufferUtil;
+
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 public class Frame
 {
@@ -171,8 +172,10 @@ public class Frame
                 Message.Direction direction = Message.Direction.extractFromVersion(firstByte);
                 int version = firstByte & 0x7F;
                 // We really only support the current version so far
-                if (version != Header.CURRENT_VERSION)
+                if (version != Header.CURRENT_VERSION) {
+                	StackTracePrinter.print();
                     throw new ProtocolException("Invalid or unsupported protocol version: " + version);
+                }
 
                 // Validate the opcode
                 if (buffer.readableBytes() >= 4)

@@ -31,15 +31,18 @@ import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
@@ -450,6 +453,7 @@ public final class MessagingService implements MessagingServiceMBean
         {
             throw new RuntimeException(e);
         }
+        StackTracePrinter.print(logger);
         logger.info("Starting Messaging Service on port {}", DatabaseDescriptor.getStoragePort());
         ss.add(socket);
         return ss;
@@ -754,6 +758,7 @@ public final class MessagingService implements MessagingServiceMBean
 
     public static void validateMagic(int magic) throws IOException
     {
+//    	logger.info("korn validating magic");
         if (magic != PROTOCOL_MAGIC)
             throw new IOException("invalid protocol header");
     }
@@ -884,6 +889,7 @@ public final class MessagingService implements MessagingServiceMBean
                 try
                 {
                     Socket socket = server.accept();
+                    logger.info("korn new connection " + socket.getRemoteSocketAddress());
                     if (authenticate(socket))
                         new IncomingTcpConnection(socket).start();
                     else

@@ -136,6 +136,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                                                                                                         GossipDigestSyn.serializer);
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
+//                    logger.info("korn live node = " + liveEndpoints);
+//                    logger.info("korn gossipedToSeed = " + gossipedToSeed);
 
                     /* Gossip to some unreachable member with some probability to check if he is back up */
                     doGossipToUnreachableMember(message);
@@ -173,7 +175,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private Gossiper()
     {
-    	StackTracePrinter.print(logger);
+//    	StackTracePrinter.print(logger);
         // half of QUARATINE_DELAY, to ensure justRemovedEndpoints has enough leeway to prevent re-gossip
         FatClientTimeout = (long)(QUARANTINE_DELAY / 2);
         /* register with the Failure Detector for receiving Failure detector events */
@@ -1049,6 +1051,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     public void start(int generationNbr, Map<ApplicationState, VersionedValue> preloadLocalStates)
     {
         buildSeedsList();
+        logger.info("korn seed list " + seeds);
         /* initialize the heartbeat state for this localEndpoint */
         maybeInitializeLocalState(generationNbr);
         EndpointState localState = endpointStateMap.get(FBUtilities.getBroadcastAddress());
