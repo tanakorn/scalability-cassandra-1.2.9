@@ -31,5 +31,5 @@ while [ $i -le $num_node ]; do
   export NODE_ID=$i
   bin/cassandra -p $operating_dir/pid/n${i}.pid
   i=`expr $i + 1`
-  sleep 15
+  sleep 1
 done

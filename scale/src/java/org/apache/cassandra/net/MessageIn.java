@@ -29,6 +29,8 @@ import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MessageIn<T>
 {
@@ -37,6 +39,8 @@ public class MessageIn<T>
     public final Map<String, byte[]> parameters;
     public final MessagingService.Verb verb;
     public final int version;
+    
+    private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
     private MessageIn(InetAddress from, T payload, Map<String, byte[]> parameters, MessagingService.Verb verb, int version)
     {
@@ -55,9 +59,12 @@ public class MessageIn<T>
     public static <T2> MessageIn<T2> read(DataInput in, int version, String id) throws IOException
     {
         InetAddress from = CompactEndpointSerializationHelper.deserialize(in);
+        int size = 0;
 
         MessagingService.Verb verb = MessagingService.Verb.values()[in.readInt()];
+        size += Integer.SIZE;
         int parameterCount = in.readInt();
+        size += Integer.SIZE;
         Map<String, byte[]> parameters;
         if (parameterCount == 0)
         {
@@ -70,13 +77,18 @@ public class MessageIn<T>
             {
                 String key = in.readUTF();
                 byte[] value = new byte[in.readInt()];
+                size += Integer.SIZE;
                 in.readFully(value);
+                size += value.length;
                 builder.put(key, value);
             }
             parameters = builder.build();
         }
 
         int payloadSize = in.readInt();
+        size += Integer.SIZE;
+        size += payloadSize;
+        logger.info("korn reading a message; size = " + size);
         IVersionedSerializer<T2> serializer = (IVersionedSerializer<T2>) MessagingService.verbSerializers.get(verb);
         if (serializer instanceof MessagingService.CallbackDeterminedSerializer)
         {

@@ -68,22 +68,26 @@ public class IncomingTcpConnection extends Thread
         {
             // determine the connection type to decide whether to buffer
             DataInputStream in = new DataInputStream(socket.getInputStream());
-            logger.info("korn validating magic for " + socket.getRemoteSocketAddress());
+//            logger.info("korn validating magic for " + socket.getRemoteSocketAddress());
             MessagingService.validateMagic(in.readInt());
-            logger.info("korn validate magic good");
+//            logger.info("korn validate magic good");
             int header = in.readInt();
-            logger.info("korn header " + header);
+//            logger.info("korn header " + header);
             boolean isStream = MessagingService.getBits(header, 3, 1) == 1;
             int version = MessagingService.getBits(header, 15, 8);
             logger.debug("Connection version {} from {}", version, socket.getInetAddress());
             logger.info("korn Connection version {} from {}", version, socket.getInetAddress());
 
-            if (isStream)
+            if (isStream) {
+                logger.info("korn first choice");
                 handleStream(in, version);
-            else if (version < MessagingService.VERSION_12)
+            } else if (version < MessagingService.VERSION_12) {
+                logger.info("korn second choice");
                 handleLegacyVersion(version);
-            else
+            } else {
+                logger.info("korn third choice");
                 handleModernVersion(version, header);
+            }
         }
         catch (EOFException e)
         {

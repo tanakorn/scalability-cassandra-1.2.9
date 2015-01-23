@@ -42,7 +42,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import edu.uchicago.cs.ucare.util.StackTracePrinter;
+//import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction
@@ -120,7 +120,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 MessagingService.instance().waitUntilListening();
 
                 /* Update the local heartbeat counter. */
+                logger.info("korn broadcast address = " + FBUtilities.getBroadcastAddress().toString());
                 endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().updateHeartBeat();
+                logger.info("korn My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
+                logger.info("korn known address = " + endpointStateMap.keySet());
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
@@ -136,8 +139,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                                                                                                         GossipDigestSyn.serializer);
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
-//                    logger.info("korn live node = " + liveEndpoints);
-//                    logger.info("korn gossipedToSeed = " + gossipedToSeed);
+                    logger.info("korn live node = " + liveEndpoints);
+                    logger.info("korn gossipedToSeed = " + gossipedToSeed);
 
                     /* Gossip to some unreachable member with some probability to check if he is back up */
                     doGossipToUnreachableMember(message);
@@ -1051,7 +1054,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     public void start(int generationNbr, Map<ApplicationState, VersionedValue> preloadLocalStates)
     {
         buildSeedsList();
-        logger.info("korn seed list " + seeds);
+//        logger.info("korn seed list " + seeds);
         /* initialize the heartbeat state for this localEndpoint */
         maybeInitializeLocalState(generationNbr);
         EndpointState localState = endpointStateMap.get(FBUtilities.getBroadcastAddress());
