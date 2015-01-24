@@ -188,6 +188,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
+        logger.info("korn PHI for " + ep + " : " + phi + " ; convict threshold : " + getPhiConvictThreshold());
         if (phi > getPhiConvictThreshold())
         {
             logger.trace("notifying listeners that {} is down", ep);

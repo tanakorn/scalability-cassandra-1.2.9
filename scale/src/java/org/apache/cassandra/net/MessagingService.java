@@ -889,7 +889,6 @@ public final class MessagingService implements MessagingServiceMBean
                 try
                 {
                     Socket socket = server.accept();
-                    logger.info("korn new connection " + socket.getRemoteSocketAddress());
                     if (authenticate(socket))
                         new IncomingTcpConnection(socket).start();
                     else

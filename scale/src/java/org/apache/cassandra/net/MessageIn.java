@@ -40,6 +40,9 @@ public class MessageIn<T>
     public final MessagingService.Verb verb;
     public final int version;
     
+    public static int count = 0;
+    public static int totalSize = 0;
+    
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
     private MessageIn(InetAddress from, T payload, Map<String, byte[]> parameters, MessagingService.Verb verb, int version)
@@ -58,6 +61,7 @@ public class MessageIn<T>
 
     public static <T2> MessageIn<T2> read(DataInput in, int version, String id) throws IOException
     {
+    	count++;
         InetAddress from = CompactEndpointSerializationHelper.deserialize(in);
         int size = 0;
 
@@ -88,7 +92,10 @@ public class MessageIn<T>
         int payloadSize = in.readInt();
         size += Integer.SIZE;
         size += payloadSize;
-        logger.info("korn reading a message; size = " + size);
+        totalSize += size;
+        if (count == 100) {
+            logger.info("korn reading messages = " + totalSize);
+        }
         IVersionedSerializer<T2> serializer = (IVersionedSerializer<T2>) MessagingService.verbSerializers.get(verb);
         if (serializer instanceof MessagingService.CallbackDeterminedSerializer)
         {
