@@ -483,6 +483,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             logger.info("Loading persisted ring state");
             Multimap<InetAddress, Token> loadedTokens = SystemTable.loadTokens();
             Map<InetAddress, UUID> loadedHostIds = SystemTable.loadHostIds();
+            logger.info("korn loadedTokens = " + loadedTokens);
+            logger.info("korn loadedHostIds = " + loadedHostIds);
             for (InetAddress ep : loadedTokens.keySet())
             {
                 if (ep.equals(FBUtilities.getBroadcastAddress()))
@@ -617,17 +619,20 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             && !SystemTable.bootstrapComplete()
             && !DatabaseDescriptor.getSeeds().contains(FBUtilities.getBroadcastAddress()))
         {
+        	logger.info("korn auto bootstrap");
             if (SystemTable.bootstrapInProgress())
                 logger.warn("Detected previous bootstrap failure; retrying");
             else
                 SystemTable.setBootstrapState(SystemTable.BootstrapState.IN_PROGRESS);
             setMode(Mode.JOINING, "waiting for ring information", true);
             // first sleep the delay to make sure we see all our peers
+            long start = System.currentTimeMillis();
             for (int i = 0; i < delay; i += 1000)
             {
                 // if we see schema, we can proceed to the next check directly
                 if (!Schema.instance.getVersion().equals(Schema.emptyVersion))
                 {
+                    logger.info("korn got schema: {}", Schema.instance.getVersion());
                     logger.debug("got schema: {}", Schema.instance.getVersion());
                     break;
                 }
@@ -640,10 +645,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     throw new AssertionError(e);
                 }
             }
+            long time = System.currentTimeMillis() - start;
+            logger.info("korn time = " + time);
             // if our schema hasn't matched yet, keep sleeping until it does
             // (post CASSANDRA-1391 we don't expect this to be necessary very often, but it doesn't hurt to be careful)
             while (!MigrationManager.isReadyForBootstrap())
             {
+            	logger.info("korn waiting for schema");
                 setMode(Mode.JOINING, "waiting for schema information to complete", true);
                 try
                 {
@@ -654,6 +662,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     throw new AssertionError(e);
                 }
             }
+            logger.info("korn schema complete");
             setMode(Mode.JOINING, "schema complete, ready to bootstrap", true);
 
 
@@ -662,16 +671,19 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
             if (!DatabaseDescriptor.isReplacing())
             {
+            	logger.info("korn 1");
                 if (tokenMetadata.isMember(FBUtilities.getBroadcastAddress()))
                 {
                     String s = "This node is already a member of the token ring; bootstrap aborted. (If replacing a dead node, remove the old one from the ring first.)";
                     throw new UnsupportedOperationException(s);
                 }
                 setMode(Mode.JOINING, "getting bootstrap token", true);
+                logger.info("korn load broadcaster " + LoadBroadcaster.instance.getLoadInfo());
                 tokens = BootStrapper.getBootstrapTokens(tokenMetadata, LoadBroadcaster.instance.getLoadInfo());
             }
             else
             {
+            	logger.info("korn 2");
                 if (DatabaseDescriptor.getReplaceTokens().size() != 0 && DatabaseDescriptor.getReplaceNode() != null)
                     throw new UnsupportedOperationException("You cannot specify both replace_token and replace_node, choose one or the other");
                 try
@@ -687,11 +699,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 tokens = new ArrayList<Token>();
                 if (DatabaseDescriptor.getReplaceTokens().size() !=0)
                 {
+                    logger.info("korn 3");
                     for (String token : DatabaseDescriptor.getReplaceTokens())
                         tokens.add(StorageService.getPartitioner().getTokenFactory().fromString(token));
                 }
                 else
                 {
+                    logger.info("korn 4");
                     assert DatabaseDescriptor.getReplaceNode() != null;
                     InetAddress endpoint = tokenMetadata.getEndpointForHostId(DatabaseDescriptor.getReplaceNode());
                     if (endpoint == null)
@@ -702,6 +716,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 // check for operator errors...
                 for (Token token : tokens)
                 {
+                	logger.info("korn token " + token);
                     InetAddress existing = tokenMetadata.getEndpoint(token);
                     if (existing != null)
                     {
@@ -718,14 +733,20 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 setMode(Mode.JOINING, "Replacing a node with token: " + tokens, true);
             }
 
+            logger.info("korn bootstrap");
+            start = System.currentTimeMillis();
             bootstrap(tokens);
+            time = System.currentTimeMillis() - start;
+            logger.info("korn time2 " + time);
             assert !isBootstrapMode; // bootstrap will block until finished
         }
         else
         {
+        	logger.info("korn no auto bootstrap");
             tokens = SystemTable.getSavedTokens();
             if (tokens.isEmpty())
             {
+            	logger.info("korn token is empty");
                 Collection<String> initialTokens = DatabaseDescriptor.getInitialTokens();
                 if (initialTokens.size() < 1)
                 {
@@ -745,6 +766,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             }
             else
             {
+            	logger.info("korn token is not empty");
                 // if we were already bootstrapped with 1 token but num_tokens is set higher in the config,
                 // then we need to migrate to multi-token
                 if (tokens.size() == 1 && DatabaseDescriptor.getNumTokens() > 1)

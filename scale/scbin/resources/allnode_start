@@ -27,9 +27,12 @@ done
 i=1
 while [ $i -le $num_node ]; do
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i -Dcassandra.ring_delay_ms=10000"
+  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i -Dcassandra.ring_delay_ms=5000"
   export NODE_ID=$i
   bin/cassandra -p $operating_dir/pid/n${i}.pid
+#  sleep `expr 5 + $i`
+#  if [ $i -ne 1 ]; then
+#    sleep 4
+#  fi
   i=`expr $i + 1`
-  sleep 1
 done

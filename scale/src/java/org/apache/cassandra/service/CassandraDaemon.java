@@ -444,6 +444,7 @@ public class CassandraDaemon
                 //Allow the server to start even if the bean can't be registered
             }
             
+            //Korn: this method is a real critical
             setup();
 
             if (pidFile != null)
