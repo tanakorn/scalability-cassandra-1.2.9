@@ -301,7 +301,7 @@ class ArrivalWindow
     {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
-        return (size > 0)
+        return (size > 40)
                ? PHI_FACTOR * t / mean()
                : 0.0;
     }
