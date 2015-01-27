@@ -53,6 +53,7 @@ public class MessageDeliveryTask implements Runnable
             return;
         }
 
+        logger.info("korn do verb " + message);
         verbHandler.doVerb(message, id);
     }
 }

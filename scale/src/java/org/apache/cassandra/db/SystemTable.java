@@ -554,6 +554,7 @@ public class SystemTable
             // (where foolproof is "guaranteed to be larger than the last one seen at this ip address"),
             // but it's as close as sanely possible
             generation = (int) (System.currentTimeMillis() / 1000);
+            logger.info("korn create new generation : " + generation);
         }
         else
         {
@@ -570,6 +571,7 @@ public class SystemTable
             {
                 generation = now;
             }
+            logger.info("korn get old generation : " + generation);
         }
 
         req = "INSERT INTO system.%s (key, gossip_generation) VALUES ('%s', %d)";

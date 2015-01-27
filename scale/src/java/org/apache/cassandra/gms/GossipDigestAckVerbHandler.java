@@ -18,17 +18,19 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+
+import edu.uchicago.cs.ucare.GossiperStub;
 
 public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
@@ -37,14 +39,16 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         InetAddress from = message.from;
+        logger.info("korn Received a GossipDigestAckMessage from {}", from);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
-        if (!Gossiper.instance.isEnabled())
-        {
-            if (logger.isTraceEnabled())
-                logger.trace("Ignoring GossipDigestAckMessage because gossip is disabled");
-            return;
-        }
+//        if (!Gossiper.instance.isEnabled())
+//        {
+//            logger.info("korn Ignoring GossipDigestAckMessage because gossip is disabled");
+//            if (logger.isTraceEnabled())
+//                logger.trace("Ignoring GossipDigestAckMessage because gossip is disabled");
+//            return;
+//        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
@@ -68,6 +72,11 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             if ( localEpStatePtr != null )
                 deltaEpStateMap.put(addr, localEpStatePtr);
         }
+        try {
+			deltaEpStateMap.put(InetAddress.getByName("127.0.0.5"), new EndpointState(GossiperStub.heartBeatState));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
@@ -75,6 +84,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-//        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
+        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
+        logger.info("korn GDA2 " + gDigestAck2Message.payload.epStateMap);
     }
 }

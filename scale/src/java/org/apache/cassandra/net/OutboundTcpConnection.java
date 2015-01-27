@@ -87,7 +87,9 @@ public class OutboundTcpConnection extends Thread
         expireMessages();
         try
         {
+        	logger.info("before " + backlog.size());
             backlog.put(new QueuedMessage(message, id));
+        	logger.info("after " + backlog.size());
         }
         catch (InterruptedException e)
         {
@@ -118,12 +120,14 @@ public class OutboundTcpConnection extends Thread
         while (true)
         {
             QueuedMessage qm = active.poll();
+            logger.info("korn qm " + qm);
             if (qm == null)
             {
                 // exhausted the active queue.  switch to backlog, once there's something to process there
                 try
                 {
                     qm = backlog.take();
+                    logger.info("korn 2 qm " + qm);
                 }
                 catch (InterruptedException e)
                 {
@@ -143,13 +147,17 @@ public class OutboundTcpConnection extends Thread
                     break;
                 continue;
             }
-            if (qm.timestamp < System.currentTimeMillis() - m.getTimeout())
+            if (qm.timestamp < System.currentTimeMillis() - m.getTimeout()) {
+            	logger.info("korn a");
                 dropped.incrementAndGet();
-            else if (socket != null || connect())
+            } else if (socket != null || connect()) {
+            	logger.info("korn b");
                 writeConnected(qm);
-            else
+            } else {
                 // clear out the queue, else gossip messages back up.
+            	logger.info("korn c");
                 active.clear();
+            }
         }
     }
 
@@ -290,6 +298,7 @@ public class OutboundTcpConnection extends Thread
 
     private boolean connect()
     {
+    	logger.info("connecting to " + poolReference.endPoint());
         if (logger.isDebugEnabled())
             logger.debug("attempting to connect to " + poolReference.endPoint());
 
@@ -370,6 +379,7 @@ public class OutboundTcpConnection extends Thread
             catch (IOException e)
             {
                 socket = null;
+                logger.info("unable to connect to " + poolReference.endPoint() + " " + e);
                 if (logger.isTraceEnabled())
                     logger.trace("unable to connect to " + poolReference.endPoint(), e);
                 try

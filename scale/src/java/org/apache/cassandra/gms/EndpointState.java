@@ -46,14 +46,14 @@ public class EndpointState
     private volatile long updateTimestamp;
     private volatile boolean isAlive;
 
-    EndpointState(HeartBeatState initialHbState)
+    public EndpointState(HeartBeatState initialHbState)
     {
         hbState = initialHbState;
         updateTimestamp = System.currentTimeMillis();
         isAlive = true;
     }
 
-    HeartBeatState getHeartBeatState()
+    public HeartBeatState getHeartBeatState()
     {
         return hbState;
     }

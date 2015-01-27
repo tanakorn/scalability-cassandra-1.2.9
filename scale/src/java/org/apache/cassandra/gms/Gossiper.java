@@ -122,11 +122,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
                 /* Update the local heartbeat counter. */
                 //Korn: endPointStateMap is a map for every node we know and its state
+                logger.info("korn end point : " + endpointStateMap.keySet());
                 endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().updateHeartBeat();
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
+//                logger.info("korn gDigests : " + gDigests);
 
                 if ( gDigests.size() > 0 )
                 {
@@ -342,7 +344,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      *
      * @param gDigests list of Gossip Digests.
     */
-    private void makeRandomGossipDigest(List<GossipDigest> gDigests)
+    public void makeRandomGossipDigest(List<GossipDigest> gDigests)
     {
         EndpointState epState;
         int generation = 0;
@@ -525,6 +527,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
+        logger.info("korn Sending a GossipDigestSyn to {} ...", to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);

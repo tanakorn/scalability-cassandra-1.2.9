@@ -758,7 +758,7 @@ public final class MessagingService implements MessagingServiceMBean
 
     public static void validateMagic(int magic) throws IOException
     {
-//    	logger.info("korn validating magic");
+    	logger.info("korn validating magic : " + magic);
         if (magic != PROTOCOL_MAGIC)
             throw new IOException("invalid protocol header");
     }

@@ -113,7 +113,9 @@ public class OutboundTcpConnectionPool
 
     public Socket newSocket() throws IOException
     {
+    	System.out.println("korn endpoint" + endPoint());
         // zero means 'bind on any available port.'
+    	System.out.println("korn encrypted " + isEncryptedChannel());
         if (isEncryptedChannel())
         {
             if (Config.getOutboundBindAny())
@@ -123,7 +125,10 @@ public class OutboundTcpConnectionPool
         }
         else
         {
-            Socket socket = SocketChannel.open(new InetSocketAddress(endPoint(), DatabaseDescriptor.getStoragePort())).socket();
+        	InetSocketAddress address = new InetSocketAddress(endPoint(), DatabaseDescriptor.getStoragePort());
+        	System.out.println("korn address " + address);
+            Socket socket = SocketChannel.open(address).socket();
+            System.out.println("korn socket " + socket);
             if (Config.getOutboundBindAny() && !socket.isBound())
                 socket.bind(new InetSocketAddress(FBUtilities.getLocalAddress(), 0));
             return socket;

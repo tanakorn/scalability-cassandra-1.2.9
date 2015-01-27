@@ -111,6 +111,7 @@ public class MessageIn<T>
         if (payloadSize == 0 || serializer == null)
             return create(from, null, parameters, verb, version);
         T2 payload = serializer.deserialize(in, version);
+        logger.info("korn read message is " + payload.getClass() + " with size " + size);
         return MessageIn.create(from, payload, parameters, verb, version);
     }
 

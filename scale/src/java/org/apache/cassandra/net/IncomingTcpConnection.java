@@ -70,8 +70,10 @@ public class IncomingTcpConnection extends Thread
             DataInputStream in = new DataInputStream(socket.getInputStream());
             MessagingService.validateMagic(in.readInt());
             int header = in.readInt();
+            logger.info("korn header : " + header);
             boolean isStream = MessagingService.getBits(header, 3, 1) == 1;
             int version = MessagingService.getBits(header, 15, 8);
+            logger.info("korn connection version {} from {} : isStream {}", version, socket.getInetAddress(), isStream);
             logger.debug("Connection version {} from {}", version, socket.getInetAddress());
 
             if (isStream) {
@@ -120,6 +122,7 @@ public class IncomingTcpConnection extends Thread
         }
 
         logger.debug("Max version for {} is {}", from, maxVersion);
+        logger.info("korn Max version for {} is {}", from, maxVersion);
         if (version > MessagingService.current_version)
         {
             // save the endpoint so gossip will reconnect to it
@@ -203,6 +206,7 @@ public class IncomingTcpConnection extends Thread
         }
 
         MessageIn message = MessageIn.read(input, version, id);
+        System.out.println("korn message " + message);
         if (message == null)
         {
             // callback expired; nothing to do
