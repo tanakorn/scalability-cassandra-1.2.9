@@ -1,0 +1,23 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+i=2
+os=`uname`
+while [ $i -le $num_node ]; do
+  ip=127.0.0.$i
+  ifconfig | grep -q "\<$ip\>"
+  if [ $? -ne 0 ]; then
+    echo Adding $ip
+    if [ $os = Darwin ]; then
+      ifconfig lo0 alias $ip
+    elif [ $os = Linux ]; then
+      ifconfig lo:$i $ip up
+    else
+      echo Cannot add $ip because OS is not supported 
+    fi
+  fi
+  i=`expr $i + 1`
+done
