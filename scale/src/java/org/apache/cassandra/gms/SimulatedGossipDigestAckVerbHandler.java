@@ -19,57 +19,50 @@ package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.utils.FBUtilities;
 
-public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
+import edu.uchicago.cs.ucare.GossiperStub;
+
+public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
-    private static final Logger logger = LoggerFactory.getLogger(GossipDigestAckVerbHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAckVerbHandler.class);
 
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         InetAddress from = message.from;
-        if (logger.isTraceEnabled())
-            logger.trace("Received a GossipDigestAckMessage from {}", from);
-        if (!Gossiper.instance.isEnabled())
-        {
-            if (logger.isTraceEnabled())
-                logger.trace("Ignoring GossipDigestAckMessage because gossip is disabled");
-            return;
-        }
 
-        GossipDigestAck gDigestAckMessage = message.payload;
-        List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
-        Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
+//        GossipDigestAck gDigestAckMessage = message.payload;
+//        List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
 
-        if ( epStateMap.size() > 0 )
-        {
-            /* Notify the Failure Detector */
-            Gossiper.instance.notifyFailureDetector(epStateMap);
-            Gossiper.instance.applyStateLocally(epStateMap);
-        }
-
-        Gossiper.instance.checkSeedContact(from);
+        // We do not need this
+//        Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
+//        if ( epStateMap.size() > 0 )
+//        {
+//            /* Notify the Failure Detector */
+//            Gossiper.instance.notifyFailureDetector(epStateMap);
+//            Gossiper.instance.applyStateLocally(epStateMap);
+//        }
+//
+//        Gossiper.instance.checkSeedContact(from);
 
         /* Get the state required to send to this gossipee - construct GossipDigestAck2Message */
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        for( GossipDigest gDigest : gDigestList )
-        {
-            InetAddress addr = gDigest.getEndpoint();
-            EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
-            if ( localEpStatePtr != null ) {
-//            	logger.info("korn local episode " + localEpStatePtr);
-                deltaEpStateMap.put(addr, localEpStatePtr);
-            }
-        }
+//        for( GossipDigest gDigest : gDigestList )
+//        {
+//            InetAddress addr = gDigest.getEndpoint();
+//            EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
+//            if ( localEpStatePtr != null )
+//                deltaEpStateMap.put(addr, localEpStatePtr);
+//        }
+        deltaEpStateMap.put(FBUtilities.getLocalAddress(), new EndpointState(GossiperStub.heartBeatState));
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),

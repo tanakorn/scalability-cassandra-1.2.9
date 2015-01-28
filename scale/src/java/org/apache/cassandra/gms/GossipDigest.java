@@ -36,24 +36,24 @@ public class GossipDigest implements Comparable<GossipDigest>
     final int generation;
     final int maxVersion;
 
-    GossipDigest(InetAddress ep, int gen, int version)
+    public GossipDigest(InetAddress ep, int gen, int version)
     {
         endpoint = ep;
         generation = gen;
         maxVersion = version;
     }
 
-    InetAddress getEndpoint()
+    public InetAddress getEndpoint()
     {
         return endpoint;
     }
 
-    int getGeneration()
+    public int getGeneration()
     {
         return generation;
     }
 
-    int getMaxVersion()
+    public int getMaxVersion()
     {
         return maxVersion;
     }
