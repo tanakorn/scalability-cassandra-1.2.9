@@ -1,0 +1,16 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+awk '{
+  if ("'$my_ip'" == $2) {
+    system("rm -r '$operating_dir'/*");
+    system("cp -r '$cassandra_data_dir'/machine"$1"/* '$operating_dir'");
+  } else {
+    system("ssh "$2" \"rm -r '$operating_dir'/*\"");
+    system("scp -r '$cassandra_data_dir'/machine"$1"/* "$2":'$operating_dir'");
+  }
+}' $machinelist

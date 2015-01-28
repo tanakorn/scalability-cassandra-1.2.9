@@ -1,0 +1,23 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+i=2
+os=`uname`
+while [ true ]; do
+  ip=127.0.0.$i
+  ifconfig | grep -q "\<$ip\>"
+  if [ $? -eq 0 ]; then
+    echo Removing $ip
+    if [ $os = Darwin ]; then
+      ifconfig lo0 -alias $ip
+    elif [ $os = Linux ]; then
+      ifconfig lo:$i down
+    else
+      echo Cannot remove $ip because OS is not supported 
+    fi
+  else
+    break
+  fi
+  i=`expr $i + 1`
+done

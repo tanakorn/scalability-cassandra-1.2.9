@@ -1,0 +1,24 @@
+#!/bin/sh
+
+operating_dir=`dirname $0`
+
+conf_file=$operating_dir/sc.conf
+if [ $# -eq 2 ]; then
+  conf_file=$1
+  node_id=$2
+elif [ $# -eq 1 ]; then
+  node_id=$1
+else
+  echo Please specify node ID
+  exit 1
+fi
+
+if [ ! -f $conf_file ]; then
+  echo There is no such configuration file : $conf_file
+  exit 1
+fi
+
+. $conf_file
+
+pid=`cat $operating_dir/pid/n${node_id}.pid`
+kill $pid

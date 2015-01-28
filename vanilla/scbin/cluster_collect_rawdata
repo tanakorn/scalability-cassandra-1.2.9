@@ -1,0 +1,13 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+mkdir -p $collecteddata_dir
+
+awk '{
+  system("rm -r '$collecteddata_dir'/machine"$1" 2> /dev/null")
+  system("scp -r "$2":'$rawdata_dir/' '$collecteddata_dir'/machine"$1)
+}' $machinelist
+

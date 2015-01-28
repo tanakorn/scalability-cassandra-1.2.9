@@ -1,0 +1,41 @@
+#!/bin/sh
+
+cwd=`pwd`
+scriptdir=`dirname $0`
+cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
+
+. $scriptdir/readconfig
+
+rm -r $operating_dir/* 2> /dev/null
+
+mkdir -p $operating_dir/cassconf
+mkdir $operating_dir/log
+
+i=1
+while [ $i -le $num_node ]; do
+  cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
+  cd $operating_dir/cassconf/conf$i
+  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.template | sed "s:\$ip_address:127.0.0.$i:g" | sed "s:\$id:$i:g" > cassandra.yaml
+  cd $cwd
+  i=`expr $i + 1`
+done
+
+if [ ! $cassandra_home ]; then
+  cassandra_home=$scriptdir/..
+fi
+
+cp -r $scriptdir/resources/bin $operating_dir
+cp $scriptdir/resources/allnode_start $operating_dir
+cp $scriptdir/resources/onenode_start $operating_dir
+cp $scriptdir/resources/onenode_stop $operating_dir
+cp $scriptdir/resources/sc.properties $operating_dir
+
+echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
+echo num_node=$num_node >> $operating_dir/sc.conf
+echo aspectj=$aspectj >> $operating_dir/sc.conf
+echo property_file=$property_file >> $operating_dir/sc.conf
+
+echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
+mkdir $rawdata_dir
