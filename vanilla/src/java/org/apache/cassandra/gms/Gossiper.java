@@ -131,6 +131,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                                         digestSynMessage,
                                                                                                         GossipDigestSyn.serializer);
+                    logger.info("korn GDS size = " + message.serializedSize(MessagingService.current_version));
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
 

@@ -299,6 +299,7 @@ class ArrivalWindow
     double phi(long tnow)
     {
         int size = arrivalIntervals.size();
+        logger.info("korn arrival intervals size = " + size);
         double t = tnow - tLast;
         return (size > 0)
                ? PHI_FACTOR * t / mean()
