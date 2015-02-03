@@ -185,7 +185,6 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now);
-        logger.info("korn PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 

@@ -66,7 +66,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             InetAddress addr = gDigest.getEndpoint();
             EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
             if ( localEpStatePtr != null ) {
-//            	logger.info("korn local episode " + localEpStatePtr);
                 deltaEpStateMap.put(addr, localEpStatePtr);
             }
         }
