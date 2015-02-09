@@ -62,7 +62,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            if ( localEpStatePtr != null )
 //                deltaEpStateMap.put(addr, localEpStatePtr);
 //        }
-        deltaEpStateMap.put(FBUtilities.getLocalAddress(), new EndpointState(GossiperStub.heartBeatState));
+        deltaEpStateMap.put(FBUtilities.getLocalAddress(), GossiperStub.state);
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
