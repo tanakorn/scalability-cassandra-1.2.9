@@ -76,6 +76,14 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+        	EndpointState eps = deltaEpStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		logger.info("korn sending ack to " + from + " about node " + address + " by state " + state + " = " + value);
+        	}
+        }
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),

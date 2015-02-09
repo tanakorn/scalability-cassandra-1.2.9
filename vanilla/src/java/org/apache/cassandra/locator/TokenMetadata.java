@@ -827,11 +827,12 @@ public class TokenMetadata
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
+//        logger.info("korn tokenmetadata toString");
         lock.readLock().lock();
         try
         {
             Set<InetAddress> eps = tokenToEndpointMap.inverse().keySet();
-
+//            logger.info("korn eps = " + eps);
             if (!eps.isEmpty())
             {
                 sb.append("Normal Tokens:");
@@ -845,6 +846,7 @@ public class TokenMetadata
                 }
             }
 
+//            logger.info("korn bootstrap tokens = " + bootstrapTokens.size());
             if (!bootstrapTokens.isEmpty())
             {
                 sb.append("Bootstrapping Tokens:" );
@@ -856,6 +858,7 @@ public class TokenMetadata
                 }
             }
 
+//            logger.info("korn leaving EP = " + leavingEndpoints);
             if (!leavingEndpoints.isEmpty())
             {
                 sb.append("Leaving Endpoints:");
@@ -867,6 +870,7 @@ public class TokenMetadata
                 }
             }
 
+//            logger.info("korn pending ranges = " + pendingRanges);
             if (!pendingRanges.isEmpty())
             {
                 sb.append("Pending Ranges:");

@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
@@ -68,6 +67,14 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             if ( localEpStatePtr != null ) {
                 deltaEpStateMap.put(addr, localEpStatePtr);
             }
+        }
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+        	EndpointState eps = deltaEpStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		logger.info("korn sending ack2 to " + from + " about node " + address + " by state " + state + " = " + value);
+        	}
         }
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,

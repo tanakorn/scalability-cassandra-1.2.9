@@ -663,6 +663,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     throw new UnsupportedOperationException(s);
                 }
                 setMode(Mode.JOINING, "getting bootstrap token", true);
+                logger.info("korn get bootstrap token ");
                 tokens = BootStrapper.getBootstrapTokens(tokenMetadata, LoadBroadcaster.instance.getLoadInfo());
             }
             else
@@ -680,10 +681,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     throw new AssertionError(e);
                 }
                 tokens = new ArrayList<Token>();
+                logger.info("korn create tokens array");
                 if (DatabaseDescriptor.getReplaceTokens().size() !=0)
                 {
-                    for (String token : DatabaseDescriptor.getReplaceTokens())
+                    for (String token : DatabaseDescriptor.getReplaceTokens()) {
+                    	logger.info("korn token string = " + token);
                         tokens.add(StorageService.getPartitioner().getTokenFactory().fromString(token));
+                    }
                 }
                 else
                 {
@@ -691,6 +695,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     InetAddress endpoint = tokenMetadata.getEndpointForHostId(DatabaseDescriptor.getReplaceNode());
                     if (endpoint == null)
                         throw new UnsupportedOperationException("Cannot replace host id " + DatabaseDescriptor.getReplaceNode() + " because it does not exist!");
+                    logger.info("korn get replaced tokens");
                     tokens = tokenMetadata.getTokens(endpoint);
                 }
 
@@ -724,6 +729,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 Collection<String> initialTokens = DatabaseDescriptor.getInitialTokens();
                 if (initialTokens.size() < 1)
                 {
+                	logger.info("korn token metadata " + tokenMetadata);
                     tokens = BootStrapper.getRandomTokens(tokenMetadata, DatabaseDescriptor.getNumTokens());
                     if (DatabaseDescriptor.getNumTokens() == 1)
                         logger.warn("Generated random token " + tokens + ". Random tokens will result in an unbalanced ring; see http://wiki.apache.org/cassandra/Operations");
@@ -924,6 +930,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         {
             // if not an existing token then bootstrap
             // order is important here, the gossiper can fire in between adding these two states.  It's ok to send TOKENS without STATUS, but *not* vice versa.
+//        	for (Token token : tokens) {
+//        		logger.info("korn token " + token.getClass().getCanonicalName());
+//        	}
             Gossiper.instance.addLocalApplicationState(ApplicationState.TOKENS, valueFactory.tokens(tokens));
             Gossiper.instance.addLocalApplicationState(ApplicationState.STATUS,
                                                        valueFactory.bootstrapping(tokens));

@@ -200,7 +200,10 @@ public class IncomingTcpConnection extends Thread
                 timestamp = (timestamp & 0xFFFFFFFF00000000L) | (((partial & 0xFFFFFFFFL) << 2) >> 2);
         }
 
+        long s = System.currentTimeMillis();
         MessageIn message = MessageIn.read(input, version, id);
+        long t = System.currentTimeMillis() - s;
+        logger.info("korn read msg = " + t + " ms");
         if (message == null)
         {
             // callback expired; nothing to do
