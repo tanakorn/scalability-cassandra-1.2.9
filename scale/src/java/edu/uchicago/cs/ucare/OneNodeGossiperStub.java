@@ -30,7 +30,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.utils.FBUtilities;
 
-public class GossiperStub {
+public class OneNodeGossiperStub {
 	
 	public static HeartBeatState heartBeatState;
 	public static EndpointState state;

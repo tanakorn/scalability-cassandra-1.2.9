@@ -29,7 +29,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.utils.FBUtilities;
 
-import edu.uchicago.cs.ucare.GossiperStub;
+import edu.uchicago.cs.ucare.OneNodeGossiperStub;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
@@ -62,7 +62,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            if ( localEpStatePtr != null )
 //                deltaEpStateMap.put(addr, localEpStatePtr);
 //        }
-        deltaEpStateMap.put(FBUtilities.getLocalAddress(), GossiperStub.state);
+        deltaEpStateMap.put(FBUtilities.getLocalAddress(), OneNodeGossiperStub.state);
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
