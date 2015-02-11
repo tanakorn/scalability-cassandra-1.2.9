@@ -453,7 +453,6 @@ public final class MessagingService implements MessagingServiceMBean
         {
             throw new RuntimeException(e);
         }
-        StackTracePrinter.print(logger);
         logger.info("Starting Messaging Service on port {}", DatabaseDescriptor.getStoragePort());
         ss.add(socket);
         return ss;

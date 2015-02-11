@@ -81,7 +81,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
         	for (ApplicationState state : appStateMap.keySet()) {
         		VersionedValue value = appStateMap.get(state);
-        		logger.info("korn sending ack to " + from + " about node " + address + " by state " + state + " = " + value);
+//        		logger.info("korn sending ack to " + from + " about node " + address + " by state " + state + " = " + value);
         	}
         }
 

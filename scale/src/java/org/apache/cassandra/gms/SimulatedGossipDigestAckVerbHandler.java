@@ -29,6 +29,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.utils.FBUtilities;
 
+import edu.uchicago.cs.ucare.GroupGossiperStub;
 import edu.uchicago.cs.ucare.OneNodeGossiperStub;
 import edu.uchicago.cs.ucare.TwoNodeGossiperStub;
 
@@ -55,8 +56,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        Gossiper.instance.checkSeedContact(from);
 
         /* Get the state required to send to this gossipee - construct GossipDigestAck2Message */
-//        Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        Map<InetAddress, EndpointState> deltaEpStateMap = TwoNodeGossiperStub.endpointStateMap;
+        Map<InetAddress, EndpointState> deltaEpStateMap = GroupGossiperStub.endpointStateMaps[GroupGossiperStub.currentGroup];
 //        for( GossipDigest gDigest : gDigestList )
 //        {
 //            InetAddress addr = gDigest.getEndpoint();
