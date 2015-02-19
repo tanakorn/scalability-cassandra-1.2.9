@@ -18,12 +18,12 @@
 package org.apache.cassandra.gms;
 
 import java.io.*;
-
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.UUID;
 
 import com.google.common.collect.Iterables;
+
 import static com.google.common.base.Charsets.ISO_8859_1;
 
 import org.apache.cassandra.db.TypeSizes;
@@ -31,8 +31,11 @@ import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -49,6 +52,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class VersionedValue implements Comparable<VersionedValue>
 {
+	private static final Logger logger = LoggerFactory.getLogger(StorageService.class);
 
     public static final IVersionedSerializer<VersionedValue> serializer = new VersionedValueSerializer();
 
@@ -114,8 +118,10 @@ public class VersionedValue implements Comparable<VersionedValue>
 
         public VersionedValue bootstrapping(Collection<Token> tokens)
         {
-            return new VersionedValue(versionString(VersionedValue.STATUS_BOOTSTRAPPING,
+            VersionedValue bootstrapping = new VersionedValue(versionString(VersionedValue.STATUS_BOOTSTRAPPING,
                                                     makeTokenString(tokens)));
+//            logger.info("korn tokens = " + tokens + " bootstrapping = " + bootstrapping);
+            return bootstrapping;
         }
 
         public VersionedValue normal(Collection<Token> tokens)
