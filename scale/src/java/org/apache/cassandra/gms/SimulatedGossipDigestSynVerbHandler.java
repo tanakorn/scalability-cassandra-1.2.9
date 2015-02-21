@@ -80,9 +80,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         		gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
-        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
-                                                                                                      new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                                                                                                      GossipDigestAck.serializer);
+        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
+        		WorstCaseGossiperStub.broadcastAddresses[WorstCaseGossiperStub.currentNode], 
+        		MessagingService.Verb.GOSSIP_DIGEST_ACK,
+                new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
+                GossipDigestAck.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?

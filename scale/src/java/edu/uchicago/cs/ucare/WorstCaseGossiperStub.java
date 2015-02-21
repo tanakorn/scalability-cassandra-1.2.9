@@ -25,20 +25,25 @@ import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorstCaseGossiperStub {
 	
+    private static final Logger logger = LoggerFactory.getLogger(WorstCaseGossiperStub.class);
+
+    public static InetAddress[] broadcastAddresses;
 	public static ConcurrentMap<InetAddress, EndpointState>[] endpointStateMaps;
 	public static int currentNode;
 //	public static int currentGroup;
 
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
-		int allNodes = 150;
+		int allNodes = 100;
 		String localDataCenter = "datacenter1";
 		int numTokens = 1024;
 		String addressPrefix = "127.0.0.";
 		InetAddress localAddresses[] = new InetAddress[allNodes];
-		InetAddress broadcastAddresses[] = new InetAddress[allNodes];
+		broadcastAddresses = new InetAddress[allNodes];
 		InetAddress rpcAddresses[] = new InetAddress[allNodes];
 		HeartBeatState[] heartBeats = new HeartBeatState[allNodes];
 		EndpointState[] states = new EndpointState[allNodes];
@@ -91,18 +96,21 @@ public class WorstCaseGossiperStub {
                 gossipDigestLists[i].add(new GossipDigest(endpoint, generation, maxVersion));
             }
             GossipDigestSyn digestSynMessage = new GossipDigestSyn("Test Cluster", "org.apache.cassandra.dht.Murmur3Partitioner", gossipDigestLists[i]);
-            messages[i] = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
+            messages[i] = new MessageOut<GossipDigestSyn>(InetAddress.getByName("127.0.0." + (i + 3)), MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
             MessagingService.instance().listen(localAddresses[i]);
         }
         InetAddress seed = InetAddress.getByName("127.0.0.1");
         InetAddress target = InetAddress.getByName("127.0.0.2");
         currentNode = 0;
+        logger.info("before send");
         while (true) {
-            heartBeats[currentNode].updateHeartBeat();
-            MessagingService.instance().sendOneWay(messages[currentNode], seed);
-            MessagingService.instance().sendOneWay(messages[currentNode], target);
+        	while (currentNode != allNodes - 1) {
+                heartBeats[currentNode].updateHeartBeat();
+                MessagingService.instance().sendOneWay(messages[currentNode], seed);
+                MessagingService.instance().sendOneWay(messages[currentNode], target);
+                currentNode = (currentNode + 1) % allNodes;
+        	}
         	Thread.sleep(1000);
-        	currentNode = (currentNode + 1) % allNodes;
         }
         
 	}

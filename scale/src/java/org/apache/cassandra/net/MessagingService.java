@@ -398,7 +398,7 @@ public final class MessagingService implements MessagingServiceMBean
         }
         listenGate.signalAll();
     }
-
+    
     private List<ServerSocket> getServerSocket(InetAddress localEp) throws ConfigurationException
     {
         final List<ServerSocket> ss = new ArrayList<ServerSocket>(2);

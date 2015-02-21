@@ -174,8 +174,8 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
      */
     public static final EnumMap<Verb, IVersionedSerializer<?>> verbSerializers = new EnumMap<Verb, IVersionedSerializer<?>>(Verb.class)
     {{
-        put(Verb.REQUEST_RESPONSE, CallbackDeterminedSerializer.instance);
-        put(Verb.INTERNAL_RESPONSE, CallbackDeterminedSerializer.instance);
+//        put(Verb.REQUEST_RESPONSE, CallbackDeterminedSerializer.instance);
+//        put(Verb.INTERNAL_RESPONSE, CallbackDeterminedSerializer.instance);
 
         put(Verb.MUTATION, RowMutation.serializer);
         put(Verb.READ_REPAIR, RowMutation.serializer);
@@ -218,32 +218,32 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         put(Verb.REPLICATION_FINISHED, null);
     }};
 
-    /* This records all the results mapped by message Id */
-    private final ExpiringMap<String, CallbackInfo> callbacks;
-
-    /**
-     * a placeholder class that means "deserialize using the callback." We can't implement this without
-     * special-case code in InboundTcpConnection because there is no way to pass the message id to IVersionedSerializer.
-     */
-    static class CallbackDeterminedSerializer implements IVersionedSerializer<Object>
-    {
-        public static final CallbackDeterminedSerializer instance = new CallbackDeterminedSerializer();
-
-        public Object deserialize(DataInput in, int version) throws IOException
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public void serialize(Object o, DataOutput out, int version) throws IOException
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public long serializedSize(Object o, int version)
-        {
-            throw new UnsupportedOperationException();
-        }
-    }
+//    /* This records all the results mapped by message Id */
+//    private final ExpiringMap<String, CallbackInfo> callbacks;
+//
+//    /**
+//     * a placeholder class that means "deserialize using the callback." We can't implement this without
+//     * special-case code in InboundTcpConnection because there is no way to pass the message id to IVersionedSerializer.
+//     */
+//    static class CallbackDeterminedSerializer implements IVersionedSerializer<Object>
+//    {
+//        public static final CallbackDeterminedSerializer instance = new CallbackDeterminedSerializer();
+//
+//        public Object deserialize(DataInput in, int version) throws IOException
+//        {
+//            throw new UnsupportedOperationException();
+//        }
+//
+//        public void serialize(Object o, DataOutput out, int version) throws IOException
+//        {
+//            throw new UnsupportedOperationException();
+//        }
+//
+//        public long serializedSize(Object o, int version)
+//        {
+//            throw new UnsupportedOperationException();
+//        }
+//    }
 
     /* Lookup table for registering message handlers based on the verb. */
     private final Map<Verb, IVerbHandler> verbHandlers;
@@ -294,14 +294,14 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
     // protocol versions of the other nodes in the cluster
     private final ConcurrentMap<InetAddress, Integer> versions = new NonBlockingHashMap<InetAddress, Integer>();
 
-    private static class MSHandle
-    {
-        public static final SimulatedMessagingService instance = new SimulatedMessagingService();
-    }
-    public static SimulatedMessagingService instance()
-    {
-        return MSHandle.instance;
-    }
+//    private static class MSHandle
+//    {
+//        public static final SimulatedMessagingService instance = new SimulatedMessagingService();
+//    }
+//    public static SimulatedMessagingService instance()
+//    {
+//        return MSHandle.instance;
+//    }
 
     private SimulatedMessagingService()
     {
@@ -342,7 +342,7 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
             }
         };
 
-        callbacks = new ExpiringMap<String, CallbackInfo>(DatabaseDescriptor.getMinRpcTimeout(), timeoutReporter);
+//        callbacks = new ExpiringMap<String, CallbackInfo>(DatabaseDescriptor.getMinRpcTimeout(), timeoutReporter);
 
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try
@@ -390,14 +390,14 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
      */
     public void listen(InetAddress localEp) throws ConfigurationException
     {
-        callbacks.reset(); // hack to allow tests to stop/restart MS
+//        callbacks.reset(); // hack to allow tests to stop/restart MS
         for (ServerSocket ss : getServerSocket(localEp))
         {
             SocketThread th = new SocketThread(ss, "ACCEPT-" + localEp);
             th.start();
             socketThreads.add(th);
         }
-        listenGate.signalAll();
+//        listenGate.signalAll();
     }
     
     private List<ServerSocket> getServerSocket(InetAddress localEp) throws ConfigurationException
@@ -521,20 +521,20 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         return verbHandlers.get(type);
     }
 
-    public String addCallback(IMessageCallback cb, MessageOut message, InetAddress to, long timeout)
-    {
-        String messageId = nextId();
-        CallbackInfo previous;
-
-        // If HH is enabled and this is a mutation message => store the message to track for potential hints.
-        if (DatabaseDescriptor.hintedHandoffEnabled() && message.verb == Verb.MUTATION)
-            previous = callbacks.put(messageId, new CallbackInfo(to, cb, message, callbackDeserializers.get(message.verb)), timeout);
-        else
-            previous = callbacks.put(messageId, new CallbackInfo(to, cb, callbackDeserializers.get(message.verb)), timeout);
-
-        assert previous == null;
-        return messageId;
-    }
+//    public String addCallback(IMessageCallback cb, MessageOut message, InetAddress to, long timeout)
+//    {
+//        String messageId = nextId();
+//        CallbackInfo previous;
+//
+//        // If HH is enabled and this is a mutation message => store the message to track for potential hints.
+//        if (DatabaseDescriptor.hintedHandoffEnabled() && message.verb == Verb.MUTATION)
+//            previous = callbacks.put(messageId, new CallbackInfo(to, cb, message, callbackDeserializers.get(message.verb)), timeout);
+//        else
+//            previous = callbacks.put(messageId, new CallbackInfo(to, cb, callbackDeserializers.get(message.verb)), timeout);
+//
+//        assert previous == null;
+//        return messageId;
+//    }
 
     private static final AtomicInteger idGen = new AtomicInteger(0);
 
@@ -544,44 +544,44 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         return Integer.toString(idGen.incrementAndGet());
     }
 
-    /*
-     * @see #sendRR(Message message, InetAddress to, IMessageCallback cb, long timeout)
-     */
-    public String sendRR(MessageOut message, InetAddress to, IMessageCallback cb)
-    {
-        return sendRR(message, to, cb, message.getTimeout());
-    }
-
-    /**
-     * Send a message to a given endpoint. This method specifies a callback
-     * which is invoked with the actual response.
-     * Also holds the message (only mutation messages) to determine if it
-     * needs to trigger a hint (uses StorageProxy for that).
-     *
-     * @param message message to be sent.
-     * @param to      endpoint to which the message needs to be sent
-     * @param cb      callback interface which is used to pass the responses or
-     *                suggest that a timeout occurred to the invoker of the send().
-     *                suggest that a timeout occurred to the invoker of the send().
-     * @param timeout the timeout used for expiration
-     * @return an reference to message id used to match with the result
-     */
-    public String sendRR(MessageOut message, InetAddress to, IMessageCallback cb, long timeout)
-    {
-        String id = addCallback(cb, message, to, timeout);
-
-        if (cb instanceof AbstractWriteResponseHandler)
-        {
-            PBSPredictor.instance().startWriteOperation(id);
-        }
-        else if (cb instanceof ReadCallback)
-        {
-            PBSPredictor.instance().startReadOperation(id);
-        }
-
-        sendOneWay(message, id, to);
-        return id;
-    }
+//    /*
+//     * @see #sendRR(Message message, InetAddress to, IMessageCallback cb, long timeout)
+//     */
+//    public String sendRR(MessageOut message, InetAddress to, IMessageCallback cb)
+//    {
+//        return sendRR(message, to, cb, message.getTimeout());
+//    }
+//
+//    /**
+//     * Send a message to a given endpoint. This method specifies a callback
+//     * which is invoked with the actual response.
+//     * Also holds the message (only mutation messages) to determine if it
+//     * needs to trigger a hint (uses StorageProxy for that).
+//     *
+//     * @param message message to be sent.
+//     * @param to      endpoint to which the message needs to be sent
+//     * @param cb      callback interface which is used to pass the responses or
+//     *                suggest that a timeout occurred to the invoker of the send().
+//     *                suggest that a timeout occurred to the invoker of the send().
+//     * @param timeout the timeout used for expiration
+//     * @return an reference to message id used to match with the result
+//     */
+//    public String sendRR(MessageOut message, InetAddress to, IMessageCallback cb, long timeout)
+//    {
+//        String id = addCallback(cb, message, to, timeout);
+//
+//        if (cb instanceof AbstractWriteResponseHandler)
+//        {
+//            PBSPredictor.instance().startWriteOperation(id);
+//        }
+//        else if (cb instanceof ReadCallback)
+//        {
+//            PBSPredictor.instance().startReadOperation(id);
+//        }
+//
+//        sendOneWay(message, id, to);
+//        return id;
+//    }
 
     public void sendOneWay(MessageOut message, InetAddress to)
     {
@@ -622,12 +622,12 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         connection.enqueue(processedMessage, id);
     }
 
-    public <T> IAsyncResult<T> sendRR(MessageOut message, InetAddress to)
-    {
-        IAsyncResult<T> iar = new AsyncResult();
-        sendRR(message, to, iar);
-        return iar;
-    }
+//    public <T> IAsyncResult<T> sendRR(MessageOut message, InetAddress to)
+//    {
+//        IAsyncResult<T> iar = new AsyncResult();
+//        sendRR(message, to, iar);
+//        return iar;
+//    }
 
     /**
      * Stream a file from source to destination. This is highly optimized
@@ -662,10 +662,10 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         subscribers.add(subcriber);
     }
 
-    public void clearCallbacksUnsafe()
-    {
-        callbacks.reset();
-    }
+//    public void clearCallbacksUnsafe()
+//    {
+//        callbacks.reset();
+//    }
 
     public void waitForStreaming() throws InterruptedException
     {
@@ -691,7 +691,7 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         assert !StageManager.getStage(Stage.MUTATION).isShutdown();
 
         // the important part
-        callbacks.shutdownBlocking();
+//        callbacks.shutdownBlocking();
 
         // attempt to humor tests that try to stop and restart MS
         try
@@ -711,7 +711,7 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         if (state != null)
             state.trace("Message received from {}", message.from);
 
-        message = SinkManager.processInboundMessage(message, id);
+//        message = SinkManager.processInboundMessage(message, id);
         if (message == null)
             return;
 
@@ -719,42 +719,42 @@ public final class SimulatedMessagingService implements MessagingServiceMBean
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
         assert stage != null : "No stage for message type " + message.verb;
 
-        if (message.verb == Verb.REQUEST_RESPONSE && PBSPredictor.instance().isLoggingEnabled())
-        {
-            IMessageCallback cb = SimulatedMessagingService.instance().getRegisteredCallback(id).callback;
-
-            if (cb instanceof AbstractWriteResponseHandler)
-            {
-                PBSPredictor.instance().logWriteResponse(id, timestamp);
-            }
-            else if (cb instanceof ReadCallback)
-            {
-                PBSPredictor.instance().logReadResponse(id, timestamp);
-            }
-        }
+//        if (message.verb == Verb.REQUEST_RESPONSE && PBSPredictor.instance().isLoggingEnabled())
+//        {
+//            IMessageCallback cb = SimulatedMessagingService.instance().getRegisteredCallback(id).callback;
+//
+//            if (cb instanceof AbstractWriteResponseHandler)
+//            {
+//                PBSPredictor.instance().logWriteResponse(id, timestamp);
+//            }
+//            else if (cb instanceof ReadCallback)
+//            {
+//                PBSPredictor.instance().logReadResponse(id, timestamp);
+//            }
+//        }
 
         stage.execute(runnable, state);
     }
 
-    public void setCallbackForTests(String messageId, CallbackInfo callback)
-    {
-        callbacks.put(messageId, callback);
-    }
-
-    public CallbackInfo getRegisteredCallback(String messageId)
-    {
-        return callbacks.get(messageId);
-    }
-
-    public CallbackInfo removeRegisteredCallback(String messageId)
-    {
-        return callbacks.remove(messageId);
-    }
-
-    public long getRegisteredCallbackAge(String messageId)
-    {
-        return callbacks.getAge(messageId);
-    }
+//    public void setCallbackForTests(String messageId, CallbackInfo callback)
+//    {
+//        callbacks.put(messageId, callback);
+//    }
+//
+//    public CallbackInfo getRegisteredCallback(String messageId)
+//    {
+//        return callbacks.get(messageId);
+//    }
+//
+//    public CallbackInfo removeRegisteredCallback(String messageId)
+//    {
+//        return callbacks.remove(messageId);
+//    }
+//
+//    public long getRegisteredCallbackAge(String messageId)
+//    {
+//        return callbacks.getAge(messageId);
+//    }
 
     public static void validateMagic(int magic) throws IOException
     {

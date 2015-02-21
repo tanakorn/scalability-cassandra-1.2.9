@@ -105,6 +105,7 @@ public class IncomingTcpConnection extends Thread
         DataInputStream in = new DataInputStream(socket.getInputStream());
         int maxVersion = in.readInt();
         from = CompactEndpointSerializationHelper.deserialize(in);
+        logger.info("korn receive connection from " + from);
         boolean compressed = MessagingService.getBits(header, 2, 1) == 1;
 
         if (compressed)

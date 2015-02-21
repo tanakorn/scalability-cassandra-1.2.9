@@ -61,12 +61,20 @@ public class MessageOut<T>
                          : Collections.<String, byte[]>emptyMap());
     }
 
+    public MessageOut(InetAddress from, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer)
+    {
+        this(from, verb,
+             payload,
+             serializer,
+             isTracing() ? ImmutableMap.of(TRACE_HEADER, UUIDGen.decompose(Tracing.instance().getSessionId()))
+                         : Collections.<String, byte[]>emptyMap());
+    }
+
     private MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
     {
         this(FBUtilities.getBroadcastAddress(), verb, payload, serializer, parameters);
     }
 
-    @VisibleForTesting
     public MessageOut(InetAddress from, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
     {
         this.from = from;

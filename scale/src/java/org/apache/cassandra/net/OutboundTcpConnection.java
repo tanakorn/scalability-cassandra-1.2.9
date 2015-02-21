@@ -35,15 +35,15 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.tracing.TraceState;
 import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.UUIDGen;
 import org.xerial.snappy.SnappyOutputStream;
-
 import org.apache.cassandra.config.Config;
 import org.apache.cassandra.config.DatabaseDescriptor;
+
+import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class OutboundTcpConnection extends Thread
 {
@@ -356,7 +356,9 @@ public class OutboundTcpConnection extends Thread
                     }
 
                     out.writeInt(MessagingService.current_version);
-                    CompactEndpointSerializationHelper.serialize(FBUtilities.getBroadcastAddress(), out);
+                    logger.info("connecting on behalf of " + "127.0.0." + (WorstCaseGossiperStub.currentNode + 3));
+                    CompactEndpointSerializationHelper.serialize(InetAddress.getByName("127.0.0." + (WorstCaseGossiperStub.currentNode + 3)), out);
+//                    CompactEndpointSerializationHelper.serialize(FBUtilities.getBroadcastAddress(), out);
                     if (shouldCompressConnection())
                     {
                         out.flush();
