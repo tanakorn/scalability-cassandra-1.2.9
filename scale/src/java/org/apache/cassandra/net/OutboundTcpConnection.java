@@ -166,7 +166,7 @@ public class OutboundTcpConnection extends Thread
                 // clear out the queue, else gossip messages back up.
                 active.clear();
             }
-//            WorstCaseGossiperStub.messageOutAddressMap.remove(m);
+            WorstCaseGossiperStub.messageOutAddressMap.remove(m);
         }
     }
 

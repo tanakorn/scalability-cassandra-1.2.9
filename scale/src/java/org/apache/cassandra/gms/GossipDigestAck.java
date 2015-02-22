@@ -56,6 +56,39 @@ public class GossipDigestAck
     {
         return epStateMap;
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((epStateMap == null) ? 0 : epStateMap.hashCode());
+		result = prime * result
+				+ ((gDigestList == null) ? 0 : gDigestList.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GossipDigestAck other = (GossipDigestAck) obj;
+		if (epStateMap == null) {
+			if (other.epStateMap != null)
+				return false;
+		} else if (!epStateMap.equals(other.epStateMap))
+			return false;
+		if (gDigestList == null) {
+			if (other.gDigestList != null)
+				return false;
+		} else if (!gDigestList.equals(other.gDigestList))
+			return false;
+		return true;
+	}
 }
 
 class GossipDigestAckSerializer implements IVersionedSerializer<GossipDigestAck>

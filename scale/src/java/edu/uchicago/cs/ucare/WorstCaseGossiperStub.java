@@ -42,7 +42,7 @@ public class WorstCaseGossiperStub {
 //	public static int currentGroup;
 
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
-		int allNodes = 13;
+		int allNodes = 198;
 		String localDataCenter = "datacenter1";
 		int numTokens = 1024;
 		String addressPrefix = "127.0.0.";
@@ -103,8 +103,7 @@ public class WorstCaseGossiperStub {
                 gossipDigestLists[i].add(new GossipDigest(endpoint, generation, maxVersion));
             }
             GossipDigestSyn digestSynMessage = new GossipDigestSyn("Test Cluster", "org.apache.cassandra.dht.Murmur3Partitioner", gossipDigestLists[i]);
-            messages[i] = new MessageOut<GossipDigestSyn>(InetAddress.getByName("127.0.0." + (i + 3)), MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
-            messageOutAddressMap.put(messages[i], InetAddress.getByName("127.0.0." + (i + 3)));
+            messages[i] = new MessageOut<GossipDigestSyn>(broadcastAddresses[i], MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
             MessagingService.instance().listen(localAddresses[i]);
         }
         InetAddress seed = InetAddress.getByName("127.0.0.1");
@@ -115,11 +114,10 @@ public class WorstCaseGossiperStub {
         	while (true) {
                 heartBeats[currentNode].updateHeartBeat();
                 int r = random.nextInt(allNodes + 2);
+                messageOutAddressMap.put(messages[currentNode], broadcastAddresses[currentNode]);
                 if (r == 0) {
                     MessagingService.instance().sendOneWay(messages[currentNode], seed);
-                }
-//                r = random.nextInt(allNodes + 2);
-                if (r == 1) {
+                } else if (r == 1) {
                 	logger.info("node " + currentNode);
                     MessagingService.instance().sendOneWay(messages[currentNode], target);
                 }

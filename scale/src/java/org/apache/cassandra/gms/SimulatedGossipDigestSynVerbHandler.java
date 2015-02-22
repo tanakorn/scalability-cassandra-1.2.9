@@ -91,6 +91,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         Gossiper.instance.checkSeedContact(from);
         WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAckMessage, to);
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+        WorstCaseGossiperStub.messageInAddressMap.remove(message);
     }
 
     /*

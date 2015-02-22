@@ -52,5 +52,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
         Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
+        WorstCaseGossiperStub.messageInAddressMap.remove(message);
     }
 }

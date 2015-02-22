@@ -76,13 +76,13 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         }
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(
-        		WorstCaseGossiperStub.broadcastAddresses[WorstCaseGossiperStub.currentNode],
-        		MessagingService.Verb.GOSSIP_DIGEST_ACK2,
+        		to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                new GossipDigestAck2(deltaEpStateMap),
                GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAck2Message, to);
+        WorstCaseGossiperStub.messageInAddressMap.remove(message);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
     }
