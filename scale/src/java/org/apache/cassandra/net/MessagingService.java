@@ -38,6 +38,7 @@ import javax.management.ObjectName;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 import org.cliffc.high_scale_lib.NonBlockingHashMap;

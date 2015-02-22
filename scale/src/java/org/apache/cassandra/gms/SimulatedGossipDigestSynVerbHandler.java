@@ -37,6 +37,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
         InetAddress from = message.from;
+        InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -76,19 +77,19 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMaps[WorstCaseGossiperStub.currentNode], 
+        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
         		gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
-        		WorstCaseGossiperStub.broadcastAddresses[WorstCaseGossiperStub.currentNode], 
-        		MessagingService.Verb.GOSSIP_DIGEST_ACK,
+        		to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                 GossipDigestAck.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
+        WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAckMessage, to);
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
     }
 

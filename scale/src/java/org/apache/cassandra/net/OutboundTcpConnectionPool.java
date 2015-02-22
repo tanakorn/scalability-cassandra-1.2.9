@@ -129,6 +129,25 @@ public class OutboundTcpConnectionPool
             return socket;
         }
     }
+    
+    public Socket newSocket(InetAddress connectBy) throws IOException
+    {
+        // zero means 'bind on any available port.'
+        if (isEncryptedChannel())
+        {
+            if (Config.getOutboundBindAny())
+                return SSLFactory.getSocket(DatabaseDescriptor.getServerEncryptionOptions(), endPoint(), DatabaseDescriptor.getSSLStoragePort());
+            else
+                return SSLFactory.getSocket(DatabaseDescriptor.getServerEncryptionOptions(), endPoint(), DatabaseDescriptor.getSSLStoragePort(), FBUtilities.getLocalAddress(), 0);
+        }
+        else
+        {
+            Socket socket = SocketChannel.open(new InetSocketAddress(endPoint(), DatabaseDescriptor.getStoragePort())).socket();
+            if (Config.getOutboundBindAny() && !socket.isBound())
+                socket.bind(new InetSocketAddress(connectBy, 0));
+            return socket;
+        }
+    }
 
     public InetAddress endPoint()
     {

@@ -185,9 +185,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now);
-        if (ep.getHostAddress().equals("127.0.0.2")) {
-        	logger.info("korn PHI for " + ep + " : " + phi);
-        }
+        logger.info("korn PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 

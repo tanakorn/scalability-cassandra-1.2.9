@@ -23,6 +23,7 @@ import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.HeartBeatState;
 import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.slf4j.Logger;
@@ -33,12 +34,15 @@ public class WorstCaseGossiperStub {
     private static final Logger logger = LoggerFactory.getLogger(WorstCaseGossiperStub.class);
 
     public static InetAddress[] broadcastAddresses;
-	public static ConcurrentMap<InetAddress, EndpointState>[] endpointStateMaps;
+//	public static ConcurrentMap<InetAddress, EndpointState>[] endpointStateMaps;
+	public static ConcurrentMap<InetAddress, ConcurrentMap<InetAddress, EndpointState>> endpointStateMapMap;
+	public static ConcurrentMap<MessageOut, InetAddress> messageOutAddressMap;
+	public static ConcurrentMap<MessageIn, InetAddress> messageInAddressMap;
 	public static int currentNode;
 //	public static int currentGroup;
 
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
-		int allNodes = 100;
+		int allNodes = 13;
 		String localDataCenter = "datacenter1";
 		int numTokens = 1024;
 		String addressPrefix = "127.0.0.";
@@ -49,6 +53,8 @@ public class WorstCaseGossiperStub {
 		EndpointState[] states = new EndpointState[allNodes];
 		IPartitioner partitioner = DatabaseDescriptor.getPartitioner();
 		VersionedValueFactory[] valueFactories = new VersionedValueFactory[allNodes];
+		messageOutAddressMap = new ConcurrentHashMap<MessageOut, InetAddress>();
+		messageInAddressMap = new ConcurrentHashMap<MessageIn, InetAddress>();
 		for (int i = 0; i < allNodes; ++i) {
 			localAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
 			broadcastAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
@@ -66,12 +72,13 @@ public class WorstCaseGossiperStub {
             states[i].addApplicationState(ApplicationState.STATUS, valueFactories[i].normal(tokens));
             states[i].addApplicationState(ApplicationState.TOKENS, valueFactories[i].tokens(tokens));
 		}
-		endpointStateMaps = new ConcurrentHashMap[allNodes];
+		endpointStateMapMap = new ConcurrentHashMap<InetAddress, ConcurrentMap<InetAddress,EndpointState>>();
 		for (int i = 0; i < allNodes; ++i) {
-            endpointStateMaps[i] = new ConcurrentHashMap<InetAddress, EndpointState>();
+            ConcurrentHashMap<InetAddress, EndpointState> endpointStateMaps = new ConcurrentHashMap<InetAddress, EndpointState>();
             for (int j = 0; j < allNodes; ++j) {
-                endpointStateMaps[i].put(localAddresses[j], states[j]);
+                endpointStateMaps.put(localAddresses[j], states[j]);
             }
+            endpointStateMapMap.put(broadcastAddresses[i], endpointStateMaps);
 		}
 
 		// Gossiper.makeRandomGossipDigest
@@ -83,11 +90,11 @@ public class WorstCaseGossiperStub {
             EndpointState epState;
             int generation = 0;
             int maxVersion = 0;
-            List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMaps[i].keySet());
+            List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMapMap.get(broadcastAddresses[i]).keySet());
             Collections.shuffle(endpoints, random);
             for (InetAddress endpoint : endpoints)
             {
-                epState = endpointStateMaps[i].get(endpoint);
+                epState = endpointStateMapMap.get(broadcastAddresses[i]).get(endpoint);
                 if (epState != null)
                 {
                     generation = epState.getHeartBeatState().getGeneration();
@@ -97,18 +104,29 @@ public class WorstCaseGossiperStub {
             }
             GossipDigestSyn digestSynMessage = new GossipDigestSyn("Test Cluster", "org.apache.cassandra.dht.Murmur3Partitioner", gossipDigestLists[i]);
             messages[i] = new MessageOut<GossipDigestSyn>(InetAddress.getByName("127.0.0." + (i + 3)), MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
+            messageOutAddressMap.put(messages[i], InetAddress.getByName("127.0.0." + (i + 3)));
             MessagingService.instance().listen(localAddresses[i]);
         }
         InetAddress seed = InetAddress.getByName("127.0.0.1");
         InetAddress target = InetAddress.getByName("127.0.0.2");
-        currentNode = 0;
         logger.info("before send");
         while (true) {
-        	while (currentNode != allNodes - 1) {
+            currentNode = 0;
+        	while (true) {
                 heartBeats[currentNode].updateHeartBeat();
-                MessagingService.instance().sendOneWay(messages[currentNode], seed);
-                MessagingService.instance().sendOneWay(messages[currentNode], target);
+                int r = random.nextInt(allNodes + 2);
+                if (r == 0) {
+                    MessagingService.instance().sendOneWay(messages[currentNode], seed);
+                }
+//                r = random.nextInt(allNodes + 2);
+                if (r == 1) {
+                	logger.info("node " + currentNode);
+                    MessagingService.instance().sendOneWay(messages[currentNode], target);
+                }
                 currentNode = (currentNode + 1) % allNodes;
+                if (currentNode == 0) {
+                	break;
+                }
         	}
         	Thread.sleep(1000);
         }

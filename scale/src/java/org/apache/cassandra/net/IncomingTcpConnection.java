@@ -24,13 +24,14 @@ import java.net.SocketException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.io.util.FastByteArrayInputStream;
 import org.apache.cassandra.streaming.IncomingStreamReader;
 import org.apache.cassandra.streaming.StreamHeader;
 import org.xerial.snappy.SnappyInputStream;
+
+import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class IncomingTcpConnection extends Thread
 {
@@ -208,6 +209,7 @@ public class IncomingTcpConnection extends Thread
             // callback expired; nothing to do
             return null;
         }
+        WorstCaseGossiperStub.messageInAddressMap.put(message, socket.getLocalAddress());
         if (version <= MessagingService.current_version)
         {
             MessagingService.instance().receive(message, id, timestamp);

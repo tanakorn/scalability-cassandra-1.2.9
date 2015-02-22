@@ -38,6 +38,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         InetAddress from = message.from;
+        InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -56,8 +57,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
-            Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMaps[WorstCaseGossiperStub.currentNode], epStateMap);
-            Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMaps[WorstCaseGossiperStub.currentNode], epStateMap);
+            Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
+            Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -68,7 +69,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         {
             InetAddress addr = gDigest.getEndpoint();
 //            EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
-            EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(WorstCaseGossiperStub.endpointStateMaps[WorstCaseGossiperStub.currentNode], 
+            EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), 
             		addr, gDigest.getMaxVersion());
             if ( localEpStatePtr != null )
                 deltaEpStateMap.put(addr, localEpStatePtr);
@@ -81,6 +82,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
+        WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAck2Message, to);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
     }
