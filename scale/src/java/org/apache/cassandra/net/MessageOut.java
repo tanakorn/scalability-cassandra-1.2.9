@@ -90,6 +90,13 @@ public class MessageOut<T>
         builder.putAll(parameters).put(key, value);
         return new MessageOut<T>(verb, payload, serializer, builder.build());
     }
+    
+    public MessageOut<T> copy() {
+        ImmutableMap.Builder<String, byte[]> builder = ImmutableMap.builder();
+        builder.putAll(parameters);
+    	MessageOut<T> msg = new MessageOut<T>(from, verb, payload, serializer, builder.build());
+    	return msg;
+    }
 
     public Stage getStage()
     {

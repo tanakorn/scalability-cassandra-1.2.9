@@ -1111,8 +1111,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
-            if ( ep.equals(FBUtilities.getBroadcastAddress()))
-                continue;
+//            if ( ep.equals(FBUtilities.getBroadcastAddress()))
+//                continue;
 //            if (justRemovedEndpoints.containsKey(ep))
 //            {
 //                if (logger.isTraceEnabled())
@@ -1379,7 +1379,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             else
             {
                 /* We are here since we have no data for this endpoint locally so request everything. */
+//                logger.info("delta 2 " + deltaGossipDigestList);
                 requestAllStatic(gDigest, deltaGossipDigestList, remoteGeneration);
+//                logger.info("delta 3 " + deltaGossipDigestList);
             }
         }
     }

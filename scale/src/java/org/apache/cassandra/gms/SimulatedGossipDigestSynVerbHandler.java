@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
@@ -89,8 +90,16 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAckMessage, to);
-        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+//        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
+        if (WorstCaseGossiperStub.addressSet.contains(from)) {
+        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
+            WorstCaseGossiperStub.messageInAddressMap.put(msgIn, from);
+            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
+            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
+        } else {
+            WorstCaseGossiperStub.messageOutAddressMap.get(from).put(gDigestAckMessage, to);
+            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+        }
         WorstCaseGossiperStub.messageInAddressMap.remove(message);
     }
 

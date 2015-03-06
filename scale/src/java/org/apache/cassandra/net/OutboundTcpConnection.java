@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.jboss.netty.util.internal.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.tracing.TraceState;
 import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.utils.FBUtilities;
@@ -71,7 +73,7 @@ public class OutboundTcpConnection extends Thread
     private final AtomicLong dropped = new AtomicLong();
     private int targetVersion;
     
-    Set<InetAddress> connectedAddresses = java.util.Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>());
+//    Set<InetAddress> connectedAddresses = java.util.Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>());
     java.util.concurrent.ConcurrentHashMap<InetAddress, Socket> connectedSocketMap = new java.util.concurrent.ConcurrentHashMap<InetAddress, Socket>();
     java.util.concurrent.ConcurrentHashMap<InetAddress, DataOutputStream> connectedOutMap = new java.util.concurrent.ConcurrentHashMap<InetAddress, DataOutputStream>();
 
@@ -142,8 +144,11 @@ public class OutboundTcpConnection extends Thread
             }
 
             MessageOut<?> m = qm.message;
-            InetAddress sendBy = WorstCaseGossiperStub.messageOutAddressMap.get(m);
-            logger.info("Message " + m + " sent by " + sendBy);
+            InetAddress sendBy = WorstCaseGossiperStub.messageOutAddressMap.get(poolReference.endPoint()).get(m);
+            if (sendBy == null) {
+            	logger.info("problem " + m + " with hash " + m.hashCode() + " to " + poolReference.endPoint());
+            	continue;
+            }
             if (m == CLOSE_SENTINEL)
             {
                 disconnect(sendBy);
@@ -166,7 +171,15 @@ public class OutboundTcpConnection extends Thread
                 // clear out the queue, else gossip messages back up.
                 active.clear();
             }
-            WorstCaseGossiperStub.messageOutAddressMap.remove(m);
+            WorstCaseGossiperStub.messageOutAddressMap.get(poolReference.endPoint()).remove(m);
+//            if (poolReference.endPoint().equals(WorstCaseGossiperStub.seed) || m.verb != Verb.GOSSIP_DIGEST_SYN) {
+//                WorstCaseGossiperStub.messageOutAddressMap.remove(m);
+//            }
+            CountDownLatch countDown = WorstCaseGossiperStub.countDowns.get(sendBy);
+            if (countDown != null) {
+                WorstCaseGossiperStub.countDowns.get(sendBy).countDown();
+            }
+//            logger.info("korn size = " + WorstCaseGossiperStub.messageOutAddressMap.size());
         }
     }
 
@@ -393,7 +406,7 @@ public class OutboundTcpConnection extends Thread
                     }
 
                     out.writeInt(MessagingService.current_version);
-                    logger.info("connecting on behalf of " + address);
+//                    logger.info("connecting on behalf of " + address);
                     CompactEndpointSerializationHelper.serialize(address, out);
 //                    CompactEndpointSerializationHelper.serialize(FBUtilities.getBroadcastAddress(), out);
                     if (shouldCompressConnection())
@@ -435,7 +448,7 @@ public class OutboundTcpConnection extends Thread
             {
                 try
                 {
-                    logger.info("Handshaking version with {}", poolReference.endPoint());
+//                    logger.info("Handshaking version with {}", poolReference.endPoint());
                     version.set(inputStream.readInt());
                 }
                 catch (IOException ex) 

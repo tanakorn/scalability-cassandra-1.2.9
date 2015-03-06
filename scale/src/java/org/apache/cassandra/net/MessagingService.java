@@ -609,7 +609,8 @@ public final class MessagingService implements MessagingServiceMBean
             logger.trace("Message-to-self {} going over MessagingService", message);
 
         // message sinks are a testing hook
-        MessageOut processedMessage = SinkManager.processOutboundMessage(message, id, to);
+//        MessageOut processedMessage = SinkManager.processOutboundMessage(message, id, to);
+        MessageOut processedMessage = message;
         if (processedMessage == null)
         {
             return;

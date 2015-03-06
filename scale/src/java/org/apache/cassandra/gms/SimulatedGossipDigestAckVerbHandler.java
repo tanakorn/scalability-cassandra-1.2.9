@@ -28,6 +28,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
@@ -81,9 +82,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        WorstCaseGossiperStub.messageOutAddressMap.put(gDigestAck2Message, to);
         WorstCaseGossiperStub.messageInAddressMap.remove(message);
-        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-//        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(6));
+        if (WorstCaseGossiperStub.addressSet.contains(from)) {
+        	MessageIn<GossipDigestAck2> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAck2Message);
+            WorstCaseGossiperStub.messageInAddressMap.put(msgIn, from);
+            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
+            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
+        } else {
+            WorstCaseGossiperStub.messageOutAddressMap.get(from).put(gDigestAck2Message, to);
+            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        }
+//        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
     }
 }

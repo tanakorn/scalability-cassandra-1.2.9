@@ -33,18 +33,19 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+    	InetAddress from = message.from;
         InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
         if (logger.isTraceEnabled())
         {
-            InetAddress from = message.from;
+//            InetAddress from = message.from;
             logger.trace("Received a GossipDigestAck2Message from {}", from);
         }
-        if (!Gossiper.instance.isEnabled())
-        {
-            if (logger.isTraceEnabled())
-                logger.trace("Ignoring GossipDigestAck2Message because gossip is disabled");
-            return;
-        }
+//        if (!Gossiper.instance.isEnabled())
+//        {
+//            if (logger.isTraceEnabled())
+//                logger.trace("Ignoring GossipDigestAck2Message because gossip is disabled");
+//            return;
+//        }
 
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         /* Notify the Failure Detector */
