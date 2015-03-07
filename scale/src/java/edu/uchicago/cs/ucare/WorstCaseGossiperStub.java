@@ -11,11 +11,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -44,17 +41,14 @@ public class WorstCaseGossiperStub {
     public static InetAddress[] broadcastAddresses;
     public static Set<InetAddress> addressSet;
 	public static ConcurrentMap<InetAddress, ConcurrentMap<InetAddress, EndpointState>> endpointStateMapMap;
-	public static ConcurrentMap<InetAddress, ConcurrentMap<MessageOut, InetAddress>> messageOutAddressMap;
-	public static ConcurrentMap<MessageIn, InetAddress> messageInAddressMap;
-	public static int currentNode;
     public static final AtomicInteger idGen = new AtomicInteger(0);
     public static InetAddress seed;
     public static InetAddress target;
-    public static ConcurrentHashMap<InetAddress, CountDownLatch> countDowns;
     
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
-		int allNodes = 13;
+        int currentNode;
+		final int allNodes = 108;
 		String localDataCenter = "datacenter1";
 		int numTokens = 1024;
 		String addressPrefix = "127.0.0.";
@@ -62,18 +56,15 @@ public class WorstCaseGossiperStub {
 		broadcastAddresses = new InetAddress[allNodes];
 		InetAddress rpcAddresses[] = new InetAddress[allNodes];
 		HeartBeatState[] heartBeats = new HeartBeatState[allNodes];
-		EndpointState[] states = new EndpointState[allNodes];
+		final EndpointState[] states = new EndpointState[allNodes];
 		IPartitioner partitioner = DatabaseDescriptor.getPartitioner();
-		VersionedValueFactory[] valueFactories = new VersionedValueFactory[allNodes];
-		messageOutAddressMap = new ConcurrentHashMap<InetAddress, ConcurrentMap<MessageOut,InetAddress>>();
-		messageInAddressMap = new ConcurrentHashMap<MessageIn, InetAddress>();
+		final VersionedValueFactory[] valueFactories = new VersionedValueFactory[allNodes];
+        final Collection<Token>[] tokens = new Collection[allNodes];
 		addressSet = new HashSet<InetAddress>();
-		countDowns = new ConcurrentHashMap<InetAddress, CountDownLatch>();
 		for (int i = 0; i < allNodes; ++i) {
 			localAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
 			broadcastAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
 			addressSet.add(broadcastAddresses[i]);
-			messageOutAddressMap.put(broadcastAddresses[i], new ConcurrentHashMap<MessageOut, InetAddress>());
 			rpcAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
 			heartBeats[i] = new HeartBeatState((int) System.currentTimeMillis());
 			states[i] = new EndpointState(heartBeats[i]);
@@ -84,12 +75,8 @@ public class WorstCaseGossiperStub {
             states[i].addApplicationState(ApplicationState.RPC_ADDRESS, valueFactories[i].rpcaddress(rpcAddresses[i]));
             states[i].addApplicationState(ApplicationState.SCHEMA, valueFactories[i].schema(UUID.fromString("59adb24e-f3cd-3e02-97f0-5b395827453f")));
             TokenMetadata tokenMetadata = new TokenMetadata();
-            Collection<Token> tokens = BootStrapper.getRandomTokens(tokenMetadata, numTokens);
-            states[i].addApplicationState(ApplicationState.STATUS, valueFactories[i].normal(tokens));
-            states[i].addApplicationState(ApplicationState.TOKENS, valueFactories[i].tokens(tokens));
-            states[i].addApplicationState(ApplicationState.LOAD, valueFactories[i].load(10000));
+            tokens[i] = BootStrapper.getRandomTokens(tokenMetadata, numTokens);
 		}
-//		broadcastAddress
 		endpointStateMapMap = new ConcurrentHashMap<InetAddress, ConcurrentMap<InetAddress,EndpointState>>();
 		for (int i = 0; i < allNodes; ++i) {
             ConcurrentHashMap<InetAddress, EndpointState> endpointStateMaps = new ConcurrentHashMap<InetAddress, EndpointState>();
@@ -99,37 +86,40 @@ public class WorstCaseGossiperStub {
 //            }
             endpointStateMapMap.put(broadcastAddresses[i], endpointStateMaps);
             logger.info(i + " " + endpointStateMaps.keySet());
+            MessagingService.instance().listen(localAddresses[i]);
 		}
 
 		// Gossiper.makeRandomGossipDigest
         Random random = new Random();
-//        List<GossipDigest>[] gossipDigestLists = new List[allNodes];
-//        MessageOut<GossipDigestSyn>[] messages = new MessageOut[allNodes];
-        for (int i = 0; i < allNodes; ++i) {
-//        	gossipDigestLists[i] = new ArrayList<GossipDigest>();
-//            EndpointState epState;
-//            int generation = 0;
-//            int maxVersion = 0;
-//            List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMapMap.get(broadcastAddresses[i]).keySet());
-//            Collections.shuffle(endpoints, random);
-//            for (InetAddress endpoint : endpoints)
-//            {
-//                epState = endpointStateMapMap.get(broadcastAddresses[i]).get(endpoint);
-//                if (epState != null)
-//                {
-//                    generation = epState.getHeartBeatState().getGeneration();
-//                    maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
-//                }
-//                gossipDigestLists[i].add(new GossipDigest(endpoint, generation, maxVersion));
-//            }
-//            GossipDigestSyn digestSynMessage = new GossipDigestSyn("Test Cluster", "org.apache.cassandra.dht.Murmur3Partitioner", gossipDigestLists[i]);
-//            messages[i] = new MessageOut<GossipDigestSyn>(broadcastAddresses[i], MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
-            MessagingService.instance().listen(localAddresses[i]);
-        }
         seed = InetAddress.getByName("127.0.0.1");
-        messageOutAddressMap.put(seed, new ConcurrentHashMap<MessageOut, InetAddress>());
         target = InetAddress.getByName("127.0.0.2");
-        messageOutAddressMap.put(target, new ConcurrentHashMap<MessageOut, InetAddress>());
+        Thread updateThread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(5000);
+					for (int i = 0; i < allNodes; ++i) {
+                        states[i].addApplicationState(ApplicationState.TOKENS, valueFactories[i].tokens(tokens[i]));
+                        states[i].addApplicationState(ApplicationState.STATUS, valueFactories[i].bootstrapping(tokens[i]));
+					}
+					Thread.sleep(5000);
+					for (int i = 0; i < allNodes; ++i) {
+                        states[i].addApplicationState(ApplicationState.TOKENS, valueFactories[i].tokens(tokens[i]));
+                        states[i].addApplicationState(ApplicationState.STATUS, valueFactories[i].normal(tokens[i]));
+                        states[i].addApplicationState(ApplicationState.SEVERITY, valueFactories[i].severity(0.0));
+					}
+					Thread.sleep(5000);
+					for (int i = 0; i < allNodes; ++i) {
+                        states[i].addApplicationState(ApplicationState.LOAD, valueFactories[i].load(10000));
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+        updateThread.start();
         while (true) {
             currentNode = 0;
 
@@ -153,30 +143,30 @@ public class WorstCaseGossiperStub {
                 GossipDigestSyn digestSynMessage = new GossipDigestSyn("Test Cluster", "org.apache.cassandra.dht.Murmur3Partitioner", gossipDigestList);
                 MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(broadcastAddresses[currentNode], MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
                 heartBeats[currentNode].updateHeartBeat();
-//                messageOutAddressMap.put(messages[currentNode], broadcastAddresses[currentNode]);
+//                MessagingService.instance().sendOneWay(message, seed);
+//                MessagingService.instance().sendOneWay(message, target);
+//                MessageIn<GossipDigestSyn> msgIn = convertOutToIn(message);
+//                int r = random.nextInt(allNodes);
+//                msgIn.setTo(broadcastAddresses[r]);
+//                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, 
+//                        Integer.toString(idGen.incrementAndGet()));
+//                MessagingService.instance().sendOneWay(message, seed);
                 int r = random.nextInt(allNodes + 2);
                 if (r == 0) {
-//                	logger.info("Put message " + messages[currentNode].hashCode() + " to seed by " + broadcastAddresses[currentNode]);
-                	messageOutAddressMap.get(seed).put(message, broadcastAddresses[currentNode]);
+//                	logger.info("Put message " + message + " to seed by " + broadcastAddresses[currentNode]);
                     MessagingService.instance().sendOneWay(message, seed);
                 } else if (r == 1) {
-//                	logger.info("Put message " + messages[currentNode].hashCode() + " to target by " + broadcastAddresses[currentNode]);
-                	messageOutAddressMap.get(target).put(message, broadcastAddresses[currentNode]);
+//                	logger.info("Put message " + message + " to target by " + broadcastAddresses[currentNode]);
                     MessagingService.instance().sendOneWay(message, target);
-//                	messageOutAddressMap.get(seed).put(messages[currentNode], broadcastAddresses[currentNode]);
-//                    MessagingService.instance().sendOneWay(messages[currentNode], seed);
+                    MessagingService.instance().sendOneWay(message, seed);
                 } else {
-//                	logger.info("Put message " + messages[currentNode].hashCode() + " to " + broadcastAddresses[r - 2] + " by " + broadcastAddresses[currentNode]);
-//                	CountDownLatch countDown = new CountDownLatch(1);
-//                	countDowns.put(broadcastAddresses[currentNode], countDown);
-//                	messageOutAddressMap.get(seed).put(messages[currentNode], broadcastAddresses[currentNode]);
-//                    MessagingService.instance().sendOneWay(messages[currentNode], seed);
-//                    countDown.await();
-//                    countDowns.remove(broadcastAddresses[currentNode]);
+//                	logger.info("Put message " + message + " to " + broadcastAddresses[r - 2] + " by " + broadcastAddresses[currentNode]);
+                	for (; r == 0 || r == 1 || (r - 2) != currentNode; r = random.nextInt(allNodes + 2));
                 	MessageIn<GossipDigestSyn> msgIn = convertOutToIn(message);
-                	messageInAddressMap.put(msgIn, broadcastAddresses[r - 2]);
+                	msgIn.setTo(broadcastAddresses[r - 2]);
                 	MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, 
                 			Integer.toString(idGen.incrementAndGet()));
+                    MessagingService.instance().sendOneWay(message, seed);
                 }
                 currentNode = (currentNode + 1) % allNodes;
                 if (currentNode == 0) {

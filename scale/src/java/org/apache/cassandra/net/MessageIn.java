@@ -40,8 +40,10 @@ public class MessageIn<T>
     public final MessagingService.Verb verb;
     public final int version;
     
-    public static int count = 0;
-    public static int totalSize = 0;
+    public InetAddress to;
+    
+//    public static int count = 0;
+//    public static int totalSize = 0;
     
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
@@ -61,14 +63,14 @@ public class MessageIn<T>
 
     public static <T2> MessageIn<T2> read(DataInput in, int version, String id) throws IOException
     {
-    	count++;
+//    	count++;
         InetAddress from = CompactEndpointSerializationHelper.deserialize(in);
-        int size = 0;
+//        int size = 0;
 
         MessagingService.Verb verb = MessagingService.Verb.values()[in.readInt()];
-        size += Integer.SIZE;
+//        size += Integer.SIZE;
         int parameterCount = in.readInt();
-        size += Integer.SIZE;
+//        size += Integer.SIZE;
         Map<String, byte[]> parameters;
         if (parameterCount == 0)
         {
@@ -81,21 +83,21 @@ public class MessageIn<T>
             {
                 String key = in.readUTF();
                 byte[] value = new byte[in.readInt()];
-                size += Integer.SIZE;
+//                size += Integer.SIZE;
                 in.readFully(value);
-                size += value.length;
+//                size += value.length;
                 builder.put(key, value);
             }
             parameters = builder.build();
         }
 
         int payloadSize = in.readInt();
-        size += Integer.SIZE;
-        size += payloadSize;
-        totalSize += size;
-        if (count == 100) {
-            logger.info("korn reading messages = " + totalSize);
-        }
+//        size += Integer.SIZE;
+//        size += payloadSize;
+//        totalSize += size;
+//        if (count == 100) {
+//            logger.info("korn reading messages = " + totalSize);
+//        }
         IVersionedSerializer<T2> serializer = (IVersionedSerializer<T2>) MessagingService.verbSerializers.get(verb);
         if (serializer instanceof MessagingService.CallbackDeterminedSerializer)
         {
@@ -124,7 +126,15 @@ public class MessageIn<T>
         return DatabaseDescriptor.getTimeout(verb);
     }
 
-    public String toString()
+    public InetAddress getTo() {
+		return to;
+	}
+
+	public void setTo(InetAddress to) {
+		this.to = to;
+	}
+
+	public String toString()
     {
         StringBuilder sbuf = new StringBuilder("");
         sbuf.append("FROM:").append(from).append(" TYPE:").append(getMessageType()).append(" VERB:").append(verb);
@@ -139,6 +149,7 @@ public class MessageIn<T>
 		result = prime * result
 				+ ((parameters == null) ? 0 : parameters.hashCode());
 		result = prime * result + ((payload == null) ? 0 : payload.hashCode());
+		result = prime * result + ((to == null) ? 0 : to.hashCode());
 		result = prime * result + ((verb == null) ? 0 : verb.hashCode());
 		result = prime * result + version;
 		return result;
@@ -168,10 +179,16 @@ public class MessageIn<T>
 				return false;
 		} else if (!payload.equals(other.payload))
 			return false;
+		if (to == null) {
+			if (other.to != null)
+				return false;
+		} else if (!to.equals(other.to))
+			return false;
 		if (verb != other.verb)
 			return false;
 		if (version != other.version)
 			return false;
 		return true;
 	}
+
 }

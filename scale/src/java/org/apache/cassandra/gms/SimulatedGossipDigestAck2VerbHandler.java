@@ -34,7 +34,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
     	InetAddress from = message.from;
-        InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
+        InetAddress to = message.to;
         if (logger.isTraceEnabled())
         {
 //            InetAddress from = message.from;
@@ -53,6 +53,5 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
         Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
-        WorstCaseGossiperStub.messageInAddressMap.remove(message);
     }
 }

@@ -47,8 +47,26 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
         GossipDigestAck gDigestAckMessage = message.payload;
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
+        StringBuilder sb = new StringBuilder();
+        for ( GossipDigest gDigest : gDigestList )
+        {
+            sb.append(gDigest);
+            sb.append(", ");
+        }
+        logger.info("sc_debug: GDA digests from " + from + " are (" + sb.toString() + ")");
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
 
+        for (InetAddress address : epStateMap.keySet()) {
+        	EndpointState eps = epStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+            StringBuilder strBuilder = new StringBuilder();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
+        	}
+            logger.info("sc_debug: Reading GDA from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+        }
+        
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
@@ -68,19 +86,21 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                 deltaEpStateMap.put(addr, localEpStatePtr);
             }
         }
-        for (InetAddress address : deltaEpStateMap.keySet()) {
-        	EndpointState eps = deltaEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-                logger.info("korn sending ack2 to " + from + " about node " + address + " by state " + state + " = " + (state == ApplicationState.TOKENS ? "Tokens" : value));
-        	}
-        }
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
-        logger.info("korn GDA2 size = " + gDigestAck2Message.serializedSize(MessagingService.current_version));
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+        	EndpointState eps = deltaEpStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+            StringBuilder strBuilder = new StringBuilder();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
+        	}
+            logger.info("sc_debug: Sending GDA2 to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+        }
+        logger.info("sc_debug: GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);

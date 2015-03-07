@@ -120,7 +120,6 @@ public class VersionedValue implements Comparable<VersionedValue>
         {
             VersionedValue bootstrapping = new VersionedValue(versionString(VersionedValue.STATUS_BOOTSTRAPPING,
                                                     makeTokenString(tokens)));
-//            logger.info("korn tokens = " + tokens + " bootstrapping = " + bootstrapping);
             return bootstrapping;
         }
 

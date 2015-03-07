@@ -209,7 +209,7 @@ public class IncomingTcpConnection extends Thread
             // callback expired; nothing to do
             return null;
         }
-        WorstCaseGossiperStub.messageInAddressMap.put(message, socket.getLocalAddress());
+        message.setTo(socket.getLocalAddress());
         if (version <= MessagingService.current_version)
         {
             MessagingService.instance().receive(message, id, timestamp);

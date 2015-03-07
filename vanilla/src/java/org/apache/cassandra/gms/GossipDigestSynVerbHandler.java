@@ -22,7 +22,6 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
@@ -70,25 +69,34 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
+        StringBuilder sb = new StringBuilder();
+        for ( GossipDigest gDigest : gDigestList )
+        {
+            sb.append(gDigest);
+            sb.append(", ");
+        }
+        logger.info("sc_debug: GDS digests from " + from + " are (" + sb.toString() + ")");
 
         doSort(gDigestList);
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
-        for (InetAddress address : deltaEpStateMap.keySet()) {
-        	EndpointState eps = deltaEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-//        		logger.info("korn sending ack to " + from + " about node " + address + " by state " + state + " = " + value);
-        	}
-        }
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
-        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+        	EndpointState eps = deltaEpStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+            StringBuilder strBuilder = new StringBuilder();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
+        	}
+            logger.info("sc_debug: Sending GDA to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+        }
+        logger.info("sc_debug: GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);

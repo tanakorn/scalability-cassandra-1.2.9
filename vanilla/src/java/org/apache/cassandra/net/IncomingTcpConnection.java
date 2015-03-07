@@ -105,7 +105,7 @@ public class IncomingTcpConnection extends Thread
         DataInputStream in = new DataInputStream(socket.getInputStream());
         int maxVersion = in.readInt();
         from = CompactEndpointSerializationHelper.deserialize(in);
-        logger.info("korn receive connection from " + from);
+        logger.info("sc_debug: Receiving connection from " + from);
         boolean compressed = MessagingService.getBits(header, 2, 1) == 1;
 
         if (compressed)
@@ -204,7 +204,7 @@ public class IncomingTcpConnection extends Thread
         long s = System.currentTimeMillis();
         MessageIn message = MessageIn.read(input, version, id);
         long t = System.currentTimeMillis() - s;
-        logger.info("korn read msg = " + t + " ms");
+        logger.info("sc_debug: Reading a message from " + from + " took " + t + " ms");
         if (message == null)
         {
             // callback expired; nothing to do

@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
@@ -32,9 +31,9 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+        InetAddress from = message.from;
         if (logger.isTraceEnabled())
         {
-            InetAddress from = message.from;
             logger.trace("Received a GossipDigestAck2Message from {}", from);
         }
         if (!Gossiper.instance.isEnabled())
@@ -45,6 +44,16 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
 
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
+        for (InetAddress address : remoteEpStateMap.keySet()) {
+        	EndpointState eps = remoteEpStateMap.get(address);
+        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
+            StringBuilder strBuilder = new StringBuilder();
+        	for (ApplicationState state : appStateMap.keySet()) {
+        		VersionedValue value = appStateMap.get(state);
+        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
+        	}
+            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+        }
         /* Notify the Failure Detector */
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
         Gossiper.instance.applyStateLocally(remoteEpStateMap);

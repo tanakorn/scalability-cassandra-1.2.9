@@ -35,11 +35,11 @@ import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAckVerbHandler.class);
-
+    
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         InetAddress from = message.from;
-        InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
+        InetAddress to = message.to;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -82,14 +82,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        WorstCaseGossiperStub.messageInAddressMap.remove(message);
         if (WorstCaseGossiperStub.addressSet.contains(from)) {
         	MessageIn<GossipDigestAck2> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAck2Message);
-            WorstCaseGossiperStub.messageInAddressMap.put(msgIn, from);
+        	msgIn.setTo(from);
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
             		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
         } else {
-            WorstCaseGossiperStub.messageOutAddressMap.get(from).put(gDigestAck2Message, to);
             MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         }
 //        MessagingService.instance().sendOneWay(gDigestAck2Message, from);

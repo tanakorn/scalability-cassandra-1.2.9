@@ -144,11 +144,7 @@ public class OutboundTcpConnection extends Thread
             }
 
             MessageOut<?> m = qm.message;
-            InetAddress sendBy = WorstCaseGossiperStub.messageOutAddressMap.get(poolReference.endPoint()).get(m);
-            if (sendBy == null) {
-            	logger.info("problem " + m + " with hash " + m.hashCode() + " to " + poolReference.endPoint());
-            	continue;
-            }
+            InetAddress sendBy = m.from;
             if (m == CLOSE_SENTINEL)
             {
                 disconnect(sendBy);
@@ -171,15 +167,6 @@ public class OutboundTcpConnection extends Thread
                 // clear out the queue, else gossip messages back up.
                 active.clear();
             }
-            WorstCaseGossiperStub.messageOutAddressMap.get(poolReference.endPoint()).remove(m);
-//            if (poolReference.endPoint().equals(WorstCaseGossiperStub.seed) || m.verb != Verb.GOSSIP_DIGEST_SYN) {
-//                WorstCaseGossiperStub.messageOutAddressMap.remove(m);
-//            }
-            CountDownLatch countDown = WorstCaseGossiperStub.countDowns.get(sendBy);
-            if (countDown != null) {
-                WorstCaseGossiperStub.countDowns.get(sendBy).countDown();
-            }
-//            logger.info("korn size = " + WorstCaseGossiperStub.messageOutAddressMap.size());
         }
     }
 

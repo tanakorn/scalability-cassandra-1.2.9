@@ -38,7 +38,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
         InetAddress from = message.from;
-        InetAddress to = WorstCaseGossiperStub.messageInAddressMap.get(message);
+        InetAddress to = message.to;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -93,14 +93,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
         if (WorstCaseGossiperStub.addressSet.contains(from)) {
         	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
-            WorstCaseGossiperStub.messageInAddressMap.put(msgIn, from);
+        	msgIn.setTo(from);
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
             		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
         } else {
-            WorstCaseGossiperStub.messageOutAddressMap.get(from).put(gDigestAckMessage, to);
             MessagingService.instance().sendOneWay(gDigestAckMessage, from);
         }
-        WorstCaseGossiperStub.messageInAddressMap.remove(message);
     }
 
     /*
