@@ -113,6 +113,10 @@ public class GossiperStub {
 		state.addApplicationState(ApplicationState.LOAD, versionedValueFactory.load(load));
 	}
 	
+	public ConcurrentMap<InetAddress, EndpointState> getEndpointStateMap() {
+		return endpointStateMap;
+	}
+	
 	public void updateHeartBeat() {
 		heartBeatState.updateHeartBeat();
 	}
