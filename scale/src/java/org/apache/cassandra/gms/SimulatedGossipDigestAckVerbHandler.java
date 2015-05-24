@@ -30,6 +30,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.ScaleSimulator;
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
@@ -55,11 +56,14 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 
         if ( epStateMap.size() > 0 )
         {
+        	logger.info("louise " + to + " " + epStateMap);
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
             Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
             Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
+//            Gossiper.notifyFailureDetectorStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(), epStateMap);
+//            Gossiper.applyStateLocallyStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(), epStateMap);
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -72,6 +76,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
             EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), 
             		addr, gDigest.getMaxVersion());
+//            EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(),
+//            		addr, gDigest.getMaxVersion());
             if ( localEpStatePtr != null )
                 deltaEpStateMap.put(addr, localEpStatePtr);
         }

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
+import edu.uchicago.cs.ucare.ScaleSimulator;
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
@@ -53,5 +54,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
         Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), remoteEpStateMap);
+//        Gossiper.notifyFailureDetectorStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(), remoteEpStateMap);
+//        Gossiper.applyStateLocallyStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(), remoteEpStateMap);
     }
 }

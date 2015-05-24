@@ -29,6 +29,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+//import edu.uchicago.cs.ucare.ScaleSimulator;
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
@@ -79,6 +80,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
+//        Gossiper.examineGossiperStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(),
         		gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
@@ -99,6 +101,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         } else {
             MessagingService.instance().sendOneWay(gDigestAckMessage, from);
         }
+//        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
     }
 
     /*
