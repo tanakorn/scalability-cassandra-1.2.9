@@ -1265,7 +1265,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         return "'" + value + "'";
     }
 
-    private byte[] getApplicationStateValue(InetAddress endpoint, ApplicationState appstate)
+    public byte[] getApplicationStateValue(InetAddress endpoint, ApplicationState appstate)
     {
         String vvalue = Gossiper.instance.getEndpointStateForEndpoint(endpoint).getApplicationState(appstate).value;
         return vvalue.getBytes(ISO_8859_1);

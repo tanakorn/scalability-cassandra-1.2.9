@@ -47,12 +47,12 @@ public class GossipDigestAck
         this.epStateMap = epStateMap;
     }
 
-    List<GossipDigest> getGossipDigestList()
+    public List<GossipDigest> getGossipDigestList()
     {
         return gDigestList;
     }
 
-    Map<InetAddress, EndpointState> getEndpointStateMap()
+    public Map<InetAddress, EndpointState> getEndpointStateMap()
     {
         return epStateMap;
     }

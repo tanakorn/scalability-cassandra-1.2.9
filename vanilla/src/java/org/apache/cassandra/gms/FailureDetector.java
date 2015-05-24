@@ -256,6 +256,7 @@ class ArrivalWindow
     // because everyone seems pretty accustomed to the default of 8, and users who have
     // already tuned their phi_convict_threshold for their own environments won't need to
     // change.
+    // It is 0.43429448190325176 
     private final double PHI_FACTOR = 1.0 / Math.log(10.0);
 
     // in the event of a long partition, never record an interval longer than the rpc timeout,
@@ -301,6 +302,7 @@ class ArrivalWindow
     {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
+        logger.info("korn " + PHI_FACTOR + " " + mean());
         return (size > 0)
                ? PHI_FACTOR * t / mean()
                : 0.0;

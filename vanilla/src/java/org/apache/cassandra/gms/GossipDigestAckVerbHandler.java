@@ -35,6 +35,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
+    	long start = System.currentTimeMillis();
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
@@ -104,5 +105,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        long time = System.currentTimeMillis() - start;
+        logger.info("sc_debug: exe time for sync = " + time);
     }
 }

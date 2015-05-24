@@ -31,6 +31,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+    	long start = System.currentTimeMillis();
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
         {
@@ -57,5 +58,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         /* Notify the Failure Detector */
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
         Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        long time = System.currentTimeMillis() - start;
+        logger.info("sc_debug: exe time for sync = " + time);
     }
 }
