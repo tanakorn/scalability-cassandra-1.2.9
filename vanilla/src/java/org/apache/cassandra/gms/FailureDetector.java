@@ -302,7 +302,6 @@ class ArrivalWindow
     {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
-        logger.info("korn " + PHI_FACTOR + " " + mean());
         return (size > 0)
                ? PHI_FACTOR * t / mean()
                : 0.0;

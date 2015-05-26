@@ -203,9 +203,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     int deadNode = 0;
                     int nonMemberNode = 0;
                     int notCompletedNode = 0;
-                    strBuilder = new StringBuilder("Dead nodes: ");
-                    StringBuilder strBuilder2 = new StringBuilder("Non-member nodes: ");
-                    StringBuilder strBuilder3 = new StringBuilder("Not-completed nodes: ");
+                    strBuilder = new StringBuilder("sc_dbug: Dead nodes: ");
+                    StringBuilder strBuilder2 = new StringBuilder("sc_dbug: Non-member nodes: ");
+                    StringBuilder strBuilder3 = new StringBuilder("sc_dbug: Not-completed nodes: ");
                     for (InetAddress address : endpointStateMap.keySet()) {
                     	EndpointState state = endpointStateMap.get(address);
                         int thisNumTokens = StorageService.instance.getTokenMetadata().getTokenSize(address);
@@ -226,7 +226,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     		strBuilder3.append(", ");
                     	}
                     }
-                    logger.info("sc_debug: RingInfo: seen nodes = " + seenNode + ", dead nodes = " + deadNode);
+                    logger.info("sc_debug: RingInfo: seen nodes = " + seenNode + 
+                    		", non-member nodes = " + nonMemberNode + 
+                    		", not-completed nodes = " + notCompletedNode + 
+                    		", dead nodes = " + deadNode);
                     if (deadNode > 0) {
                         logger.info(strBuilder.toString());
                     }
