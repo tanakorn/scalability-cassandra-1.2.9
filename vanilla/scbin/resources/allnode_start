@@ -26,8 +26,13 @@ export CASSANDRA_HOME=$cassandra_home
 #done
 i=1
 while [ $i -le $num_node ]; do
+  if [ $id_offset ]; then
+    id=`expr \( $id_offset - 1 \) \* $num_node + $i`
+  elif
+    id=$i
+  fi
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i -Dcassandra.ring_delay_ms=5000"
+  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
   export NODE_ID=$i
   bin/cassandra -p $operating_dir/pid/n${i}.pid
 #  sleep `expr 5 + $i`

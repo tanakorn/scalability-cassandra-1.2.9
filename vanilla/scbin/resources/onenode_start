@@ -29,7 +29,12 @@ for jar in `ls $aspectj/lib/*.jar`; do
   export CLASSPATH=$jar:$CLASSPATH
 done
 export CASSANDRA_CONF=$operating_dir/cassconf/conf$node_id
-export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$node_id"
+if [ $id_offset ]; then
+  id=`expr \( $id_offset - 1 \) \* $num_node + $node_id`
+elif
+  id=$i
+fi
+export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$id"
 export NODE_ID=$node_id
 mkdir -p $operating_dir/pid
 bin/cassandra -p  $operating_dir/pid/node${node_id}.pid
