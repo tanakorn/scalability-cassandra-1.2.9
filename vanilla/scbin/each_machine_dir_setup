@@ -19,6 +19,8 @@ my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
 
 rm -r $operating_dir/* 2> /dev/null
 
+sudo mkdir -p $operating_dir
+sudo chown `whoami` $operating_dir
 mkdir -p $operating_dir/cassconf
 mkdir $operating_dir/log
 
