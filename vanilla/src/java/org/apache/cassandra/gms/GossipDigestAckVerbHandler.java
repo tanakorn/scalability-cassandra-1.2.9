@@ -54,7 +54,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             sb.append(gDigest);
             sb.append(", ");
         }
-        logger.info("sc_debug: GDA digests from " + from + " are (" + sb.toString() + ")");
+//        logger.info("sc_debug: GDA digests from " + from + " are (" + sb.toString() + ")");
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
 
         for (InetAddress address : epStateMap.keySet()) {
@@ -65,7 +65,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         		VersionedValue value = appStateMap.get(state);
         		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
-            logger.info("sc_debug: Reading GDA from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+//            logger.info("sc_debug: Reading GDA from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
         }
         
         if ( epStateMap.size() > 0 )
@@ -99,13 +99,13 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         		VersionedValue value = appStateMap.get(state);
         		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
-            logger.info("sc_debug: Sending GDA2 to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+//            logger.info("sc_debug: Sending GDA2 to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
         }
         logger.info("sc_debug: GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long time = System.currentTimeMillis() - start;
-        logger.info("sc_debug: Execution time for GDA = " + time);
+//        logger.info("sc_debug: Execution time for GDA = " + time);
     }
 }

@@ -53,12 +53,12 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         		VersionedValue value = appStateMap.get(state);
         		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
-            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+//            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
         }
         /* Notify the Failure Detector */
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
         Gossiper.instance.applyStateLocally(remoteEpStateMap);
         long time = System.currentTimeMillis() - start;
-        logger.info("sc_debug: Execution time for GDA2 = " + time);
+//        logger.info("sc_debug: Execution time for GDA2 = " + time);
     }
 }

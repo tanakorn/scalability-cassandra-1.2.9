@@ -204,7 +204,7 @@ public class IncomingTcpConnection extends Thread
         long s = System.currentTimeMillis();
         MessageIn message = MessageIn.read(input, version, id);
         long t = System.currentTimeMillis() - s;
-        logger.info("sc_debug: Reading a message from " + from + " took " + t + " ms");
+//        logger.info("sc_debug: Reading a message from " + from + " took " + t + " ms");
         if (message == null)
         {
             // callback expired; nothing to do

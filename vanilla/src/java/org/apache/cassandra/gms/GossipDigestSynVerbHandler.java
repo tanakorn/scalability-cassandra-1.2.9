@@ -76,7 +76,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(gDigest);
             sb.append(", ");
         }
-        logger.info("sc_debug: GDS digests from " + from + " are (" + sb.toString() + ")");
+//        logger.info("sc_debug: GDS digests from " + from + " are (" + sb.toString() + ")");
 
         doSort(gDigestList);
 
@@ -95,7 +95,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         		VersionedValue value = appStateMap.get(state);
         		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
-            logger.info("sc_debug: Sending GDA to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+//            logger.info("sc_debug: Sending GDA to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
         }
         logger.info("sc_debug: GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
@@ -104,7 +104,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
         long end = System.currentTimeMillis();
         long time = end - start;
-        logger.info("sc_debug: Execution time for GDS = " + time);
+//        logger.info("sc_debug: Execution time for GDS = " + time);
     }
 
     /*
