@@ -106,6 +106,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long time = System.currentTimeMillis() - start;
-        logger.info("sc_debug: exe time for sync = " + time);
+        logger.info("sc_debug: Execution time for GDA = " + time);
     }
 }

@@ -59,6 +59,6 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
         Gossiper.instance.applyStateLocally(remoteEpStateMap);
         long time = System.currentTimeMillis() - start;
-        logger.info("sc_debug: exe time for sync = " + time);
+        logger.info("sc_debug: Execution time for GDA2 = " + time);
     }
 }

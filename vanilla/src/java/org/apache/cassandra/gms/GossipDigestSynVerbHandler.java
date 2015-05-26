@@ -104,7 +104,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
         long end = System.currentTimeMillis();
         long time = end - start;
-        logger.info("sc_debug: exe time for sync = " + time);
+        logger.info("sc_debug: Execution time for GDS = " + time);
     }
 
     /*

@@ -70,6 +70,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     public final static int QUARANTINE_DELAY = StorageService.RING_DELAY * 2;
     private static final Logger logger = LoggerFactory.getLogger(Gossiper.class);
     public static final Gossiper instance = new Gossiper();
+    
 
     public static final long aVeryLongTime = 259200 * 1000; // 3 days
     private long FatClientTimeout;
@@ -110,6 +111,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private class GossipTask implements Runnable
     {
+        public final int numTokens = DatabaseDescriptor.getNumTokens();
+
         public void run()
         {
             try
@@ -196,6 +199,43 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     strBuilder.append("vnode in GDA2 = ");
                     strBuilder.append(messageInfo[3]);
                     logger.info(strBuilder.toString());
+                    int seenNode = endpointStateMap.size();
+                    int deadNode = 0;
+                    int nonMemberNode = 0;
+                    int notCompletedNode = 0;
+                    strBuilder = new StringBuilder("Dead nodes: ");
+                    StringBuilder strBuilder2 = new StringBuilder("Non-member nodes: ");
+                    StringBuilder strBuilder3 = new StringBuilder("Not-completed nodes: ");
+                    for (InetAddress address : endpointStateMap.keySet()) {
+                    	EndpointState state = endpointStateMap.get(address);
+                        int thisNumTokens = StorageService.instance.getTokenMetadata().getTokenSize(address);
+                        boolean isMember = StorageService.instance.getTokenMetadata().isMember(address);
+                    	if (!state.isAlive()) {
+                    		deadNode++;
+                    		strBuilder.append(address.toString());
+                    		strBuilder.append(", ");
+                    	}
+                    	if (!isMember) {
+                    		nonMemberNode++;
+                    		strBuilder2.append(address.toString());
+                    		strBuilder2.append(", ");
+                    	}
+                    	if (thisNumTokens != numTokens) {
+                    		notCompletedNode++;
+                    		strBuilder3.append(address.toString());
+                    		strBuilder3.append(", ");
+                    	}
+                    }
+                    logger.info("sc_debug: RingInfo: seen nodes = " + seenNode + ", dead nodes = " + deadNode);
+                    if (deadNode > 0) {
+                        logger.info(strBuilder.toString());
+                    }
+                    if (nonMemberNode > 0) {
+                    	logger.info(strBuilder2.toString());
+                    }
+                    if (notCompletedNode > 0) {
+                        logger.info(strBuilder3.toString());
+                    }
                 }
             }
             catch (Exception e)
