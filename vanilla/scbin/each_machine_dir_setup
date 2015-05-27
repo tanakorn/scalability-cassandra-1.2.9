@@ -16,6 +16,9 @@ cd $cwd
 
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
+#if [ ! $my_id ]; then
+  #
+#fi
 
 rm -r $operating_dir/* 2> /dev/null
 
