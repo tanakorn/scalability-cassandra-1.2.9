@@ -125,7 +125,7 @@ public class DatabaseDescriptor
             conf = new Config();
         InetAddress address = getListenAddress();
         String nodeId = System.getProperty("cassandra.id", "0");
-        logger.info("sc_debug: This is node " + nodeId + " address " + address);
+        logger.info("sc_debug: Logical ID is " + nodeId + " address " + address);
     }
     static void loadYaml()
     {
