@@ -184,8 +184,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             return;
         }
         long now = System.currentTimeMillis();
-        double phi = hbWnd.phi(now);
-        logger.info("sc_debug: PHI for " + ep + " : " + phi);
+//        double phi = hbWnd.phi(now);
+        double phi = hbWnd.phi(now, ep);
+//        logger.info("sc_debug: PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
@@ -305,6 +306,16 @@ class ArrivalWindow
         return (size > 0)
                ? PHI_FACTOR * t / mean()
                : 0.0;
+    }
+
+    double phi(long tnow, InetAddress address)
+    {
+        int size = arrivalIntervals.size();
+        double t = tnow - tLast;
+        double mean = mean();
+        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean);
+        return phi;
     }
 
     public String toString()
