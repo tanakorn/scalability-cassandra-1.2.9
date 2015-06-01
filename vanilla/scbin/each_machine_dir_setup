@@ -51,6 +51,7 @@ echo num_node=$num_node >> $operating_dir/sc.conf
 echo property_file=$property_file >> $operating_dir/sc.conf
 echo aspectj=$aspectj >> $operating_dir/sc.conf
 echo id_offset=$my_id >> $operating_dir/sc.conf
+echo observed_nodes=$observed_nodes >> $operating_dir/sc.conf
 
 echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
 mkdir $rawdata_dir

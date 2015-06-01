@@ -23,13 +23,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.util.FileUtils;
@@ -51,6 +51,20 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
 
     private final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
+    
+    private static Set<InetAddress> observedNodes;
+    static {
+    	observedNodes = new HashSet<InetAddress>();
+    	String[] tmp = System.getProperty("observed.nodes", "").split(",");
+    	for (String node : tmp) {
+    		try {
+				observedNodes.add(InetAddress.getByName(node));
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				logger.error("Error for when observe {}", node);
+			}
+    	}
+    }
 
     public FailureDetector()
     {
@@ -167,6 +181,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
+        if (observedNodes.contains(ep)) {
+        	logger.info("sc_debug : See " + ep + " at time " + now);
+        }
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
