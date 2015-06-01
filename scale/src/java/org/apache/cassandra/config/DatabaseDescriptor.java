@@ -124,8 +124,11 @@ public class DatabaseDescriptor
         else
             conf = new Config();
     }
-    static void loadYaml()
+    public static void loadYaml()
     {
+    	if (conf != null) {
+    		return;
+    	}
         try
         {
             URL url = getStorageConfigURL();

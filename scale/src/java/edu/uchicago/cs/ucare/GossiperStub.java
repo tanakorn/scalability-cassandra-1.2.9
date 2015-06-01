@@ -143,7 +143,6 @@ public class GossiperStub {
             }
             gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
         }
-        System.out.println(gossipDigestList);
         GossipDigestSyn digestSynMessage = new GossipDigestSyn(clusterId, partitionerName, 
         		gossipDigestList);
         MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(broadcastAddress, 

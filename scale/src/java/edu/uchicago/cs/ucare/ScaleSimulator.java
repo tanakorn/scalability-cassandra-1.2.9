@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
@@ -86,6 +87,13 @@ public class ScaleSimulator {
 		}
 	}
 	
+	void sendGossip(InetAddress node) {
+		for (InetAddress address : stubs.keySet()) {
+			GossiperStub stub = stubs.get(address);
+			stub.doGossip(node);
+		}
+	}
+	
 	void updateHeartBeat() {
 		for (InetAddress address : stubs.keySet()) {
 			GossiperStub stub = stubs.get(address);
@@ -101,13 +109,17 @@ public class ScaleSimulator {
 	}
 	
 	void gossip() {
+		int i = 0;
 		while (true) {
-            for (InetAddress address : stubs.keySet()) {
-                GossiperStub stub = stubs.get(address);
-                stub.doGossip(seed);
-            }
+			sendGossip(seed);
+            updateHeartBeat();
+            ++i;
             try {
-				Thread.sleep(1000);
+            	if (++i < 20) {
+                    Thread.sleep(1000);
+            	} else {
+                    Thread.sleep(2000 + i * 200);
+            	}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -116,6 +128,7 @@ public class ScaleSimulator {
 	}
 	
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
+		DatabaseDescriptor.loadYaml();
 		instance = new ScaleSimulator("Test Cluster", 1, 1024, new Murmur3Partitioner());
 		instance.prepareInitialState();
 		instance.listen();

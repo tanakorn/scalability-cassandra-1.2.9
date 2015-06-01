@@ -42,6 +42,8 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction
  * maintains the list of live and dead endpoints. Periodically i.e. every 1 second this module
@@ -833,6 +835,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 localEndpointState.updateTimestamp();
                 // this node was dead and the generation changed, this indicates a reboot, or possibly a takeover
                 // we will clean the fd intervals for it and relearn them
+                logger.info("sc_debug: Clearing interval times for {} due to generation change", endpoint);
                 if (!localEndpointState.isAlive())
                 {
                     logger.debug("Clearing interval times for {} due to generation change", endpoint);
@@ -851,7 +854,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
                     fd.report(endpoint);
+                } else {
+                	logger.info("sc_debug: impossible 1");
                 }
+            } else {
+                logger.info("sc_debug: impossible 2");
             }
         }
 
@@ -859,6 +866,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void markAlive(InetAddress addr, EndpointState localState)
     {
+    	StackTracePrinter.print(logger);
         if (logger.isTraceEnabled())
             logger.trace("marking as alive {}", addr);
         localState.markAlive();
@@ -984,8 +992,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     }
                     else if (logger.isTraceEnabled())
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
-                    if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) // unless of course, it was dead
+                    if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) { // unless of course, it was dead
                         markAlive(ep, localEpStatePtr);
+                        logger.info("sc_debug: {} comes back");
+                    }
                 }
                 else
                 {

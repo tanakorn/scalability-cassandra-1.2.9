@@ -29,7 +29,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
-//import edu.uchicago.cs.ucare.ScaleSimulator;
+import edu.uchicago.cs.ucare.ScaleSimulator;
 import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
@@ -79,8 +79,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
-//        Gossiper.examineGossiperStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(),
+//        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
+        Gossiper.examineGossiperStatic(ScaleSimulator.getInstance().getStubs().get(to).getEndpointStateMap(),
         		gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
@@ -93,15 +93,15 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
 //        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
-        if (WorstCaseGossiperStub.addressSet.contains(from)) {
-        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
-        	msgIn.setTo(from);
-            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
-        } else {
-            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-        }
-//        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+//        if (WorstCaseGossiperStub.addressSet.contains(from)) {
+//        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
+//        	msgIn.setTo(from);
+//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
+//            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
+//        } else {
+//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+//        }
+        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
     }
 
     /*

@@ -100,13 +100,13 @@ public class GroupGossiperStub {
             MessagingService.instance().listen(localAddresses[i]);
         }
         InetAddress seed = InetAddress.getByName("127.0.0.1");
-        InetAddress target = InetAddress.getByName("127.0.0.2");
+//        InetAddress target = InetAddress.getByName("127.0.0.2");
         while (true) {
         	for (currentNode = 0; currentNode < allNodes; ++currentNode) {
         		currentGroup = currentNode / nodePerGroup;
         		heartBeats[currentNode].updateHeartBeat();
         		MessagingService.instance().sendOneWay(messages[currentNode], seed);
-        		MessagingService.instance().sendOneWay(messages[currentNode], target);
+//        		MessagingService.instance().sendOneWay(messages[currentNode], target);
         	}
         	Thread.sleep(1000);
         }
