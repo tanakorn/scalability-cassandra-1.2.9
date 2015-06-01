@@ -18,6 +18,7 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -49,11 +50,16 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         	EndpointState eps = remoteEpStateMap.get(address);
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
             StringBuilder strBuilder = new StringBuilder();
+            int maxVersion = 0;
         	for (ApplicationState state : appStateMap.keySet()) {
         		VersionedValue value = appStateMap.get(state);
-        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
+        		if (value.version > maxVersion) {
+        			maxVersion = value.version;
+        		}
+//        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
 //            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
         }
         /* Notify the Failure Detector */
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);

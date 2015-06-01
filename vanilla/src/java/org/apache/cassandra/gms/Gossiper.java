@@ -852,7 +852,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 int remoteVersion = remoteEndpointState.getHeartBeatState().getHeartBeatVersion();
                 if ( remoteVersion > localVersion )
                 {
-                    logger.info("sc_debug: Clearing interval times for {} due to generation change", endpoint);
                 	logger.info("sc_debug: possible 2 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
@@ -975,6 +974,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 int localGeneration = localEpStatePtr.getHeartBeatState().getGeneration();
                 int remoteGeneration = remoteState.getHeartBeatState().getGeneration();
+                logger.info("sc_debug: " + ep + " local generation " + localGeneration + ", remote generation " + remoteGeneration);
                 if (logger.isTraceEnabled())
                     logger.trace(ep + "local generation " + localGeneration + ", remote generation " + remoteGeneration);
 
@@ -990,6 +990,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     /* find maximum state */
                     int localMaxVersion = getMaxEndpointStateVersion(localEpStatePtr);
                     int remoteMaxVersion = getMaxEndpointStateVersion(remoteState);
+                    logger.info("sc_debug: " + ep + " local version " + localMaxVersion + ", remote version " + remoteMaxVersion);
                     if ( remoteMaxVersion > localMaxVersion )
                     {
                         // apply states, but do not notify since there is no major change
