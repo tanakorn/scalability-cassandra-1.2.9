@@ -854,6 +854,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
                     fd.report(endpoint);
+                } else if (remoteVersion == localVersion) {
+                	logger.info("sc_debug: impossible 0");
                 } else {
                 	logger.info("sc_debug: impossible 1");
                 }
@@ -994,7 +996,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
                     if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) { // unless of course, it was dead
                         markAlive(ep, localEpStatePtr);
-                        logger.info("sc_debug: {} comes back");
+                        logger.info("sc_debug: {} comes back", ep);
                     }
                 }
                 else
