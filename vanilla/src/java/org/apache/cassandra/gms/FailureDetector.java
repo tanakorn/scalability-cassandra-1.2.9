@@ -314,6 +314,9 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        if (size < 10) {
+        	logger.info("sc_debug: Arrival intervals = " + toString());
+        }
         logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
         return phi;
     }
