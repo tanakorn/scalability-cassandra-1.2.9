@@ -173,7 +173,8 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             heartbeatWindow = new ArrivalWindow(SAMPLE_SIZE);
             arrivalSamples.put(ep, heartbeatWindow);
         }
-        heartbeatWindow.add(now);
+//        heartbeatWindow.add(now);
+        heartbeatWindow.add(now, ep);
     }
 
     public void interpret(InetAddress ep)
@@ -286,6 +287,26 @@ class ArrivalWindow
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         tLast = value;
+    }
+
+    synchronized void add(double value, InetAddress address)
+    {
+        logger.info("sc_debug: add time of " + address + " with " + value);
+        double interArrivalTime;
+        if ( tLast > 0L )
+        {
+            interArrivalTime = (value - tLast);
+        }
+        else
+        {
+            interArrivalTime = Gossiper.intervalInMillis / 2;
+        }
+        if (interArrivalTime <= MAX_INTERVAL_IN_MS)
+            arrivalIntervals.add(interArrivalTime);
+        else
+            logger.debug("Ignoring interval time of {}", interArrivalTime);
+        tLast = value;
+        logger.info("sc_debug: change tlast of " + address + " to be " + tLast);
     }
 
     double mean()
