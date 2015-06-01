@@ -112,8 +112,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             sb.append(gDigest);
             sb.append(", ");
         }
-        logger.info("sc_debug: GDA2 digests from " + from + " are (" + sb.toString() + ") with size" + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
-//        logger.info("sc_debug: GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
+//        logger.info("sc_debug: GDA2 digests from " + from + " are (" + sb.toString() + ") with size" + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
+        logger.info("sc_debug: GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);

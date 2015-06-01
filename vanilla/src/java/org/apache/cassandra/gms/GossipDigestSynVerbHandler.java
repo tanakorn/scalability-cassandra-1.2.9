@@ -103,8 +103,8 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(gDigest);
             sb.append(", ");
         }
-        logger.info("sc_debug: GDA digests to " + from + " are (" + sb.toString() + ") with size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
-//        logger.info("sc_debug: GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
+//        logger.info("sc_debug: GDA digests to " + from + " are (" + sb.toString() + ") with size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
+        logger.info("sc_debug: GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);

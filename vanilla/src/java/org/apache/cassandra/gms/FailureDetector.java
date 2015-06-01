@@ -291,7 +291,6 @@ class ArrivalWindow
 
     synchronized void add(double value, InetAddress address)
     {
-        logger.info("sc_debug: add time of " + address + " with " + value);
         double interArrivalTime;
         if ( tLast > 0L )
         {
@@ -306,7 +305,6 @@ class ArrivalWindow
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         tLast = value;
-        logger.info("sc_debug: change tlast of " + address + " to be " + tLast);
     }
 
     double mean()
@@ -335,9 +333,6 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (size < 10) {
-        	logger.info("sc_debug: Arrival intervals = " + toString());
-        }
         logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
         return phi;
     }

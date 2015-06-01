@@ -835,8 +835,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 localEndpointState.updateTimestamp();
                 // this node was dead and the generation changed, this indicates a reboot, or possibly a takeover
                 // we will clean the fd intervals for it and relearn them
-                logger.info("sc_debug: possible 1 {} get generation {}, but has {}", endpoint, remoteGeneration, localGeneration);
-                logger.info("sc_debug: Clearing interval times for {} due to generation change", endpoint);
                 if (!localEndpointState.isAlive())
                 {
                     logger.debug("Clearing interval times for {} due to generation change", endpoint);
@@ -852,17 +850,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 int remoteVersion = remoteEndpointState.getHeartBeatState().getHeartBeatVersion();
                 if ( remoteVersion > localVersion )
                 {
-                	logger.info("sc_debug: possible 2 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
                     fd.report(endpoint);
                 } else if (remoteVersion == localVersion) {
-                	logger.info("sc_debug: impossible 0 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                 } else {
-                	logger.info("sc_debug: impossible 1 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                 }
             } else {
-                logger.info("sc_debug: impossible 2 {} get generation {}, but has {}", endpoint, remoteGeneration, localGeneration);
             }
         }
 
@@ -870,7 +864,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void markAlive(InetAddress addr, EndpointState localState)
     {
-    	StackTracePrinter.print(logger);
+//    	StackTracePrinter.print(logger);
         if (logger.isTraceEnabled())
             logger.trace("marking as alive {}", addr);
         localState.markAlive();
@@ -974,7 +968,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 int localGeneration = localEpStatePtr.getHeartBeatState().getGeneration();
                 int remoteGeneration = remoteState.getHeartBeatState().getGeneration();
-                logger.info("sc_debug: " + ep + " local generation " + localGeneration + ", remote generation " + remoteGeneration);
                 if (logger.isTraceEnabled())
                     logger.trace(ep + "local generation " + localGeneration + ", remote generation " + remoteGeneration);
 
@@ -990,7 +983,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     /* find maximum state */
                     int localMaxVersion = getMaxEndpointStateVersion(localEpStatePtr);
                     int remoteMaxVersion = getMaxEndpointStateVersion(remoteState);
-                    logger.info("sc_debug: " + ep + " local version " + localMaxVersion + ", remote version " + remoteMaxVersion);
                     if ( remoteMaxVersion > localMaxVersion )
                     {
                         // apply states, but do not notify since there is no major change
@@ -1000,7 +992,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
                     if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) { // unless of course, it was dead
                         markAlive(ep, localEpStatePtr);
-                        logger.info("sc_debug: {} comes back", ep);
                     }
                 }
                 else
