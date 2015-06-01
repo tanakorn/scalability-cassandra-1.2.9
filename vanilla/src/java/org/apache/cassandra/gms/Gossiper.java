@@ -835,6 +835,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 localEndpointState.updateTimestamp();
                 // this node was dead and the generation changed, this indicates a reboot, or possibly a takeover
                 // we will clean the fd intervals for it and relearn them
+                logger.info("sc_debug: possible 1 {} get generation {}, but has {}", endpoint, remoteGeneration, localGeneration);
                 logger.info("sc_debug: Clearing interval times for {} due to generation change", endpoint);
                 if (!localEndpointState.isAlive())
                 {
@@ -851,16 +852,18 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 int remoteVersion = remoteEndpointState.getHeartBeatState().getHeartBeatVersion();
                 if ( remoteVersion > localVersion )
                 {
+                    logger.info("sc_debug: Clearing interval times for {} due to generation change", endpoint);
+                	logger.info("sc_debug: possible 2 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
                     fd.report(endpoint);
                 } else if (remoteVersion == localVersion) {
-                	logger.info("sc_debug: impossible 0");
+                	logger.info("sc_debug: impossible 0 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                 } else {
-                	logger.info("sc_debug: impossible 1");
+                	logger.info("sc_debug: impossible 1 {} get verstion {}, but has {}", endpoint, remoteVersion, localVersion);
                 }
             } else {
-                logger.info("sc_debug: impossible 2");
+                logger.info("sc_debug: impossible 2 {} get generation {}, but has {}", endpoint, remoteGeneration, localGeneration);
             }
         }
 
