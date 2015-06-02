@@ -32,7 +32,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
-    	long start = System.currentTimeMillis();
+    	long start, end; 
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
         {
@@ -46,6 +46,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
 
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
+        /*
         for (InetAddress address : remoteEpStateMap.keySet()) {
         	EndpointState eps = remoteEpStateMap.get(address);
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
@@ -61,10 +62,22 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 //            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
             logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
         }
+        */
         /* Notify the Failure Detector */
+        start = System.currentTimeMillis();
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
+        end = System.currentTimeMillis();
+        long notifyFD = end - start;
+        start = System.currentTimeMillis();
         Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        long time = System.currentTimeMillis() - start;
-//        logger.info("sc_debug: Execution time for GDA2 = " + time);
+        end = System.currentTimeMillis();
+        long applyState = end - start;
+        for (InetAddress observedNode : FailureDetector.observedNodes) {
+            if (remoteEpStateMap.keySet().contains(observedNode)) {
+                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));
+                logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
+            }
+        }
+        logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
 }

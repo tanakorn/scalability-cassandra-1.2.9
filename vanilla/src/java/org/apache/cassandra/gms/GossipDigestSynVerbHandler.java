@@ -34,7 +34,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
-    	long start = System.currentTimeMillis();
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
@@ -76,17 +75,27 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(gDigest);
             sb.append(", ");
         }
-        logger.info("sc_debug: GDS digests from " + from + " are (" + sb.toString() + ")");
+//        logger.info("sc_debug: GDS digests from " + from + " are (" + sb.toString() + ")");
+        
+        long start;
+        long end;
 
+        start = System.currentTimeMillis();
         doSort(gDigestList);
+        end = System.currentTimeMillis();
+        long doSort = end - start;
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
+        start = System.currentTimeMillis();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        end = System.currentTimeMillis();
+        long examine = end - start;
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
+        /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
@@ -104,14 +113,23 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(", ");
         }
 //        logger.info("sc_debug: GDA digests to " + from + " are (" + sb.toString() + ") with size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
+        */
+//        if (deltaEpStateMap.keySet())
+        for (InetAddress observedNode : FailureDetector.observedNodes) {
+        	if (deltaEpStateMap.keySet().contains(observedNode)) {
+        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+        		logger.info("sc_debug: propagate info of " + observedNode + " to " + from + " version " + version);
+        	}
+        }
         logger.info("sc_debug: GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);
+        start = System.currentTimeMillis();
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-        long end = System.currentTimeMillis();
-        long time = end - start;
-//        logger.info("sc_debug: Execution time for GDS = " + time);
+        end = System.currentTimeMillis();
+        long send = end - start;
+        logger.info("sc_debug: SyncHandler for " + from + " doSort took {} ms, examine took {} ms, sendMsg took {} ms", doSort, examine, send);
     }
 
     /*

@@ -342,7 +342,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      * @param epState
      * @return
      */
-    int getMaxEndpointStateVersion(EndpointState epState)
+    public static int getMaxEndpointStateVersion(EndpointState epState)
     {
         int maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
         for (VersionedValue value : epState.getApplicationStateMap().values())

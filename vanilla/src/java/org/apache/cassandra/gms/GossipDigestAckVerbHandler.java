@@ -35,7 +35,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-    	long start = System.currentTimeMillis();
+    	long start;
+    	long end;
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
@@ -48,6 +49,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
         GossipDigestAck gDigestAckMessage = message.payload;
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
+        /*
         StringBuilder sb = new StringBuilder();
         for ( GossipDigest gDigest : gDigestList )
         {
@@ -55,8 +57,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             sb.append(", ");
         }
 //        logger.info("sc_debug: GDA digests from " + from + " are (" + sb.toString() + ")");
+        */
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
 
+        /*
         for (InetAddress address : epStateMap.keySet()) {
         	EndpointState eps = epStateMap.get(address);
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
@@ -72,16 +76,33 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 //            logger.info("sc_debug: Reading GDA from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
             logger.info("sc_debug: Reading GDA from " + from + " about node " + address + " with version " + maxVersion);
         }
+        */
         
+
+        long notifyFD = 0;
+        long applyState = 0;
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
+        	start = System.currentTimeMillis();
             Gossiper.instance.notifyFailureDetector(epStateMap);
+            end = System.currentTimeMillis();
+            notifyFD = end - start;
+        	start = System.currentTimeMillis();
             Gossiper.instance.applyStateLocally(epStateMap);
+            end = System.currentTimeMillis();
+            applyState = end - start;
+            for (InetAddress observedNode : FailureDetector.observedNodes) {
+                if (epStateMap.keySet().contains(observedNode)) {
+                    int version = Gossiper.getMaxEndpointStateVersion(epStateMap.get(observedNode));
+                    logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
+                }
+            }
         }
 
         Gossiper.instance.checkSeedContact(from);
 
+        start = System.currentTimeMillis();
         /* Get the state required to send to this gossipee - construct GossipDigestAck2Message */
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         for( GossipDigest gDigest : gDigestList )
@@ -92,10 +113,13 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                 deltaEpStateMap.put(addr, localEpStatePtr);
             }
         }
+        end = System.currentTimeMillis();
+        long examine = end - start;
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
+        /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);
         	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
@@ -112,12 +136,21 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             sb.append(gDigest);
             sb.append(", ");
         }
+        */
 //        logger.info("sc_debug: GDA2 digests from " + from + " are (" + sb.toString() + ") with size" + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
+        for (InetAddress observedNode : FailureDetector.observedNodes) {
+        	if (deltaEpStateMap.keySet().contains(observedNode)) {
+        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+        		logger.info("sc_debug: propagate info of " + observedNode + " to " + from + " version " + version);
+        	}
+        }
         logger.info("sc_debug: GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
+        start = System.currentTimeMillis();
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-        long time = System.currentTimeMillis() - start;
-//        logger.info("sc_debug: Execution time for GDA = " + time);
+        end = System.currentTimeMillis();
+        long send = end - start;
+        logger.info("sc_debug: AckHandler for " + from + " notifyFD took {} ms, applyState took {} ms, examine took {} ms, sendMsg took {} ms", notifyFD, applyState, examine, send);
     }
 }

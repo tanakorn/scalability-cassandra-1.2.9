@@ -52,7 +52,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     private final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
     
-    private static Set<InetAddress> observedNodes;
+    public static final Set<InetAddress> observedNodes;
     static {
     	observedNodes = new HashSet<InetAddress>();
     	String[] tmp = System.getProperty("observed.nodes", "").split(",");
