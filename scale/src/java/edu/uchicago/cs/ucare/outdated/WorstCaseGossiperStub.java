@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare;
+package edu.uchicago.cs.ucare.outdated;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

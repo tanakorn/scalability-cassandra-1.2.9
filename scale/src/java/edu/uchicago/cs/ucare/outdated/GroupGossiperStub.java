@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare;
+package edu.uchicago.cs.ucare.outdated;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.BootStrapper;
-import org.apache.cassandra.dht.ByteOrderedPartitioner;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.exceptions.ConfigurationException;
@@ -26,7 +25,6 @@ import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.utils.FBUtilities;
 
 public class GroupGossiperStub {
 	

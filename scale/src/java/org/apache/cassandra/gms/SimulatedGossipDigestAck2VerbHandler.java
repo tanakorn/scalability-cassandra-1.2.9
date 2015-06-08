@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
-import edu.uchicago.cs.ucare.ScaleSimulator;
-import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
+import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {

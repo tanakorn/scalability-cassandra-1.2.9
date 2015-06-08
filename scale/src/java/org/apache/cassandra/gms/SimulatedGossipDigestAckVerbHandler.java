@@ -30,8 +30,8 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
-import edu.uchicago.cs.ucare.ScaleSimulator;
-import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
+import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {

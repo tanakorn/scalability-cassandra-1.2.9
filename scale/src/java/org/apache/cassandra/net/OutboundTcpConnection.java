@@ -47,7 +47,7 @@ import org.xerial.snappy.SnappyOutputStream;
 import org.apache.cassandra.config.Config;
 import org.apache.cassandra.config.DatabaseDescriptor;
 
-import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
+import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
 public class OutboundTcpConnection extends Thread
 {

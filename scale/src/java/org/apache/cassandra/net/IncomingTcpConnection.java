@@ -31,7 +31,7 @@ import org.apache.cassandra.streaming.IncomingStreamReader;
 import org.apache.cassandra.streaming.StreamHeader;
 import org.xerial.snappy.SnappyInputStream;
 
-import edu.uchicago.cs.ucare.WorstCaseGossiperStub;
+import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
 public class IncomingTcpConnection extends Thread
 {
