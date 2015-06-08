@@ -5,3 +5,4 @@ gen-java/
 *.pyc
 scdeploy.conf
 machinelist
+.settings
