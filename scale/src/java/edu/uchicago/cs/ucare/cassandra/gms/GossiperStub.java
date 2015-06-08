@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare;
+package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
 import java.security.MessageDigest;
@@ -27,7 +27,9 @@ import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 
-public class GossiperStub {
+import edu.uchicago.cs.ucare.scale.ScaleStub;
+
+public class GossiperStub implements ScaleStub {
 	
 	private static final UUID EMPTY_SCHEMA;
     static {
@@ -133,11 +135,9 @@ public class GossiperStub {
         int maxVersion = 0;
         List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMap.keySet());
         Collections.shuffle(endpoints, random);
-        for (InetAddress endpoint : endpoints)
-        {
+        for (InetAddress endpoint : endpoints) {
             epState = endpointStateMap.get(endpoint);
-            if (epState != null)
-            {
+            if (epState != null) {
                 generation = epState.getHeartBeatState().getGeneration();
                 maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
             }
