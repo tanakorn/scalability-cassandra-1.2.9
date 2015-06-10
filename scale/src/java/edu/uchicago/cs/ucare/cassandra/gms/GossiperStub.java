@@ -27,9 +27,9 @@ import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 
-import edu.uchicago.cs.ucare.scale.ScaleStub;
+import edu.uchicago.cs.ucare.scale.InetAddressStub;
 
-public class GossiperStub implements ScaleStub {
+public class GossiperStub implements InetAddressStub {
 	
 	private static final UUID EMPTY_SCHEMA;
     static {
@@ -55,13 +55,13 @@ public class GossiperStub implements ScaleStub {
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
 	
-	GossiperStub(String clusterId, String dataCenter, InetAddress broadcastAddress, int numTokens,
+	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, int numTokens,
 			@SuppressWarnings("rawtypes") IPartitioner partitioner) {
-		this(clusterId, dataCenter, broadcastAddress, UUID.randomUUID(), EMPTY_SCHEMA, 
+		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA, 
 				new HeartBeatState((int) System.currentTimeMillis()), numTokens, partitioner);
 	}
 	
-	GossiperStub(String clusterId, String dataCenter, InetAddress broadcastAddress, 
+	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, 
 			UUID hostId, UUID schema, HeartBeatState heartBeatState, int numTokens,
 			@SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this.clusterId = clusterId;
@@ -154,5 +154,10 @@ public class GossiperStub implements ScaleStub {
 		MessageOut<GossipDigestSyn> gds = genGossipDigestSyncMsg();
 		MessagingService.instance().sendOneWay(gds, to);
 	}
+
+    @Override
+    public InetAddress getInetAddress() {
+        return broadcastAddress;
+    }
 
 }

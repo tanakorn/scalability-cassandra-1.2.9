@@ -604,7 +604,6 @@ public final class MessagingService implements MessagingServiceMBean
     {
         if (logger.isTraceEnabled())
             logger.trace(FBUtilities.getBroadcastAddress() + " sending " + message.verb + " to " + id + "@" + to);
-
         if (to.equals(FBUtilities.getBroadcastAddress()))
             logger.trace("Message-to-self {} going over MessagingService", message);
 

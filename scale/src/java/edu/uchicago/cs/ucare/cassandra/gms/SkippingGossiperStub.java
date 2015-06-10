@@ -24,7 +24,7 @@ public class SkippingGossiperStub extends GossiperStub {
     SkippingGossiperStub(String clusterId, String dataCenter,
             InetAddress broadcastAddress, int numTokens,
             @SuppressWarnings("rawtypes") IPartitioner partitioner) {
-        super(clusterId, dataCenter, broadcastAddress, numTokens, partitioner);
+        super(broadcastAddress, clusterId, dataCenter, numTokens, partitioner);
         skipAddresses = new HashSet<InetAddress>();
     }
 
@@ -32,7 +32,7 @@ public class SkippingGossiperStub extends GossiperStub {
             InetAddress broadcastAddress, int numTokens,
             @SuppressWarnings("rawtypes") IPartitioner partitioner,
             Collection<InetAddress> skipAddresses) {
-        super(clusterId, dataCenter, broadcastAddress, numTokens, partitioner);
+        super(broadcastAddress, clusterId, dataCenter, numTokens, partitioner);
         this.skipAddresses = new HashSet<InetAddress>(skipAddresses);
     }
     

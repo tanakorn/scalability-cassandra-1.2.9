@@ -2,19 +2,11 @@ package edu.uchicago.cs.ucare.scale;
 
 import java.net.InetAddress;
 import java.util.Collection;
-import java.util.Map;
 
-public abstract class InetAddressStubGroup implements ScaleStubGroup {
+public interface InetAddressStubGroup<T extends InetAddressStub> extends StubGroup<T> {
     
-    Map<InetAddress, ScaleStub> stubs;
+    public Collection<InetAddress> getAllInetAddress();
     
-    public Collection<InetAddress> getAllInetAddress() {
-        return stubs.keySet();
-    }
+    public T getStub(InetAddress address);
 
-    @Override
-    public Collection<ScaleStub> getAllStubs() {
-        return stubs.values();
-    }
-    
 }
