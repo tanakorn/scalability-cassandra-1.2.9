@@ -78,4 +78,15 @@ public class BoundedStatsDeque implements Iterable<Double>
     {
         return size() > 0 ? sum() / size() : 0;
     }
+    
+    public double sd() {
+        double mean = mean();
+        double sumSquare = 0;
+        for (Double interval : deque)
+        {
+            double diff = mean - interval;
+            sumSquare += (diff * diff);
+        }
+        return Math.sqrt(sumSquare / size());
+    }
 }

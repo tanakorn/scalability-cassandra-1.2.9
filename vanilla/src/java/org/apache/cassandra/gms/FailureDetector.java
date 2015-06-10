@@ -270,6 +270,7 @@ class ArrivalWindow
     private static final Logger logger = LoggerFactory.getLogger(ArrivalWindow.class);
     private double tLast = 0L;
     private final BoundedStatsDeque arrivalIntervals;
+    private final BoundedStatsDeque arrivalIntervals2;
 
     // this is useless except to provide backwards compatibility in phi_convict_threshold,
     // because everyone seems pretty accustomed to the default of 8, and users who have
@@ -286,6 +287,7 @@ class ArrivalWindow
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
+        arrivalIntervals2 = new BoundedStatsDeque(size);
     }
 
     synchronized void add(double value)
@@ -303,6 +305,7 @@ class ArrivalWindow
             arrivalIntervals.add(interArrivalTime);
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
+        arrivalIntervals2.add(interArrivalTime);
         tLast = value;
     }
 
@@ -317,10 +320,12 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
+        logger.info("sc_debug: arrival for " + address + " : " + interArrivalTime + " ms ");
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
+        arrivalIntervals2.add(interArrivalTime);
         tLast = value;
     }
 
@@ -347,10 +352,15 @@ class ArrivalWindow
     double phi(long tnow, InetAddress address)
     {
         int size = arrivalIntervals.size();
+        int size2 = arrivalIntervals2.size();
         double t = tnow - tLast;
         double mean = mean();
+        double mean2 = arrivalIntervals2.mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
+        double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
         logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
+        logger.info("sc_debug: PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
         return phi;
     }
 
