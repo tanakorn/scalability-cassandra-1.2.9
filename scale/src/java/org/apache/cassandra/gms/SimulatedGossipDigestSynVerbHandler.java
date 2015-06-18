@@ -27,10 +27,9 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
-import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 {
@@ -62,7 +61,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-
+        
+        GossiperStub stub = ScaleSimulator.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -75,13 +75,35 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
 
+        if (stub.getHasContactedSeed() && !ScaleSimulator.isTestNodesStarted) {
+            System.out.println(to + " send only our endpoint");
+            GossipDigest digestForStub = null;
+            for (GossipDigest gDigest : gDigestList) {
+                if (gDigest.endpoint.equals(to)) {
+                    digestForStub = gDigest;
+                }
+            }
+            assert digestForStub != null;
+            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
+            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
+            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
+            System.out.println(to + " send " + deltaGossipDigestList.size() + " " + deltaEpStateMap.size());
+            MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
+                    to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
+                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
+                    GossipDigestAck.serializer);
+            Gossiper.instance.checkSeedContact(from);
+            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+            return;
+        }
+
         doSort(gDigestList);
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
 //        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
-        Gossiper.examineGossiperStatic(ScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(),
-        		gDigestList, deltaGossipDigestList, deltaEpStateMap);
+//        		gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(

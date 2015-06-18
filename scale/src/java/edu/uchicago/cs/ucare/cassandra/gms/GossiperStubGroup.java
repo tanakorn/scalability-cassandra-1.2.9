@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.cassandra.dht.IPartitioner;
@@ -44,7 +45,6 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         for (GossiperStub stub : stubList) {
             stubs.put(stub.getInetAddress(), stub);
         }
-        System.out.println(stubs);
     }
 
     void prepareInitialState() {
@@ -92,7 +92,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     void sendGossip(InetAddress node) {
         for (InetAddress address : stubs.keySet()) {
             GossiperStub stub = stubs.get(address);
-            stub.doGossip(node);
+            stub.sendGossip(node);
         }
     }
 
@@ -138,6 +138,11 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     @Override
     public GossiperStub getStub(InetAddress address) {
         return stubs.get(address);
+    }
+
+    @Override
+    public Iterator<GossiperStub> iterator() {
+        return stubs.values().iterator();
     }
 
 }

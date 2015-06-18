@@ -45,7 +45,7 @@ public class SkippingGossiperStub extends GossiperStub {
     }
     
     @Override
-    MessageOut<GossipDigestSyn> genGossipDigestSyncMsg() {
+    public MessageOut<GossipDigestSyn> genGossipDigestSyncMsg() {
         Random random = new Random();
         List<GossipDigest> gossipDigestList = new LinkedList<GossipDigest>();
         EndpointState epState;

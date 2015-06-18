@@ -55,6 +55,8 @@ public class GossiperStub implements InetAddressStub {
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
 	
+	boolean hasContactedSeed;
+	
 	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, int numTokens,
 			@SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA, 
@@ -76,6 +78,7 @@ public class GossiperStub implements InetAddressStub {
 		endpointStateMap = new ConcurrentHashMap<InetAddress, EndpointState>();
 		state = new EndpointState(heartBeatState);
 		versionedValueFactory = new VersionedValueFactory(partitioner);
+		hasContactedSeed = false;
 	}
 	
 	public void prepareInitialState() {
@@ -127,7 +130,7 @@ public class GossiperStub implements InetAddressStub {
         MessagingService.instance().listen(broadcastAddress);
 	}
 	
-	MessageOut<GossipDigestSyn> genGossipDigestSyncMsg() {
+	public MessageOut<GossipDigestSyn> genGossipDigestSyncMsg() {
 		Random random = new Random();
 		List<GossipDigest> gossipDigestList = new LinkedList<GossipDigest>();
         EndpointState epState;
@@ -150,7 +153,14 @@ public class GossiperStub implements InetAddressStub {
         return message;
 	}
 	
-	public void doGossip(InetAddress to) {
+	public GossipDigest createGossipDigest() {
+	    EndpointState endpointState = endpointStateMap.get(broadcastAddress);
+	    int generation = endpointState.getHeartBeatState().getGeneration();
+	    int maxVersion = endpointState.getHeartBeatState().getHeartBeatVersion();
+	    return new GossipDigest(broadcastAddress, generation, maxVersion);
+	}
+	
+	public void sendGossip(InetAddress to) {
 		MessageOut<GossipDigestSyn> gds = genGossipDigestSyncMsg();
 		MessagingService.instance().sendOneWay(gds, to);
 	}
@@ -158,6 +168,14 @@ public class GossiperStub implements InetAddressStub {
     @Override
     public InetAddress getInetAddress() {
         return broadcastAddress;
+    }
+
+    public boolean getHasContactedSeed() {
+        return hasContactedSeed;
+    }
+
+    public void setHasContactedSeed(boolean hasContactedSeed) {
+        this.hasContactedSeed = hasContactedSeed;
     }
 
 }
