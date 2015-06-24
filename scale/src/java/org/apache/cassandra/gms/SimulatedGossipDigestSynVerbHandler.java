@@ -76,7 +76,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         }
 
         if (stub.getHasContactedSeed() && !ScaleSimulator.isTestNodesStarted) {
-            System.out.println(to + " send only our endpoint");
             GossipDigest digestForStub = null;
             for (GossipDigest gDigest : gDigestList) {
                 if (gDigest.endpoint.equals(to)) {
@@ -87,7 +86,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
             Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
             Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
-            System.out.println(to + " send " + deltaGossipDigestList.size() + " " + deltaEpStateMap.size());
             MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
                     to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
                     new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),

@@ -118,6 +118,10 @@ public class GossiperStub implements InetAddressStub {
 		state.addApplicationState(ApplicationState.LOAD, versionedValueFactory.load(load));
 	}
 	
+	public EndpointState getEndpointState() {
+	    return endpointStateMap.get(broadcastAddress);
+	}
+
 	public ConcurrentMap<InetAddress, EndpointState> getEndpointStateMap() {
 		return endpointStateMap;
 	}
@@ -163,6 +167,10 @@ public class GossiperStub implements InetAddressStub {
 	public void sendGossip(InetAddress to) {
 		MessageOut<GossipDigestSyn> gds = genGossipDigestSyncMsg();
 		MessagingService.instance().sendOneWay(gds, to);
+	}
+	
+	public void sendMessage(InetAddress to, MessageOut<?> message) {
+	    MessagingService.instance().sendOneWay(message, to);
 	}
 
     @Override

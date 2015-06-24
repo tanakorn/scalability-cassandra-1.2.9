@@ -18,6 +18,7 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,26 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         
         GossiperStub stub = ScaleSimulator.stubGroup.getStub(to);
 
+        if (stub.getHasContactedSeed() && !ScaleSimulator.isTestNodesStarted && from.equals(ScaleSimulator.seed)) {
+            GossipDigest digestForStub = null;
+            for (GossipDigest gDigest : gDigestList) {
+                if (gDigest.endpoint.equals(to)) {
+                    digestForStub = gDigest;
+                }
+            }
+            assert digestForStub != null;
+            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
+            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
+            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
+            MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(
+                   to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
+                   new GossipDigestAck2(deltaEpStateMap),
+                   GossipDigestAck2.serializer);
+            Gossiper.instance.checkSeedContact(from);
+            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+            return;
+        }
+        
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
