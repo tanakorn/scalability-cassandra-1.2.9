@@ -169,6 +169,19 @@ public class GossiperStub implements InetAddressStub {
 		MessagingService.instance().sendOneWay(gds, to);
 	}
 	
+	public boolean setEndpointStateIfNewer(InetAddress address, EndpointState epState) {
+	    if (endpointStateMap.containsKey(address)) {
+	        EndpointState oldState = endpointStateMap.get(address);
+	        if (oldState.getHeartBeatState().getHeartBeatVersion() >= epState.getHeartBeatState().getHeartBeatVersion()) {
+                endpointStateMap.put(address, epState);
+                return true;
+	        }
+	        return false;
+	    }
+	    endpointStateMap.put(address, epState);
+	    return true;
+	}
+	
 	public void sendMessage(InetAddress to, MessageOut<?> message) {
 	    MessagingService.instance().sendOneWay(message, to);
 	}

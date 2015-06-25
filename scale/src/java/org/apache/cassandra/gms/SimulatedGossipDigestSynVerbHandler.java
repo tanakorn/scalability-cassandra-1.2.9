@@ -99,8 +99,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-//        Gossiper.examineGossiperStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to),
-//        		gDigestList, deltaGossipDigestList, deltaEpStateMap);
         Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 

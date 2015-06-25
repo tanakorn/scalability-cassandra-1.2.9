@@ -78,11 +78,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         
         if ( epStateMap.size() > 0 )
         {
+            for (InetAddress address : epStateMap.keySet()) {
+                if (ScaleSimulator.testNodes.contains(address)) {
+                    EndpointState epState = epStateMap.get(address);
+                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
+                }
+            }
+            
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
-//            Gossiper.notifyFailureDetectorStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
-//            Gossiper.applyStateLocallyStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), epStateMap);
             Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
             Gossiper.applyStateLocallyStatic(stub.getEndpointStateMap(), epStateMap);
         }
@@ -95,8 +100,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         {
             InetAddress addr = gDigest.getEndpoint();
 //            EndpointState localEpStatePtr = Gossiper.instance.getStateForVersionBiggerThan(addr, gDigest.getMaxVersion());
-//            EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(WorstCaseGossiperStub.endpointStateMapMap.get(to), 
-//            		addr, gDigest.getMaxVersion());
             EndpointState localEpStatePtr = Gossiper.getStateForVersionBiggerThanStatic(stub.getEndpointStateMap(),
             		addr, gDigest.getMaxVersion());
             if ( localEpStatePtr != null )

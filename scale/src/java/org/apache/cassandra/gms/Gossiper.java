@@ -894,7 +894,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         unreachableEndpoints.remove(addr);
         expireTimeEndpointMap.remove(addr);
         logger.debug("removing expire time for endpoint : " + addr);
-        logger.info("InetAddress {} is now UP", addr);
+//        logger.info("InetAddress {} is now UP", addr);
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
             subscriber.onAlive(addr, localState);
         if (logger.isTraceEnabled())
@@ -911,7 +911,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //        unreachableEndpoints.remove(addr);
 //        expireTimeEndpointMap.remove(addr);
         logger.debug("removing expire time for endpoint : " + addr);
-        logger.info("InetAddress {} is now UP", addr);
+//        logger.info("InetAddress {} is now UP", addr);
 //        for (IEndpointStateChangeSubscriber subscriber : subscribers)
 //            subscriber.onAlive(addr, localState);
 //        if (logger.isTraceEnabled())
@@ -956,10 +956,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         if (!isDeadState(epState))
         {
-            if (endpointStateMap.get(ep) != null)
-                logger.info("Node {} has restarted, now UP", ep);
-            else
-                logger.info("Node {} is now part of the cluster", ep);
+//            if (endpointStateMap.get(ep) != null)
+//                logger.info("Node {} has restarted, now UP", ep);
+//            else
+//                logger.info("Node {} is now part of the cluster", ep);
         }
         if (logger.isTraceEnabled())
             logger.trace("Adding endpoint state for " + ep);
@@ -985,10 +985,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         if (!isDeadStateStatic(epState))
         {
-            if (endpointStateMap.get(ep) != null)
-                logger.info("Node {} has restarted, now UP", ep);
-            else
-                logger.info("Node {} is now part of the cluster", ep);
+//            if (endpointStateMap.get(ep) != null)
+//                logger.info("Node {} has restarted, now UP", ep);
+//            else
+//                logger.info("Node {} is now part of the cluster", ep);
         }
         if (logger.isTraceEnabled())
             logger.trace("Adding endpoint state for " + ep);

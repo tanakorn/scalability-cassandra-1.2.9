@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
@@ -153,12 +156,12 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         return omniStub;
     }
     
-    class OmniscientGossiperStub {
+    public class OmniscientGossiperStub {
         
-        Map<InetAddress, Map<Integer, ClockEndpointState>> testNodeStateByVersion;
+        Map<InetAddress, TreeMap<Integer, ClockEndpointState>> testNodeStatesByVersion;
         
         public OmniscientGossiperStub() {
-            testNodeStateByVersion = new HashMap<InetAddress, Map<Integer, ClockEndpointState>>();
+            testNodeStatesByVersion = new Hashtable<InetAddress, TreeMap<Integer, ClockEndpointState>>();
         }
         
         public MessageOut<GossipDigestSyn> genGossipDigestSyncMsg(InetAddress onBehalfOf) {
@@ -184,27 +187,36 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
             return message;
         }
         
+        public void addClockEndpointStateIfNotExist(InetAddress address, EndpointState epState) {
+            if (!testNodeStatesByVersion.containsKey(address)) {
+                TreeMap<Integer, ClockEndpointState> versionStateMap = new TreeMap<Integer, ClockEndpointState>();
+                ClockEndpointState dumbClockEpState = new ClockEndpointState(new EndpointState(null));
+                dumbClockEpState.setNumInfection(ScaleSimulator.allNodes - 1);
+                versionStateMap.put(-1, dumbClockEpState);
+                testNodeStatesByVersion.put(address, versionStateMap);
+            }
+            SortedMap<Integer, ClockEndpointState> clockEndpointStateByVersion = testNodeStatesByVersion.get(address);
+            if (!clockEndpointStateByVersion.containsKey(epState.getHeartBeatState().getHeartBeatVersion())) {
+                clockEndpointStateByVersion.put(epState.getHeartBeatState().getHeartBeatVersion(), new ClockEndpointState(epState));
+            }
+        }
+        
         class ClockEndpointState {
             
-            int logicalClock;
+            double numInfection;
             EndpointState endpointState;
             
             public ClockEndpointState(EndpointState endpointState) {
-                logicalClock = 0;
+                numInfection = 1.0;
                 this.endpointState = endpointState;
             }
             
-            public ClockEndpointState(int logicalClock, EndpointState endpointState) {
-                this.logicalClock = logicalClock;
-                this.endpointState = endpointState;
+            public double getNumInfection() {
+                return numInfection;
             }
-            
-            public int increaseClock() {
-                return ++logicalClock;
-            }
-            
-            public int getClock() {
-                return logicalClock;
+
+            public void setNumInfection(double numInfection) {
+                this.numInfection = numInfection;
             }
             
         }
