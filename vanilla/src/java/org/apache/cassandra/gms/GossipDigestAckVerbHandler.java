@@ -83,6 +83,32 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         long applyState = 0;
         if ( epStateMap.size() > 0 )
         {
+            for (InetAddress observedNode : FailureDetector.observedNodes) {
+                if (epStateMap.keySet().contains(observedNode)) {
+                    EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+                    EndpointState remoteEpState = epStateMap.get(observedNode);
+                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                    boolean newer = false;
+                    if (localEpState == null) {
+                        newer = true;
+                    } else {
+                        int localGen = localEpState.getHeartBeatState().getGeneration();
+                        if (localGen < remoteGen) {
+                            newer = true;
+                        } else if (localGen == remoteGen) {
+                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                            if (localVersion < remoteVersion) {
+                                newer = true;
+                            }
+                        }
+                    }
+                    if (newer) {
+                        logger.info("sc_debug: receive info of " + observedNode + " from " + from + 
+                                " generation " + remoteGen + " version " + remoteVersion);
+                    }
+                }
+            }
             /* Notify the Failure Detector */
         	start = System.currentTimeMillis();
             Gossiper.instance.notifyFailureDetector(epStateMap);
@@ -92,12 +118,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             Gossiper.instance.applyStateLocally(epStateMap);
             end = System.currentTimeMillis();
             applyState = end - start;
-            for (InetAddress observedNode : FailureDetector.observedNodes) {
-                if (epStateMap.keySet().contains(observedNode)) {
-                    int version = Gossiper.getMaxEndpointStateVersion(epStateMap.get(observedNode));
-                    logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
-                }
-            }
         }
 
         Gossiper.instance.checkSeedContact(from);
