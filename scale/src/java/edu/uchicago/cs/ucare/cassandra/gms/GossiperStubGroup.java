@@ -2,12 +2,26 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.gms.EndpointState;
+import org.apache.cassandra.gms.GossipDigest;
+import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.net.MessageOut;
+import org.apache.cassandra.net.MessagingService;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStubGroup;
 
@@ -18,6 +32,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     int numNodes;
     int numTokens;
     @SuppressWarnings("rawtypes") IPartitioner partitioner;
+    OmniscientGossiperStub omniStub;
 
     GossiperStubGroup(String clusterId, String dataCenter, int numNodes, int numTokens,
             @SuppressWarnings("rawtypes") IPartitioner partitioner)
@@ -32,6 +47,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
             stubs.put(address, new GossiperStub(address, clusterId, dataCenter, 
                     numTokens, partitioner));
         }
+        omniStub = new OmniscientGossiperStub();
     }
     
     GossiperStubGroup(String clusterId, String dataCenter, Collection<GossiperStub> stubList, 
@@ -44,7 +60,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         for (GossiperStub stub : stubList) {
             stubs.put(stub.getInetAddress(), stub);
         }
-        System.out.println(stubs);
+        omniStub = new OmniscientGossiperStub();
     }
 
     void prepareInitialState() {
@@ -92,8 +108,14 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     void sendGossip(InetAddress node) {
         for (InetAddress address : stubs.keySet()) {
             GossiperStub stub = stubs.get(address);
-            stub.doGossip(node);
+            stub.sendGossip(node);
         }
+    }
+    
+    void sendOmniscientGossip(InetAddress node, InetAddress onBehalfOf) {
+        GossiperStub stub = stubs.get(onBehalfOf);
+        MessageOut<GossipDigestSyn> gossipSync = omniStub.genGossipDigestSyncMsg(onBehalfOf);
+        stub.sendMessage(node, gossipSync);
     }
 
     void updateHeartBeat() {
@@ -115,21 +137,6 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         return stubs.values();
     }
 
-    /*
-    @Override
-    public void run() {
-        while (true) {
-//            sendGossip(seed);
-            updateHeartBeat();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    */
-
     @Override
     public Collection<InetAddress> getAllInetAddress() {
         return stubs.keySet();
@@ -138,6 +145,82 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     @Override
     public GossiperStub getStub(InetAddress address) {
         return stubs.get(address);
+    }
+
+    @Override
+    public Iterator<GossiperStub> iterator() {
+        return stubs.values().iterator();
+    }
+    
+    public OmniscientGossiperStub getOmniscientGossiperStub() {
+        return omniStub;
+    }
+    
+    public class OmniscientGossiperStub {
+        
+        Map<InetAddress, TreeMap<Integer, ClockEndpointState>> testNodeStatesByVersion;
+        
+        public OmniscientGossiperStub() {
+            testNodeStatesByVersion = new Hashtable<InetAddress, TreeMap<Integer, ClockEndpointState>>();
+        }
+        
+        public MessageOut<GossipDigestSyn> genGossipDigestSyncMsg(InetAddress onBehalfOf) {
+            Random random = new Random();
+            List<GossipDigest> gossipDigestList = new LinkedList<GossipDigest>();
+            EndpointState epState;
+            int generation = 0;
+            int maxVersion = 0;
+            List<InetAddress> endpoints = new ArrayList<InetAddress>(stubs.keySet());
+            Collections.shuffle(endpoints, random);
+            for (InetAddress endpoint : endpoints) {
+                epState = stubs.get(endpoint).getEndpointState();
+                if (epState != null) {
+                    generation = epState.getHeartBeatState().getGeneration();
+                    maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
+                }
+                gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
+            }
+            GossipDigestSyn digestSynMessage = new GossipDigestSyn(clusterId, partitioner.getClass().getName(),
+                    gossipDigestList);
+            MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(onBehalfOf, 
+                    MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
+            return message;
+        }
+        
+        public void addClockEndpointStateIfNotExist(InetAddress address, EndpointState epState) {
+            if (!testNodeStatesByVersion.containsKey(address)) {
+                TreeMap<Integer, ClockEndpointState> versionStateMap = new TreeMap<Integer, ClockEndpointState>();
+                ClockEndpointState dumbClockEpState = new ClockEndpointState(new EndpointState(null));
+                dumbClockEpState.setNumInfection(ScaleSimulator.allNodes - 1);
+                versionStateMap.put(-1, dumbClockEpState);
+                testNodeStatesByVersion.put(address, versionStateMap);
+            }
+            SortedMap<Integer, ClockEndpointState> clockEndpointStateByVersion = testNodeStatesByVersion.get(address);
+            if (!clockEndpointStateByVersion.containsKey(epState.getHeartBeatState().getHeartBeatVersion())) {
+                clockEndpointStateByVersion.put(epState.getHeartBeatState().getHeartBeatVersion(), new ClockEndpointState(epState));
+            }
+        }
+        
+        class ClockEndpointState {
+            
+            double numInfection;
+            EndpointState endpointState;
+            
+            public ClockEndpointState(EndpointState endpointState) {
+                numInfection = 1.0;
+                this.endpointState = endpointState;
+            }
+            
+            public double getNumInfection() {
+                return numInfection;
+            }
+
+            public void setNumInfection(double numInfection) {
+                this.numInfection = numInfection;
+            }
+            
+        }
+        
     }
 
 }

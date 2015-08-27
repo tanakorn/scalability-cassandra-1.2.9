@@ -63,6 +63,32 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
         }
         */
+        for (InetAddress observedNode : FailureDetector.observedNodes) {
+            if (remoteEpStateMap.keySet().contains(observedNode)) {
+                EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
+                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                boolean newer = false;
+                if (localEpState == null) {
+                    newer = true;
+                } else {
+                    int localGen = localEpState.getHeartBeatState().getGeneration();
+                    if (localGen < remoteGen) {
+                        newer = true;
+                    } else if (localGen == remoteGen) {
+                        int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                        if (localVersion < remoteVersion) {
+                            newer = true;
+                        }
+                    }
+                }
+                if (newer) {
+                    logger.info("sc_debug: receive info of " + observedNode + " from " + from + 
+                            " generation " + remoteGen + " version " + remoteVersion);
+                }
+            }
+        }
         /* Notify the Failure Detector */
         start = System.currentTimeMillis();
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
@@ -72,12 +98,12 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.applyStateLocally(remoteEpStateMap);
         end = System.currentTimeMillis();
         long applyState = end - start;
-        for (InetAddress observedNode : FailureDetector.observedNodes) {
-            if (remoteEpStateMap.keySet().contains(observedNode)) {
-                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));
-                logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
-            }
-        }
+//        for (InetAddress observedNode : FailureDetector.observedNodes) {
+//            if (remoteEpStateMap.keySet().contains(observedNode)) {
+//                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));
+//                logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
+//            }
+//        }
         logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
 }
