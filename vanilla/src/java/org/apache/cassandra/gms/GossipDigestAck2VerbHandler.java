@@ -66,26 +66,28 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         for (InetAddress observedNode : FailureDetector.observedNodes) {
             if (remoteEpStateMap.keySet().contains(observedNode)) {
                 EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
-                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
-                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                boolean newer = false;
-                if (localEpState == null) {
-                    newer = true;
-                } else {
-                    int localGen = localEpState.getHeartBeatState().getGeneration();
-                    if (localGen < remoteGen) {
+                synchronized (localEpState) {
+                    EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
+                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                    boolean newer = false;
+                    if (localEpState == null) {
                         newer = true;
-                    } else if (localGen == remoteGen) {
-                        int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                        if (localVersion < remoteVersion) {
+                    } else {
+                        int localGen = localEpState.getHeartBeatState().getGeneration();
+                        if (localGen < remoteGen) {
                             newer = true;
+                        } else if (localGen == remoteGen) {
+                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                            if (localVersion < remoteVersion) {
+                                newer = true;
+                            }
                         }
                     }
-                }
-                if (newer) {
-                    logger.info("sc_debug: receive info of " + observedNode + " from " + from + 
-                            " generation " + remoteGen + " version " + remoteVersion);
+                    if (newer) {
+                        logger.info("sc_debug: receive info of " + observedNode + " from " + from + 
+                                " generation " + remoteGen + " version " + remoteVersion);
+                    }
                 }
             }
         }
