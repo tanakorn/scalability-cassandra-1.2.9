@@ -284,10 +284,29 @@ class ArrivalWindow
     // rather mark it down quickly instead of adapting
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
+    public final Map<InetAddress, Double> maxObservedPhi;
+    public final Map<InetAddress, Double> maxObservedPhi2;
+
+    public static final Set<InetAddress> observedNodes;
+    static {
+        observedNodes = new HashSet<InetAddress>();
+        String[] tmp = System.getProperty("observed.nodes", "").split(",");
+        for (String node : tmp) {
+            try {
+                observedNodes.add(InetAddress.getByName(node));
+            } catch (UnknownHostException e) {
+                // TODO Auto-generated catch block
+                logger.error("Error for when observe {}", node);
+            }
+        }
+    }
+
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
         arrivalIntervals2 = new BoundedStatsDeque(size);
+        maxObservedPhi = new HashMap<InetAddress, Double>();
+        maxObservedPhi2 = new HashMap<InetAddress, Double>();
     }
 
     synchronized void add(double value)
@@ -359,8 +378,14 @@ class ArrivalWindow
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
         double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
         double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
-        logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
-        logger.info("sc_debug: PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
+        if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi || observedNodes.contains(address)) {
+            logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
+            maxObservedPhi.put(address, phi);
+        }
+        if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
+            logger.info("sc_debug: PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
+            maxObservedPhi2.put(address, phi2);
+        }
         return phi;
     }
 
