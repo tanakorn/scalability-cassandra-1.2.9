@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
@@ -110,6 +111,16 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
+        if (ScaleSimulator.stubGroup.contains(from)) {
+        	MessageIn<GossipDigestAck> msgIn = ScaleSimulator.convertOutToIn(gDigestAckMessage);
+        	msgIn.setTo(from);
+            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
+            		Integer.toString(ScaleSimulator.idGen.incrementAndGet()));
+        } else {
+            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+        }
+//        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+
 //        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
 //        if (WorstCaseGossiperStub.addressSet.contains(from)) {
 //        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
@@ -119,7 +130,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
 //        }
-        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
     }
 
     /*

@@ -48,18 +48,20 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         
-        for (InetAddress address : remoteEpStateMap.keySet()) {
-            if (ScaleSimulator.testNodes.contains(address)) {
-                EndpointState epState = remoteEpStateMap.get(address);
-                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
-            }
-        }
-        
-        
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(ScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
         Gossiper.applyStateLocallyStatic(ScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        
+        for (InetAddress address : remoteEpStateMap.keySet()) {
+            if (ScaleSimulator.testNodes.contains(address)) {
+                // Implement here
+                ScaleSimulator.startForwarding(address, to);
+//                EndpointState epState = remoteEpStateMap.get(address);
+//                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
+            }
+        }
+        
     }
 }

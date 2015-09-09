@@ -29,6 +29,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
@@ -78,18 +79,21 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         
         if ( epStateMap.size() > 0 )
         {
-            for (InetAddress address : epStateMap.keySet()) {
-                if (ScaleSimulator.testNodes.contains(address)) {
-                    EndpointState epState = epStateMap.get(address);
-                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
-                }
-            }
-            
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
             Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
             Gossiper.applyStateLocallyStatic(stub.getEndpointStateMap(), epStateMap);
+
+            for (InetAddress address : epStateMap.keySet()) {
+                if (ScaleSimulator.testNodes.contains(address)) {
+                    // Implement here
+                    ScaleSimulator.startForwarding(address, to);
+//                    EndpointState epState = epStateMap.get(address);
+//                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
+                }
+            }
+            
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -120,7 +124,15 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        }
-        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        if (ScaleSimulator.stubGroup.contains(from)) {
+            MessageIn<GossipDigestAck2> msgIn = ScaleSimulator.convertOutToIn(gDigestAck2Message);
+            msgIn.setTo(from);
+            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
+                    Integer.toString(ScaleSimulator.idGen.incrementAndGet()));
+        } else {
+            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        }
+//        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         if (!stub.getHasContactedSeed() && from.equals(ScaleSimulator.seed)) {
             synchronized (stub) {
                 stub.setHasContactedSeed(true);

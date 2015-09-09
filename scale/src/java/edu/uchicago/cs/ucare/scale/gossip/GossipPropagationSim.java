@@ -19,7 +19,6 @@ public class GossipPropagationSim {
             peers[i] = new PeerState();
         }
         for (int i = 0; i < numRound; ++i) {
-            peers[0].receive(new ForwardedGossip(new Gossip(i), 0, i));
             PeerState[] nextRoundPeers = copy(peers);
             for (int sendFrom = 0; sendFrom < peers.length; ++sendFrom) {
                 if (peers[sendFrom].hasReceivedGossip()) {
@@ -35,6 +34,7 @@ public class GossipPropagationSim {
                 }
             }
             peers = nextRoundPeers;
+            peers[0].receive(new ForwardedGossip(new Gossip(i), 0, i));
         }
         return peers;
     }

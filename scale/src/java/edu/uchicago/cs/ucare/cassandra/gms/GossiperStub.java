@@ -185,7 +185,7 @@ public class GossiperStub implements InetAddressStub {
 	public void sendMessage(InetAddress to, MessageOut<?> message) {
 	    MessagingService.instance().sendOneWay(message, to);
 	}
-
+	
     @Override
     public InetAddress getInetAddress() {
         return broadcastAddress;

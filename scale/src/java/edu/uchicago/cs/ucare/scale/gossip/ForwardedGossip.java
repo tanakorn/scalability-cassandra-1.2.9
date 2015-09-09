@@ -6,7 +6,7 @@ import java.util.List;
 public class ForwardedGossip {
     
     public final Gossip gossip;
-    private final List<ForwardEvent> forwardHistory;
+    private final LinkedList<ForwardEvent> forwardHistory;
 
     public ForwardedGossip(Gossip gossip, int initialPeer, int receivedTime) {
         this.gossip = gossip;
@@ -34,7 +34,11 @@ public class ForwardedGossip {
         return s;
     }
     
-    static class ForwardEvent {
+    public LinkedList<ForwardEvent> forwardHistory() {
+        return forwardHistory;
+    }
+    
+    public static class ForwardEvent {
 
         public final int receiver;
         public final int receivedTime;

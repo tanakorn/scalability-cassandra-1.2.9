@@ -38,5 +38,9 @@ public class PeerState {
         copy.gossipHistory = (LinkedList<ForwardedGossip>) this.gossipHistory.clone();
         return copy;
     }
+    
+    public LinkedList<ForwardedGossip> getModel() {
+        return (LinkedList<ForwardedGossip>) gossipHistory.clone();
+    }
 
 }
