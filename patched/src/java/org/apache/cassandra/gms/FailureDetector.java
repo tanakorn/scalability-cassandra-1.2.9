@@ -375,8 +375,8 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double mean2 = arrivalIntervals2.mean();
-        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
+        double phi = (size > 40) ? PHI_FACTOR * t / mean : 0.0;
+        double phi2 = (size2 > 40) ? PHI_FACTOR * t / mean2 : 0.0;
         double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
         if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi || observedNodes.contains(address)) {
             logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
