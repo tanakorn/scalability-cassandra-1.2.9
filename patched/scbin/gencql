@@ -1,0 +1,32 @@
+#!/bin/sh
+
+script_dir=`dirname $0`
+
+if [ -n "$JAVA_HOME" ]; then
+  JAVA="$JAVA_HOME/bin/java"
+else
+  JAVA=java
+fi 
+
+if [ ! $CASSANDRA_HOME ]; then
+    CASSANDRA_HOME=$script_dir/..
+fi
+
+if [ ! $CASSANDRA_CONF ]; then
+    CASSANDRA_CONF=$CASSANDRA_HOME/conf
+fi
+
+cassandra_bin=$CASSANDRA_HOME/build/classes/main
+cassandra_bin=$cassandra_bin:$CASSANDRA_HOME/build/classes/thrift
+CLASSPATH=$CLASSPATH:$CASSANDRA_CONF:$cassandra_bin
+
+for jar in $CASSANDRA_HOME/lib/*.jar; do
+    CLASSPATH=$CLASSPATH:$jar
+done
+if [ -z $CLASSPATH ]; then
+  echo "You must set the CLASSPATH var" >&2
+  exit 1
+fi
+
+$JAVA -ea -cp $CLASSPATH -Xmx256M \
+    edu.uchicago.cs.ucare.util.SimpleCqlGenerator "$@"

@@ -1,0 +1,10 @@
+operating_dir=/tmp/cass_scale
+num_node=5
+property_file=$operating_dir/sc.properties
+rawdata_dir=$operating_dir/output
+machinelist=machinelist.template
+collecteddata_dir=/tmp/rawdata
+cassandra_data_dir=/tmp/archive
+aspectj=/usr/local/aspectj1.8
+cassandra_log_dir=/tmp/logdir
+observed_nodes=127.0.0.2
