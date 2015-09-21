@@ -6,6 +6,7 @@ scriptdir=`dirname $0`
 
 mkdir -p $cassandra_log_dir
 rm -r $cassandra_log_dir/*
+cp $machinelist $cassandra_log_dir/machinelist
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 awk '{
   if ("'$my_ip'" == $2)
