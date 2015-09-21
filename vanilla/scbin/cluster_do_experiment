@@ -4,6 +4,15 @@ scriptdir=`dirname $0`
 cd $scriptdir
 
 for n in 16 32 64 128; do
+  ./gen_nmc_machines.sh $n
+  cp scdeploy.conf.exp scdeploy.conf.$n
+  echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6129/n$n" >> scdeploy.conf.$n
+  node3=`awk '/^3 / {print $2}' machinelist`
+  node10=`awk '/^10 / {print $2}' machinelist`
+  h=`expr $n / 2`
+  nodeh=`awk '/^'$h' / {print $2}' machinelist`
+  noden=`awk '/^'$n' / {print $2}' machinelist`
+  echo "observed_nodes=$node3,$node10,$nodeh,$noden" >> scdeploy.conf.$n
   ./cluster_dir_setup scdeploy.conf.$n
   ./cluster_start scdeploy.conf.$n
   sleep 300
