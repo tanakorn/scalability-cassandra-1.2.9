@@ -1,0 +1,17 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+
+mkdir -p $cassandra_log_dir
+rm -r $cassandra_log_dir/*
+cp $machinelist $cassandra_log_dir/machinelist
+my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+awk '{
+  if ("'$my_ip'" == $2)
+    system("cp -r '$operating_dir/log' '$cassandra_log_dir'/node"$1)
+  else
+    system("scp -r "$2":'$operating_dir/log' '$cassandra_log_dir'/node"$1)
+}' $machinelist
+

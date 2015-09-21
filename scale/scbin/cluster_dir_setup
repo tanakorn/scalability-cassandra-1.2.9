@@ -8,6 +8,8 @@ cd $cwd
 
 . $scriptdir/readconfig
 
+SSH_OPTION="StrictHostKeyChecking no"
+
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 all_ip=`awk '{print $2}' $machinelist`
 
@@ -16,6 +18,7 @@ for ip in $all_ip; do
     cd $scriptdir
     ./each_machine_dir_setup $1
   else
-    ssh $ip "cd $scriptdir; ./each_machine_dir_setup $1"
+    now="`date`"
+    ssh -o "$SSH_OPTION" $ip "sudo date --set='$now' > /dev/null; cd $scriptdir; ./each_machine_dir_setup $1"
   fi
 done

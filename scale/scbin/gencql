@@ -29,4 +29,4 @@ if [ -z $CLASSPATH ]; then
 fi
 
 $JAVA -ea -cp $CLASSPATH -Xmx256M \
-    com.netapp.atg.SimpleCqlGenerator "$@"
+    edu.uchicago.cs.ucare.util.SimpleCqlGenerator "$@"

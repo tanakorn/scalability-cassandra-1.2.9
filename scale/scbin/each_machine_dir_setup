@@ -16,9 +16,14 @@ cd $cwd
 
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
+#if [ ! $my_id ]; then
+  #
+#fi
 
 rm -r $operating_dir/* 2> /dev/null
 
+sudo mkdir -p $operating_dir
+sudo chown `whoami` $operating_dir
 mkdir -p $operating_dir/cassconf
 mkdir $operating_dir/log
 
@@ -26,7 +31,7 @@ i=1
 while [ $i -le $num_node ]; do
   cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
   cd $operating_dir/cassconf/conf$i
-  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:192.168.${my_id}.$i:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" > cassandra.yaml
+  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$my_ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" > cassandra.yaml
   cd $cwd
   i=`expr $i + 1`
 done
@@ -45,6 +50,8 @@ echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
 echo num_node=$num_node >> $operating_dir/sc.conf
 echo property_file=$property_file >> $operating_dir/sc.conf
 echo aspectj=$aspectj >> $operating_dir/sc.conf
+echo id_offset=$my_id >> $operating_dir/sc.conf
+echo observed_nodes=$observed_nodes >> $operating_dir/sc.conf
 
 echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
 mkdir $rawdata_dir

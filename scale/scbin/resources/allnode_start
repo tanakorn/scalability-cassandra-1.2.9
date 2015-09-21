@@ -21,13 +21,21 @@ if [ $property_file ]; then
   base_jvm_opts="$base_jvm_opts -Dbids.properties=$property_file"
 fi
 export CASSANDRA_HOME=$cassandra_home
-for jar in `ls $aspectj/lib/*.jar`; do
-  export CLASSPATH=$jar:$CLASSPATH
-done
+#for jar in `ls $aspectj/lib/*.jar`; do
+#  export CLASSPATH=$jar:$CLASSPATH
+#done
 i=1
 while [ $i -le $num_node ]; do
+  if [ $id_offset ]; then
+    id=`expr \( $id_offset - 1 \) \* $num_node + $i`
+  else
+    id=$i
+  fi
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dcassandra.id=$i -Dcassandra.ring_delay_ms=5000"
+  export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
+  if [ $observed_nodes ]; then
+    export JVM_OPTS="$JVM_OPTS -Dobserved.nodes=$observed_nodes"
+  fi
   export NODE_ID=$i
   bin/cassandra -p $operating_dir/pid/n${i}.pid
 #  sleep `expr 5 + $i`

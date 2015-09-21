@@ -6,3 +6,5 @@ machinelist=machinelist.template
 collecteddata_dir=/tmp/rawdata
 cassandra_data_dir=/tmp/archive
 aspectj=/usr/local/aspectj1.8
+cassandra_log_dir=/tmp/logdir
+observed_nodes=127.0.0.2
