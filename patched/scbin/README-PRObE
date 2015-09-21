@@ -1,0 +1,21 @@
+Instructions for working on PRObE cluster 
+
+1. Generate machine list by running `gen_nmc_machine.sh`
+gen_nmc_machine.sh receives the number of machines as the first
+argument. Sometime some machines in the cluster cannot start up, and
+we do not want to use those machines, we can tell gen_nmc_machine.sh
+to skip involving them by writing their indexes into a file name
+`skiplist`. The format is one index number per line.
+
+2. Customize scdeploy.conf
+For num_node variable, we should assign 1 to it (this variable
+specifies how many processes in one machine). And each time we swap in
+PRObE experiment, we have to re-enter new value of observed_nodes.
+
+3. Set up operating directory
+Set up operating directory for every machine in our running by running
+`cluster_dir_setup`. We have to call this on the machine in the cluster
+not kodiak machine (e.g. node-1.scale.ucare-kodiak.nx).
+
+4. Run Cassandra
+Running `cluster_start`
