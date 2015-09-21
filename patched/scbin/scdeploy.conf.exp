@@ -1,0 +1,7 @@
+operating_dir=/public/cass_scale
+num_node=1
+property_file=$operating_dir/sc.properties
+rawdata_dir=$operating_dir/output
+machinelist=machinelist
+collecteddata_dir=/tmp/rawdata
+cassandra_data_dir=/tmp/archive
