@@ -1,7 +1,10 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,6 +24,8 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
+import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.log4j.PropertyConfigurator;
 
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip;
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip.ForwardEvent;
@@ -47,6 +52,51 @@ public class ScaleSimulator {
     static Set<InetAddress> startedTestNodes;
     
     static LinkedBlockingQueue<InetAddress[]> gossipQueue;
+    
+    static
+    {
+        initLog4j();
+    }
+    public static void initLog4j()
+    {
+        if (System.getProperty("log4j.defaultInitOverride","false").equalsIgnoreCase("true"))
+        {
+            String config = System.getProperty("log4j.configuration", "log4j-server.properties");
+            URL configLocation = null;
+            try
+            {
+                // try loading from a physical location first.
+                configLocation = new URL(config);
+            }
+            catch (MalformedURLException ex)
+            {
+                // then try loading from the classpath.
+                configLocation = CassandraDaemon.class.getClassLoader().getResource(config);
+            }
+
+            if (configLocation == null)
+                throw new RuntimeException("Couldn't figure out log4j configuration: "+config);
+
+            // Now convert URL to a filename
+            String configFileName = null;
+            try
+            {
+                // first try URL.getFile() which works for opaque URLs (file:foo) and paths without spaces
+                configFileName = configLocation.getFile();
+                File configFile = new File(configFileName);
+                // then try alternative approach which works for all hierarchical URLs with or without spaces
+                if (!configFile.exists())
+                    configFileName = new File(configLocation.toURI()).getCanonicalPath();
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Couldn't convert log4j configuration location to a valid file", e);
+            }
+
+            PropertyConfigurator.configureAndWatch(configFileName, 10000);
+            org.apache.log4j.Logger.getLogger(CassandraDaemon.class).info("Logging initialized");
+        }
+    }
     
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
         allNodes = Integer.parseInt(args[0]);
