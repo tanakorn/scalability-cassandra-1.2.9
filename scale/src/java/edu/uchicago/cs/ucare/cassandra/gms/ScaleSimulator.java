@@ -22,7 +22,6 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
-import edu.uchicago.cs.ucare.cassandra.CassandraProcess;
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip;
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip.ForwardEvent;
 import edu.uchicago.cs.ucare.scale.gossip.GossipPropagationSim;
@@ -38,9 +37,9 @@ public class ScaleSimulator {
     
     public static boolean isTestNodesStarted = false;
     
-    public static final int numTestNodes = 1;
-    public static final int numStubs = 61;
-    public static final int allNodes = numTestNodes + numStubs + 2;
+    public static int numTestNodes;
+    public static int numStubs;
+    public static int allNodes;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
@@ -50,9 +49,16 @@ public class ScaleSimulator {
     static LinkedBlockingQueue<InetAddress[]> gossipQueue;
     
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
+        allNodes = Integer.parseInt(args[0]);
+        String id = args[1];
+        String[] observerList = args[2].split(",");
+        assert observerList.length > 0;
+        String[] testNodeList = args[3].split(",");
+        assert testNodeList.length > 0;
+        numTestNodes = testNodeList.length;
+        numStubs = allNodes - 1 - observerList.length - numTestNodes;
+
         Random rand = new Random();
-        final CassandraProcess seedProcess = new CassandraProcess("/tmp/cass_scale", 1);
-        final CassandraProcess observerProcess = new CassandraProcess("/tmp/cass_scale", 2);
         PeerState[] peers = GossipPropagationSim.simulate(allNodes, 3000);
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
         startedTestNodes = new HashSet<InetAddress>();
@@ -60,19 +66,18 @@ public class ScaleSimulator {
         // It needs some delay to start seed node
         Thread.sleep(5000);
         try {
-            seed = InetAddress.getByName("127.0.0.1");
-            observer = InetAddress.getByName("127.0.0.2");
+            // Fix seed IP address
+            seed = InetAddress.getByName("192.168.1.1");
+            observer = InetAddress.getByName(observerList[0]);
             testNodes = new HashSet<InetAddress>();
-            for (int i = 0; i < numTestNodes; ++i) {
-                InetAddress address = InetAddress.getByName("127.0.0." + (i + 3));
+            for (String testNodeIp : testNodeList) {
+                InetAddress address = InetAddress.getByName(testNodeIp);
                 testNodes.add(address);
                 int model = 0;
                 while (model == 0) {
                     model = rand.nextInt(peers.length);
                 }
                 propagationModels.put(address, peers[model].getModel());
-//                System.out.println(address);
-//                System.out.println(peers[model]);
             }
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -80,8 +85,8 @@ public class ScaleSimulator {
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
-        for (int i = 0; i < numStubs; ++i) {
-            addressList.add(InetAddress.getByName("127.0.0." + (i + numTestNodes + 3)));
+        for (int i = 1; i <= numStubs; ++i) {
+            addressList.add(InetAddress.getByName("192.168." + id + "." + i));
         }
 //        System.out.println(addressList);
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster")
@@ -131,24 +136,7 @@ public class ScaleSimulator {
         stubGroup.setNormalStatusState();
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
-        final List<CassandraProcess> testNodeProcesses = new LinkedList<CassandraProcess>();
-        for (int i = 0; i < numTestNodes; ++i) {
-            testNodeProcesses.add(new CassandraProcess("/tmp/cass_scale", i + 3));
-        }
         isTestNodesStarted = true;
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            
-            @Override
-            public void run() {
-                System.out.println("Shutting down ... kill all Cassandra");
-                seedProcess.terminate();
-                observerProcess.terminate();
-                for (CassandraProcess testNodeProcess : testNodeProcesses) {
-                    testNodeProcess.terminate();
-                }
-            }
-            
-        });
         
         Thread gossipForwarder = new Thread(new Runnable() {
 
@@ -211,54 +199,6 @@ public class ScaleSimulator {
     public static void startForwarding(final InetAddress testNode, final InetAddress startNode) {
         InetAddress[] detail = { testNode, startNode };
         gossipQueue.add(detail);
-//        Thread  t = new Thread(new Runnable() {
-//
-//            @Override
-//            public void run() {
-//                LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
-////                System.out.println(testNode);
-////                System.out.println(propagationModels);
-//                ForwardedGossip model = null;
-//                synchronized (forwardedGossip) {
-//                    while (model == null || model.forwardHistory().size() == 2) {
-//                        model = forwardedGossip.removeFirst();
-//                    }
-//                }
-//                long s = System.currentTimeMillis();
-//                LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
-//                ForwardEvent start = forwardChain.removeFirst();
-//                ForwardEvent end = forwardChain.removeLast();
-//                int previousReceivedTime = start.receivedTime;
-//                GossiperStub sendingStub = stubGroup.getStub(startNode);
-//                for (ForwardEvent forward : forwardChain) {
-//                    int receivedTime = forward.receivedTime;
-//                    int waitTime = receivedTime - previousReceivedTime;
-//                    try {
-//                        Thread.sleep(waitTime * 1000);
-//                        GossiperStub receivingStub = stubGroup.getRandomStub();
-//                        MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
-//                        msgIn.setTo(receivingStub.getInetAddress());
-//                        MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
-//                                .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-//                        sendingStub = receivingStub;
-//                        previousReceivedTime = receivedTime;
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                int waitTime = end.receivedTime - previousReceivedTime;
-//                try {
-//                    Thread.sleep(waitTime * 1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                long e = System.currentTimeMillis();
-//                System.out.println(e - s + " " + e);
-//                sendingStub.sendGossip(observer);
-//            }
-//            
-//        });
-//        t.start();
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
