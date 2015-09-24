@@ -8,7 +8,23 @@ scriptdir=`dirname $0`
 mkdir -p $cassandra_log_dir
 rm -r $cassandra_log_dir/*
 cp $machinelist $cassandra_log_dir/machinelist
-for
+i=1
+for ip in `seed_ip`; do
+  echo $i $ip >> $cassandra_log_dir/seed
+  i=`expr $i + 1`
+done
+i=1
+for ip in `observer_ips`; do
+  echo $i $ip >> $cassandra_log_dir/observer
+  i=`expr $i + 1`
+done
+i=1
+for ip in `observed_node_ips`; do
+  echo $i $ip >> $cassandra_log_dir/observed_node
+  i=`expr $i + 1`
+done
+#echo `scalecheck_ip` > $cassandra_log_dir/scalecheck
+
 i=1
 for ip in `real_seed_ip`; do
   scp -r $ip:$operating_dir/log $cassandra_log_dir/seed$i
