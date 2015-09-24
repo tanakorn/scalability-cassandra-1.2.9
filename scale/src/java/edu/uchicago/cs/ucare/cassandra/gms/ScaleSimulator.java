@@ -26,6 +26,8 @@ import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip;
 import edu.uchicago.cs.ucare.scale.gossip.ForwardedGossip.ForwardEvent;
@@ -52,6 +54,8 @@ public class ScaleSimulator {
     static Set<InetAddress> startedTestNodes;
     
     static LinkedBlockingQueue<InetAddress[]> gossipQueue;
+    
+    private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
     static
     {
@@ -107,7 +111,7 @@ public class ScaleSimulator {
         assert testNodeList.length > 0;
         numTestNodes = testNodeList.length;
         numStubs = allNodes - 1 - observerList.length - numTestNodes;
-
+        
         Random rand = new Random();
         PeerState[] peers = GossipPropagationSim.simulate(allNodes, 3000);
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
@@ -138,7 +142,12 @@ public class ScaleSimulator {
         for (int i = 1; i <= numStubs; ++i) {
             addressList.add(InetAddress.getByName("192.168." + id + "." + i));
         }
-//        System.out.println(addressList);
+        logger.info("Testing for " + allNodes + " nodes");
+        logger.info("Seed is 192.168.1.1 (fixed)");
+        logger.info("Observer is " + observer.toString());
+        logger.info("Observed nodes are " + testNodes);
+        logger.info("Simulate " + numStubs + " nodes = " + addressList);
+
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster")
                 .setDataCenter("").setNumTokens(1024).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
