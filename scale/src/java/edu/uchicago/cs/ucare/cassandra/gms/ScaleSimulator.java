@@ -117,8 +117,6 @@ public class ScaleSimulator {
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
         startedTestNodes = new HashSet<InetAddress>();
         gossipQueue = new LinkedBlockingQueue<InetAddress[]>();
-        // It needs some delay to start seed node
-        Thread.sleep(5000);
         try {
             // Fix seed IP address
             seed = InetAddress.getByName("192.168.1.1");
@@ -186,7 +184,7 @@ public class ScaleSimulator {
             stub.sendGossip(seed);
             synchronized (stub) {
                 stub.wait();
-                System.out.println(stub.getInetAddress() + " finished first gossip with seed");
+                logger.info(stub.getInetAddress() + " finished first gossip with seed");
             }
         }
         heartbeatToSeedThread.start();
@@ -200,6 +198,7 @@ public class ScaleSimulator {
         Thread gossipForwarder = new Thread(new Runnable() {
 
             @Override
+            @SuppressWarnings("unchecked")
             public void run() {
                 while (true) {
                     try {
@@ -207,42 +206,46 @@ public class ScaleSimulator {
                         InetAddress testNode = detail[0];
                         InetAddress startNode = detail[1];
                         LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
-                          ForwardedGossip model = null;
-                          synchronized (forwardedGossip) {
-                              while (model == null || model.forwardHistory().size() == 2) {
-                                  model = forwardedGossip.removeFirst();
-                              }
-                          }
-                          long s = System.currentTimeMillis();
-                          LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
-                          ForwardEvent start = forwardChain.removeFirst();
-                          ForwardEvent end = forwardChain.removeLast();
-                          int previousReceivedTime = start.receivedTime;
-                          GossiperStub sendingStub = stubGroup.getStub(startNode);
-                          for (ForwardEvent forward : forwardChain) {
-                              int receivedTime = forward.receivedTime;
-                              int waitTime = receivedTime - previousReceivedTime;
-                              try {
-                                  Thread.sleep(waitTime * 1000);
-                                  GossiperStub receivingStub = stubGroup.getRandomStub();
-                                  MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
-                                  msgIn.setTo(receivingStub.getInetAddress());
-                                  MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
-                                          .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-                                  sendingStub = receivingStub;
-                                  previousReceivedTime = receivedTime;
-                              } catch (InterruptedException e) {
-                                  e.printStackTrace();
-                              }
-                          }
-                          int waitTime = end.receivedTime - previousReceivedTime;
-                          try {
-                              Thread.sleep(waitTime * 1000);
-                          } catch (InterruptedException e) {
-                              e.printStackTrace();
-                          }
-                          long e = System.currentTimeMillis();
-                          System.out.println(e - s + " " + e);
+                        logger.info(forwardedGossip.toString());
+                        ForwardedGossip model = null;
+                        boolean isThereNextModel = false;
+                        synchronized (forwardedGossip) {
+                            while ((model == null || model.forwardHistory().size() == 2) && !forwardedGossip.isEmpty()) {
+                                model = forwardedGossip.removeFirst();
+                                isThereNextModel = true;
+                            }
+                        }
+                        if (!isThereNextModel) {
+                            logger.info("There is no forwarding model left, I have not handle this case, so exit");
+                            break;
+                        }
+                        LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
+                        ForwardEvent start = forwardChain.removeFirst();
+                        ForwardEvent end = forwardChain.removeLast();
+                        int previousReceivedTime = start.receivedTime;
+                        GossiperStub sendingStub = stubGroup.getStub(startNode);
+                        for (ForwardEvent forward : forwardChain) {
+                            int receivedTime = forward.receivedTime;
+                            int waitTime = receivedTime - previousReceivedTime;
+                            try {
+                                Thread.sleep(waitTime * 1000);
+                                GossiperStub receivingStub = stubGroup.getRandomStub();
+                                MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
+                                msgIn.setTo(receivingStub.getInetAddress());
+                                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
+                                        .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
+                                sendingStub = receivingStub;
+                                previousReceivedTime = receivedTime;
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        int waitTime = end.receivedTime - previousReceivedTime;
+                        try {
+                            Thread.sleep(waitTime * 1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                           sendingStub.sendGossip(observer);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
