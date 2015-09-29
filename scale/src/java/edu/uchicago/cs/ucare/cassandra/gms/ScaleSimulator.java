@@ -228,6 +228,7 @@ public class ScaleSimulator {
                             }
                         }
                         LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
+                        logger.info("Forward chain for " + testNode + " = " + forwardChain);
                         ForwardEvent start = forwardChain.removeFirst();
                         ForwardEvent end = forwardChain.removeLast();
                         int previousReceivedTime = start.receivedTime;
@@ -254,6 +255,7 @@ public class ScaleSimulator {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        logger.info("Forwarding to observer:" + observer + " at " + System.currentTimeMillis());
                         sendingStub.sendGossip(observer);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
