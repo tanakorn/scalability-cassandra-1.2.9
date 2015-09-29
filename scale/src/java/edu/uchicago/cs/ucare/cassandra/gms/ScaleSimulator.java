@@ -79,7 +79,7 @@ public class ScaleSimulator {
             }
 
             if (configLocation == null)
-                throw new RuntimeException("Couldn't figure out log4j configuration: "+config);
+                throw new RuntimeException("Couldn't figure out log4j configuration: "+ config);
 
             // Now convert URL to a filename
             String configFileName = null;
@@ -113,7 +113,7 @@ public class ScaleSimulator {
         numStubs = allNodes - 1 - observerList.length - numTestNodes;
         
         Random rand = new Random();
-        PeerState[] peers = GossipPropagationSim.simulate(allNodes, 20);
+        PeerState[] peers = GossipPropagationSim.simulate(allNodes, 3000);
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
         startedTestNodes = new HashSet<InetAddress>();
         gossipQueue = new LinkedBlockingQueue<InetAddress[]>();
@@ -217,13 +217,14 @@ public class ScaleSimulator {
                         }
                         if (!isThereNextModel) {
                             logger.info("There is no forwarding model left, generate more");
-                            PeerState[] peers = GossipPropagationSim.simulate(allNodes, 10);
+                            PeerState[] peers = GossipPropagationSim.simulate(allNodes, 1000);
                             Random rand = new Random();
                             int modelIndex = 0;
                             while (modelIndex == 0) {
                                 modelIndex = rand.nextInt(peers.length);
                             }
                             propagationModels.put(testNode, peers[modelIndex].getModel());
+                            continue;
                         }
                         LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
                         logger.info("Forward chain for " + testNode + " = " + forwardChain);
