@@ -219,13 +219,11 @@ public class ScaleSimulator {
                             logger.info("There is no forwarding model left, generate more");
                             PeerState[] peers = GossipPropagationSim.simulate(allNodes, 10);
                             Random rand = new Random();
-                            for (InetAddress address : propagationModels.keySet()) {
-                                int modelIndex = 0;
-                                while (modelIndex == 0) {
-                                    modelIndex = rand.nextInt(peers.length);
-                                }
-                                propagationModels.put(address, peers[modelIndex].getModel());
+                            int modelIndex = 0;
+                            while (modelIndex == 0) {
+                                modelIndex = rand.nextInt(peers.length);
                             }
+                            propagationModels.put(testNode, peers[modelIndex].getModel());
                         }
                         LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
                         logger.info("Forward chain for " + testNode + " = " + forwardChain);
