@@ -113,7 +113,7 @@ public class ScaleSimulator {
         numStubs = allNodes - 1 - observerList.length - numTestNodes;
         
         Random rand = new Random();
-        PeerState[] peers = GossipPropagationSim.simulate(allNodes, 3000);
+        PeerState[] peers = GossipPropagationSim.simulate(allNodes, 20);
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
         startedTestNodes = new HashSet<InetAddress>();
         gossipQueue = new LinkedBlockingQueue<InetAddress[]>();
@@ -206,7 +206,7 @@ public class ScaleSimulator {
                         InetAddress testNode = detail[0];
                         InetAddress startNode = detail[1];
                         LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
-                        logger.info(forwardedGossip.toString());
+//                        logger.info(forwardedGossip.toString());
                         ForwardedGossip model = null;
                         boolean isThereNextModel = false;
                         synchronized (forwardedGossip) {
@@ -216,8 +216,16 @@ public class ScaleSimulator {
                             }
                         }
                         if (!isThereNextModel) {
-                            logger.info("There is no forwarding model left, I have not handle this case, so exit");
-                            break;
+                            logger.info("There is no forwarding model left, generate more");
+                            PeerState[] peers = GossipPropagationSim.simulate(allNodes, 10);
+                            Random rand = new Random();
+                            for (InetAddress address : propagationModels.keySet()) {
+                                int modelIndex = 0;
+                                while (modelIndex == 0) {
+                                    modelIndex = rand.nextInt(peers.length);
+                                }
+                                propagationModels.put(address, peers[modelIndex].getModel());
+                            }
                         }
                         LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
                         ForwardEvent start = forwardChain.removeFirst();
@@ -246,7 +254,7 @@ public class ScaleSimulator {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                          sendingStub.sendGossip(observer);
+                        sendingStub.sendGossip(observer);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
