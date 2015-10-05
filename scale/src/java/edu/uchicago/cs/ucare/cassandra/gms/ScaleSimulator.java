@@ -184,7 +184,7 @@ public class ScaleSimulator {
             stub.sendGossip(seed);
             synchronized (stub) {
                 stub.wait();
-                logger.info(stub.getInetAddress() + " finished first gossip with seed");
+                logger.info(stub.getInetAddress() + " finished first gossip with seed with " + stub.getEndpointStateMap().keySet());
             }
         }
         heartbeatToSeedThread.start();
