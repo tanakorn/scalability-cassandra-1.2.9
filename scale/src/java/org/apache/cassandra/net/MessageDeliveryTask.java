@@ -53,7 +53,10 @@ public class MessageDeliveryTask implements Runnable
             return;
         }
 
+        long s = System.currentTimeMillis();
         verbHandler.doVerb(message, id);
+        long t = System.currentTimeMillis() - s;
+        logger.info("sc_debug: Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
     }
    
 }

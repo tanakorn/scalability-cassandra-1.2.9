@@ -240,8 +240,11 @@ public class ScaleSimulator {
                                 GossiperStub receivingStub = stubGroup.getRandomStub();
                                 MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
                                 msgIn.setTo(receivingStub.getInetAddress());
+                                long s = System.currentTimeMillis();
                                 MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
                                         .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
+                                long t = System.currentTimeMillis() - s;
+                                logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
                                 sendingStub = receivingStub;
                                 previousReceivedTime = receivedTime;
                             } catch (InterruptedException e) {
