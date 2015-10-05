@@ -40,8 +40,8 @@ public class GossipPropagationSim {
     }
 
     public static void main(String[] args) {
-        int numPeer = 10;
-        int numRound = 10;
+        int numPeer = 128;
+        int numRound = 30;
         PeerState[] peers = simulate(numPeer, numRound);
         for (PeerState peer : peers) {
             System.out.println(peer.toString());
