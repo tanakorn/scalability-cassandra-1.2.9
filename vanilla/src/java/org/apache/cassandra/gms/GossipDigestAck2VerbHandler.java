@@ -18,8 +18,10 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import org.apache.cassandra.net.MessageIn;
 public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {
     private static final Logger logger = LoggerFactory.getLogger(GossipDigestAck2VerbHandler.class);
+    private Set<InetAddress> seenAddresses = new HashSet<InetAddress>();
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
@@ -107,5 +110,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 //            }
 //        }
         logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
+        if (!seenAddresses.contains(from)) {
+            logger.info("sc_debug: see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
+        }
     }
 }
