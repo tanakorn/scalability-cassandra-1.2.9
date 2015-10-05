@@ -181,6 +181,7 @@ public class ScaleSimulator {
             
         });
         for (GossiperStub stub : stubGroup) {
+            logger.info("sc_debug: " + stub.getInetAddress() + " send gossip to seed");
             stub.sendGossip(seed);
             synchronized (stub) {
                 stub.wait();
