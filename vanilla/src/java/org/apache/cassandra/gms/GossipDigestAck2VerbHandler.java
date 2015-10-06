@@ -112,6 +112,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
         if (!seenAddresses.contains(from)) {
             logger.info("sc_debug: see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
+            seenAddresses.add(from);
         }
     }
 }
