@@ -246,6 +246,7 @@ public class ScaleSimulator {
                                         .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
                                 long t = System.currentTimeMillis() - s;
                                 logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
+                                logger.info("sc_debug: Receiving stub is " + receivingStub.getInetAddress() + " with ring " + receivingStub.getEndpointStateMap().keySet());
                                 sendingStub = receivingStub;
                                 previousReceivedTime = receivedTime;
                             } catch (InterruptedException e) {
