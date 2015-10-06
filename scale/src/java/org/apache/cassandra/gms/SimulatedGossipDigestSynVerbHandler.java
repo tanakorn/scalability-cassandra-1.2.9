@@ -118,7 +118,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
             		Integer.toString(ScaleSimulator.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
-            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
+            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
         } else {
             MessagingService.instance().sendOneWay(gDigestAckMessage, from);
         }
