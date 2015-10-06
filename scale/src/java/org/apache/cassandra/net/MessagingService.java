@@ -17,7 +17,11 @@
  */
 package org.apache.cassandra.net;
 
+import static com.google.common.base.Charsets.ISO_8859_1;
+
+import java.io.ByteArrayInputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOError;
 import java.io.IOException;
@@ -52,10 +56,15 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.EncryptionOptions.ServerEncryptionOptions;
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.dht.BootStrapper;
+import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.gms.ApplicationState;
+import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestAck;
 import org.apache.cassandra.gms.GossipDigestAck2;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.TokenSerializer;
+import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.locator.ILatencySubscriber;
@@ -715,6 +724,50 @@ public final class MessagingService implements MessagingServiceMBean
         if (message == null)
             return;
 
+        MessagingService.Verb verb = message.verb;
+        Integer count = messageCount.get(verb);
+        if (count == null) {
+            count = 1;
+        } else {
+            count += 1;
+        }
+        messageCount.put(verb, count);
+        Object payload = message.payload;
+        if (payload instanceof GossipDigestSyn) {
+            GossipDigestSyn gds = (GossipDigestSyn) payload;
+        } else if (payload instanceof GossipDigestAck) {
+            GossipDigestAck gda = (GossipDigestAck) payload;
+            Map<InetAddress, EndpointState> epsMap = gda.getEndpointStateMap();
+            nodeInGDA += epsMap.keySet().size();
+            for (InetAddress address : epsMap.keySet()) {
+                EndpointState eps = epsMap.get(address);
+                VersionedValue value = eps.getApplicationState(ApplicationState.TOKENS);
+                if (value != null) {
+                    try {
+                        Collection<Token> tokens = TokenSerializer.deserialize(StorageService.getPartitioner(), new DataInputStream(new ByteArrayInputStream(value.value.getBytes(ISO_8859_1))));
+                        vnodeInGDA += tokens.size();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else if (payload instanceof GossipDigestAck2) {
+            GossipDigestAck2 gda2 = (GossipDigestAck2) payload;
+            Map<InetAddress, EndpointState> epsMap = gda2.getEndpointStateMap();
+            nodeInGDA2 += epsMap.keySet().size();
+            for (InetAddress address : epsMap.keySet()) {
+                EndpointState eps = epsMap.get(address);
+                VersionedValue value = eps.getApplicationState(ApplicationState.TOKENS);
+                if (value != null) {
+                    try {
+                        Collection<Token> tokens = TokenSerializer.deserialize(StorageService.getPartitioner(), new DataInputStream(new ByteArrayInputStream(value.value.getBytes(ISO_8859_1))));
+                        vnodeInGDA2 += tokens.size();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
         
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
@@ -737,7 +790,32 @@ public final class MessagingService implements MessagingServiceMBean
         stage.execute(runnable, state);
     }
     
+    // For instrument
+    private HashMap<MessagingService.Verb, Integer> messageCount = new HashMap<MessagingService.Verb, Integer>();
     
+    public void resetCount() {
+        messageCount.clear();
+    }
+    
+    public HashMap<MessagingService.Verb, Integer> getCount() {
+        return (HashMap<Verb, Integer>) messageCount.clone();
+    }
+    
+    private int nodeInGDA = 0;
+    private int nodeInGDA2 = 0;
+    private int vnodeInGDA = 0;
+    private int vnodeInGDA2 = 0;
+    
+    public int[] getMessageInfo() {
+        return new int[] { nodeInGDA, nodeInGDA2, vnodeInGDA, vnodeInGDA2 };
+    }
+    
+    public void resetMessageInfo() {
+        nodeInGDA = 0;
+        nodeInGDA2 = 0;
+        vnodeInGDA = 0;
+        vnodeInGDA2 = 0;
+    }
 
     public void setCallbackForTests(String messageId, CallbackInfo callback)
     {

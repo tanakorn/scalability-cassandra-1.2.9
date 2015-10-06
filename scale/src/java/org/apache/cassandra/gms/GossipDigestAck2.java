@@ -41,7 +41,7 @@ public class GossipDigestAck2
         this.epStateMap = epStateMap;
     }
 
-    Map<InetAddress, EndpointState> getEndpointStateMap()
+    public Map<InetAddress, EndpointState> getEndpointStateMap()
     {
          return epStateMap;
     }

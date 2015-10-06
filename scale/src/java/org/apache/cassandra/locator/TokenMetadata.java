@@ -474,6 +474,22 @@ public class TokenMetadata
             lock.readLock().unlock();
         }
     }
+    
+    // Added by Korn for debugging
+    public int getTokenSize(InetAddress endpoint) {
+        if (!isMember(endpoint)) {
+            return 0;
+        }
+        lock.readLock().lock();
+        try
+        {
+            return tokenToEndpointMap.inverse().get(endpoint).size();
+        }
+        finally
+        {
+            lock.readLock().unlock();
+        }
+    }
 
     @Deprecated
     public Token getToken(InetAddress endpoint)
