@@ -89,6 +89,13 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         start = System.currentTimeMillis();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        sb = new StringBuilder();
+        for (GossipDigest d : deltaGossipDigestList) {
+            sb.append(d.getEndpoint());
+            sb.append(',');
+        }
+        logger.info("sc_debug: delta digest list = " + sb.toString());
+        logger.info("sc_debug: delta ep state map = " + deltaEpStateMap.keySet());
         end = System.currentTimeMillis();
         long examine = end - start;
 
