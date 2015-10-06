@@ -138,7 +138,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         if (!stub.getHasContactedSeed() && from.equals(ScaleSimulator.seed)) {
             synchronized (stub) {
-                logger.info("sc_debug: " + stub.getInetAddress() + " get reply from seed");
+                logger.info("sc_debug: " + stub.getInetAddress() + " get reply from seed with " + epStateMap.keySet());
                 stub.setHasContactedSeed(true);
                 stub.notify();
             }
