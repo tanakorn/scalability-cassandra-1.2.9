@@ -769,6 +769,25 @@ public final class MessagingService implements MessagingServiceMBean
             }
         }
         
+        int[] messageInfo = MessagingService.instance().getMessageInfo();
+        MessagingService.instance().resetMessageInfo();
+        StringBuilder strBuilder = new StringBuilder("sc_debug: MessageInfo\n");
+        strBuilder.append("node in GDA = ");
+        strBuilder.append(messageInfo[0]);
+        strBuilder.append('\n');
+        strBuilder.append("node in GDA2 = ");
+        strBuilder.append(messageInfo[1]);
+        strBuilder.append('\n');
+        strBuilder.append("vnode in GDA = ");
+        strBuilder.append(messageInfo[2]);
+        strBuilder.append('\n');
+        strBuilder.append("vnode in GDA2 = ");
+        strBuilder.append(messageInfo[3]);
+        logger.info(strBuilder.toString());
+        
+        resetCount();
+        resetMessageInfo();
+        
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
         assert stage != null : "No stage for message type " + message.verb;
