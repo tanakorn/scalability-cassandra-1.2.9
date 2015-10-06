@@ -112,6 +112,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private class GossipTask implements Runnable
     {
+        public final int numTokens = DatabaseDescriptor.getNumTokens();
+
         public void run()
         {
         	//Korn: this method is called every second
@@ -164,6 +166,82 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
                     doStatusCheck();
+                    Map<MessagingService.Verb, Integer> messageCount = MessagingService.instance().getCount();
+                    MessagingService.instance().resetCount();
+                    StringBuilder strBuilder = new StringBuilder("sc_debug: MessageCount\n");
+                    MessagingService.Verb verb;
+                    verb = MessagingService.Verb.GOSSIP_DIGEST_SYN;
+                    strBuilder.append(verb);
+                    strBuilder.append(" : ");
+                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+                    strBuilder.append('\n');
+                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK;
+                    strBuilder.append(verb);
+                    strBuilder.append(" : ");
+                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+                    strBuilder.append('\n');
+                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK2;
+                    strBuilder.append(verb);
+                    strBuilder.append(" : ");
+                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+                    logger.info(strBuilder.toString());
+                    
+                    int[] messageInfo = MessagingService.instance().getMessageInfo();
+                    MessagingService.instance().resetMessageInfo();
+                    strBuilder = new StringBuilder("sc_debug: MessageInfo\n");
+                    strBuilder.append("node in GDA = ");
+                    strBuilder.append(messageInfo[0]);
+                    strBuilder.append('\n');
+                    strBuilder.append("node in GDA2 = ");
+                    strBuilder.append(messageInfo[1]);
+                    strBuilder.append('\n');
+                    strBuilder.append("vnode in GDA = ");
+                    strBuilder.append(messageInfo[2]);
+                    strBuilder.append('\n');
+                    strBuilder.append("vnode in GDA2 = ");
+                    strBuilder.append(messageInfo[3]);
+                    logger.info(strBuilder.toString());
+                    int seenNode = endpointStateMap.size();
+                    int deadNode = 0;
+                    int nonMemberNode = 0;
+                    int notCompletedNode = 0;
+//                    StringBuilder strBuilder = new StringBuilder("sc_dbug: Dead nodes: ");
+                    strBuilder = new StringBuilder("sc_dbug: Dead nodes: ");
+                    StringBuilder strBuilder2 = new StringBuilder("sc_dbug: Non-member nodes: ");
+                    StringBuilder strBuilder3 = new StringBuilder("sc_dbug: Not-completed nodes: ");
+                    for (InetAddress address : endpointStateMap.keySet()) {
+                        EndpointState state = endpointStateMap.get(address);
+                        int thisNumTokens = StorageService.instance.getTokenMetadata().getTokenSize(address);
+                        boolean isMember = StorageService.instance.getTokenMetadata().isMember(address);
+                        if (!state.isAlive()) {
+                            deadNode++;
+                            strBuilder.append(address.toString());
+                            strBuilder.append(", ");
+                        }
+                        if (!isMember) {
+                            nonMemberNode++;
+                            strBuilder2.append(address.toString());
+                            strBuilder2.append(", ");
+                        }
+                        if (thisNumTokens != numTokens) {
+                            notCompletedNode++;
+                            strBuilder3.append(address.toString());
+                            strBuilder3.append(", ");
+                        }
+                    }
+                    logger.info("sc_debug: RingInfo: seen nodes = " + seenNode + 
+                            ", non-member nodes = " + nonMemberNode + 
+                            ", not-completed nodes = " + notCompletedNode + 
+                            ", dead nodes = " + deadNode);
+                    if (deadNode > 0) {
+                        logger.info(strBuilder.toString());
+                    }
+                    if (nonMemberNode > 0) {
+                        logger.info(strBuilder2.toString());
+                    }
+                    if (notCompletedNode > 0) {
+                        logger.info(strBuilder3.toString());
+                    }
                 }
             }
             catch (Exception e)

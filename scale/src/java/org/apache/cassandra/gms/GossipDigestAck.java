@@ -52,7 +52,7 @@ public class GossipDigestAck
         return gDigestList;
     }
 
-    Map<InetAddress, EndpointState> getEndpointStateMap()
+    public Map<InetAddress, EndpointState> getEndpointStateMap()
     {
         return epStateMap;
     }
