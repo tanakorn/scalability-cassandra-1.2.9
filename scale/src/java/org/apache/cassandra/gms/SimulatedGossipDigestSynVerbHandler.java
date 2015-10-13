@@ -30,7 +30,7 @@ import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
-import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
+import edu.uchicago.cs.ucare.cassandra.gms.OneMachineScaleSimulator;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 {
@@ -62,8 +62,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-        
-        GossiperStub stub = ScaleSimulator.stubGroup.getStub(to);
+        GossiperStub stub = OneMachineScaleSimulator.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -76,7 +75,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
 
-        if (stub.getHasContactedSeed() && !ScaleSimulator.isTestNodesStarted) {
+        if (stub.getHasContactedSeed() && !OneMachineScaleSimulator.isTestNodesStarted) {
             GossipDigest digestForStub = null;
             for (GossipDigest gDigest : gDigestList) {
                 if (gDigest.endpoint.equals(to)) {
@@ -111,12 +110,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        if (ScaleSimulator.stubGroup.contains(from)) {
-        	MessageIn<GossipDigestAck> msgIn = ScaleSimulator.convertOutToIn(gDigestAckMessage);
+        if (OneMachineScaleSimulator.stubGroup.contains(from)) {
+        	MessageIn<GossipDigestAck> msgIn = OneMachineScaleSimulator.convertOutToIn(gDigestAckMessage);
         	msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-            		Integer.toString(ScaleSimulator.idGen.incrementAndGet()));
+            		Integer.toString(OneMachineScaleSimulator.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
         } else {

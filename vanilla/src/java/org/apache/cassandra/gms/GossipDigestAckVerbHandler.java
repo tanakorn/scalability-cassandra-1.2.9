@@ -59,6 +59,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 //        logger.info("sc_debug: GDA digests from " + from + " are (" + sb.toString() + ")");
         */
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
+        
+        int epStateMapSize = epStateMap.size();
+        int before = Gossiper.instance.endpointStateMap.size();
 
         /*
         for (InetAddress address : epStateMap.keySet()) {
@@ -121,6 +124,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             end = System.currentTimeMillis();
             applyState = end - start;
         }
+        int after = Gossiper.instance.endpointStateMap.size();
 
         Gossiper.instance.checkSeedContact(from);
 
@@ -174,5 +178,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         end = System.currentTimeMillis();
         long send = end - start;
         logger.info("sc_debug: AckHandler for " + from + " notifyFD took {} ms, applyState took {} ms, examine took {} ms, sendMsg took {} ms", notifyFD, applyState, examine, send);
+        logger.info("sc_debug: Processing Ack receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
     }
 }

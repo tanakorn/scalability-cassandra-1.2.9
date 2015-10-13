@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
-import edu.uchicago.cs.ucare.cassandra.gms.ScaleSimulator;
+import edu.uchicago.cs.ucare.cassandra.gms.OneMachineScaleSimulator;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {
@@ -51,13 +51,13 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        Gossiper.notifyFailureDetectorStatic(ScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
-        Gossiper.applyStateLocallyStatic(ScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        Gossiper.notifyFailureDetectorStatic(OneMachineScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        Gossiper.applyStateLocallyStatic(OneMachineScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
         
         for (InetAddress address : remoteEpStateMap.keySet()) {
-            if (ScaleSimulator.testNodes.contains(address)) {
+            if (OneMachineScaleSimulator.testNodes.contains(address)) {
                 // Implement here
-                ScaleSimulator.startForwarding(address, to);
+                OneMachineScaleSimulator.startForwarding(address, to);
 //                EndpointState epState = remoteEpStateMap.get(address);
 //                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
             }
