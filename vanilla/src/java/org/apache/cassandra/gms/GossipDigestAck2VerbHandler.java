@@ -49,6 +49,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
 
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
+        int epStateMapSize = remoteEpStateMap.size();
+        int before = Gossiper.instance.endpointStateMap.size();
         /*
         for (InetAddress address : remoteEpStateMap.keySet()) {
         	EndpointState eps = remoteEpStateMap.get(address);
@@ -109,7 +111,9 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 //                logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
 //            }
 //        }
+        int after = Gossiper.instance.endpointStateMap.size();
         logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
+        logger.info("sc_debug: Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
         if (!seenAddresses.contains(from)) {
             logger.info("sc_debug: see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
             seenAddresses.add(from);
