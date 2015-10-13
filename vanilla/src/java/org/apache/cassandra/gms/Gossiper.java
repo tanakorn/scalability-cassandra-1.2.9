@@ -919,7 +919,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             long s = System.currentTimeMillis();
             subscriber.onRestart(ep, epState);
             long e = System.currentTimeMillis();
-            logger.info("sc_debug: subscriber = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
+            logger.info("sc_debug: subscriber handle major " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
 
         if (!isDeadState(epState))
@@ -1043,7 +1043,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
         {
+            long s = System.currentTimeMillis();
             subscriber.onChange(addr, state, value);
+            long e = System.currentTimeMillis();
+            logger.info("sc_debug: subscriber do noti = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
     }
 
