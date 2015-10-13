@@ -1032,10 +1032,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             assert remoteState.getHeartBeatState().getGeneration() == localState.getHeartBeatState().getGeneration();
             localState.addApplicationState(remoteKey, remoteValue);
         }
+        long s = System.currentTimeMillis();
         for (Entry<ApplicationState, VersionedValue> remoteEntry : remoteState.getApplicationStateMap().entrySet())
         {
             doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
         }
+        long e = System.currentTimeMillis();
+        logger.info("sc_debug: apply new states do noti took " + (e - s) + " ms");
     }
 
     // notify that an application state has changed
