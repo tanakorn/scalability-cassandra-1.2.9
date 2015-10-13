@@ -915,8 +915,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         endpointStateMap.put(ep, epState);
 
         // the node restarted: it is up to the subscriber to take whatever action is necessary
-        for (IEndpointStateChangeSubscriber subscriber : subscribers)
+        for (IEndpointStateChangeSubscriber subscriber : subscribers) {
+            logger.info("sc_debug: subscriber = " + subscriber.getClass().getCanonicalName());
             subscriber.onRestart(ep, epState);
+        }
 
         if (!isDeadState(epState))
             markAlive(ep, epState);
