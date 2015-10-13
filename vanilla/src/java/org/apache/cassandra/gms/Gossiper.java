@@ -916,8 +916,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
         // the node restarted: it is up to the subscriber to take whatever action is necessary
         for (IEndpointStateChangeSubscriber subscriber : subscribers) {
-            logger.info("sc_debug: subscriber = " + subscriber.getClass().getCanonicalName());
+            long s = System.currentTimeMillis();
             subscriber.onRestart(ep, epState);
+            long e = System.currentTimeMillis();
+            logger.info("sc_debug: subscriber = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
 
         if (!isDeadState(epState))
