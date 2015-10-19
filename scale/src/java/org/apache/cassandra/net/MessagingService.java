@@ -463,7 +463,7 @@ public final class MessagingService implements MessagingServiceMBean
         {
             throw new RuntimeException(e);
         }
-        logger.info("Starting Messaging Service on port {}", DatabaseDescriptor.getStoragePort());
+//        logger.info("Starting Messaging Service on port {}", DatabaseDescriptor.getStoragePort());
         ss.add(socket);
         return ss;
     }
@@ -783,7 +783,7 @@ public final class MessagingService implements MessagingServiceMBean
         strBuilder.append('\n');
         strBuilder.append("vnode in GDA2 = ");
         strBuilder.append(messageInfo[3]);
-        logger.info(strBuilder.toString());
+//        logger.info(strBuilder.toString());
         
         resetCount();
         resetMessageInfo();

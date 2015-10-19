@@ -21,11 +21,14 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.cassandra.service.LoadBroadcaster;
+import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +106,8 @@ public class OneMachineScaleSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
+        Gossiper.registerStatic(StorageService.instance);
+        Gossiper.registerStatic(LoadBroadcaster.instance);
         Random rand = new Random();
         final CassandraProcess seedProcess = new CassandraProcess("/tmp/cass_scale", 1);
         final CassandraProcess observerProcess = new CassandraProcess("/tmp/cass_scale", 2);
@@ -194,7 +199,7 @@ public class OneMachineScaleSimulator {
             if (prevInitStub != null) {
                 stub.endpointStateMap.putAll(prevInitStub.endpointStateMap);
             }
-            logger.info(stub.getInetAddress() + " finished random initialization " + stub.getEndpointStateMap().keySet());
+            logger.info(stub.getInetAddress() + " finished random initialization with " + stub.getEndpointStateMap().size() + " nodes");
             prevInitStub = stub;
         }
 //        Collection<GossiperStub> stubList = stubGroup.getAllStubs();

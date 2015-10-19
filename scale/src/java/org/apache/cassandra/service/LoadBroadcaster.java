@@ -25,10 +25,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.gms.*;
 
-public class LoadBroadcaster implements IEndpointStateChangeSubscriber
+import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+
+public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEndpointStateChangeSubscriber
 {
     static final int BROADCAST_INTERVAL = 60 * 1000;
 
@@ -41,9 +42,17 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber
     private LoadBroadcaster()
     {
         Gossiper.instance.register(this);
+//        Gossiper.registerStatic(this);
     }
 
     public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    {
+        if (state != ApplicationState.LOAD)
+            return;
+        loadInfo.put(endpoint, Double.valueOf(value.value));
+    }
+    
+    public void onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.LOAD)
             return;
@@ -59,13 +68,33 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber
         }
     }
 
+    public void onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    {
+        VersionedValue localValue = epState.getApplicationState(ApplicationState.LOAD);
+        if (localValue != null)
+        {
+            onChange(endpoint, ApplicationState.LOAD, localValue);
+        }
+    }
+
     public void onAlive(InetAddress endpoint, EndpointState state) {}
+
+    public void onAlive(GossiperStub stub, InetAddress endpoint, EndpointState state) {}
 
     public void onDead(InetAddress endpoint, EndpointState state) {}
 
+    public void onDead(GossiperStub stub, InetAddress endpoint, EndpointState state) {}
+
     public void onRestart(InetAddress endpoint, EndpointState state) {}
 
+    public void onRestart(GossiperStub stub, InetAddress endpoint, EndpointState state) {}
+
     public void onRemove(InetAddress endpoint)
+    {
+        loadInfo.remove(endpoint);
+    }
+
+    public void onRemove(GossiperStub stub, InetAddress endpoint)
     {
         loadInfo.remove(endpoint);
     }

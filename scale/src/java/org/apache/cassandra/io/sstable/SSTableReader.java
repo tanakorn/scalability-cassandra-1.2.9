@@ -26,9 +26,11 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.util.concurrent.RateLimiter;
+
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.cache.InstrumentingCache;
 import org.apache.cassandra.cache.KeyCacheKey;
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
@@ -213,6 +215,7 @@ public class SSTableReader extends SSTable
 
     private static SSTableMetadata openMetadata(Descriptor descriptor, Set<Component> components, IPartitioner partitioner) throws IOException
     {
+        StackTracePrinter.print(logger);
         assert partitioner != null;
         // Minimum components without which we can't do anything
         assert components.contains(Component.DATA) : "Data component is missing for sstable" + descriptor;

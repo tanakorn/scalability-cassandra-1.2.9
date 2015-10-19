@@ -11,10 +11,10 @@ listen_address: 127.0.0.5
 storage_port: 7000
 rpc_port: 9170
 column_index_size_in_kb: 4
-commitlog_directory: build/test/cassandra/commitlog
-saved_caches_directory: build/test/cassandra/saved_caches
+commitlog_directory: /tmp/cassandra/commitlog
+saved_caches_directory: /tmp/cassandra/saved_caches
 data_file_directories:
-    - build/test/cassandra/data
+    - /tmp/cassandra/data
 disk_access_mode: mmap
 seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider

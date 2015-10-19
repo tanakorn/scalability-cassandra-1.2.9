@@ -51,6 +51,7 @@ public class GossiperStub implements InetAddressStub {
 	EndpointState state;
 	ConcurrentMap<InetAddress, EndpointState> endpointStateMap;
 	VersionedValueFactory versionedValueFactory;
+	TokenMetadata tokenMetadata;
 	@SuppressWarnings("rawtypes") Collection<Token> tokens;
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
@@ -79,6 +80,7 @@ public class GossiperStub implements InetAddressStub {
 		state = new EndpointState(heartBeatState);
 		versionedValueFactory = new VersionedValueFactory(partitioner);
 		hasContactedSeed = false;
+		tokenMetadata = new TokenMetadata();
 	}
 	
 	public void prepareInitialState() {
@@ -91,7 +93,6 @@ public class GossiperStub implements InetAddressStub {
 	}
 	
 	private void initTokens() {
-		TokenMetadata tokenMetadata = new TokenMetadata();
 		tokens = BootStrapper.getRandomTokens(tokenMetadata, numTokens);
 	}
 	
@@ -124,6 +125,10 @@ public class GossiperStub implements InetAddressStub {
 
 	public ConcurrentMap<InetAddress, EndpointState> getEndpointStateMap() {
 		return endpointStateMap;
+	}
+	
+	public TokenMetadata getTokenMetadata() {
+	    return tokenMetadata;
 	}
 	
 	public void updateHeartBeat() {

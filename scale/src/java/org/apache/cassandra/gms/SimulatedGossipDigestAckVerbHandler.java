@@ -83,7 +83,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
             Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
-            Gossiper.applyStateLocallyStatic(stub.getEndpointStateMap(), epStateMap);
+            Gossiper.applyStateLocallyStatic(stub, epStateMap);
 
             for (InetAddress address : epStateMap.keySet()) {
                 if (OneMachineScaleSimulator.testNodes.contains(address)) {

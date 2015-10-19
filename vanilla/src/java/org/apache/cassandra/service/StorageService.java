@@ -1340,6 +1340,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     private void handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
         assert pieces.length >= 2;
+        
+//        logger.info("sc_debug: isClientMode = " + isClientMode);
 
         // Parse versioned values according to end-point version:
         //   versions  < 1.2 .....: STATUS,TOKEN
