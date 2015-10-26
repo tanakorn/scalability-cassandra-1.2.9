@@ -307,15 +307,19 @@ public class SystemTable
      */
     public static synchronized void updateTokens(InetAddress ep, Collection<Token> tokens)
     {
+        System.out.println("x");
         if (ep.equals(FBUtilities.getBroadcastAddress()))
         {
             removeEndpoint(ep);
             return;
         }
 
+        System.out.println("y");
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        System.out.println("z");
         forceBlockingFlush(PEERS_CF);
+        System.out.println("zz");
     }
 
     public static synchronized void updatePeerInfo(InetAddress ep, String columnName, String value)

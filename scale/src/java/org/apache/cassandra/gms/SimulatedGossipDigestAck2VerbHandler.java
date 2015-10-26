@@ -35,6 +35,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     {
     	InetAddress from = message.from;
         InetAddress to = message.to;
+        System.out.println(to + " receiving gossip ack2 from " + from);
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -52,15 +53,22 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(OneMachineScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        System.out.println("Before apply");
         Gossiper.applyStateLocallyStatic(OneMachineScaleSimulator.stubGroup.getStub(to), remoteEpStateMap);
+        System.out.println("After apply");
         
+        boolean contain = false;
         for (InetAddress address : remoteEpStateMap.keySet()) {
             if (OneMachineScaleSimulator.testNodes.contains(address)) {
                 // Implement here
                 OneMachineScaleSimulator.startForwarding(address, to);
 //                EndpointState epState = remoteEpStateMap.get(address);
 //                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
+                contain = true;
+                break;
             }
+        }
+        if (!contain) {
         }
         
     }

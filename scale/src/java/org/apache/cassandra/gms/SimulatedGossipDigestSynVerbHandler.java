@@ -40,6 +40,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
     {
         InetAddress from = message.from;
         InetAddress to = message.to;
+        System.out.println(to + " receiving gossip sync from " + from);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
