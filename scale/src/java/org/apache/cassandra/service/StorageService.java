@@ -1281,67 +1281,45 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         switch (state)
         {
             case STATUS:
-                System.out.println("st");
                 String apStateValue = value.value;
                 String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
                 assert (pieces.length > 0);
 
                 String moveName = pieces[0];
 
-                if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
+                if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
 //                    handleStateBootstrap(endpoint, pieces);
-                    System.out.println("2 1");
                     handleStateBootstrapStatic(stub, endpoint, pieces);
-                    System.out.println("2 2");
-                } else if (moveName.equals(VersionedValue.STATUS_NORMAL)){
+                else if (moveName.equals(VersionedValue.STATUS_NORMAL))
 //                    handleStateNormal(endpoint, pieces);
-                    System.out.println("2 3");
                     handleStateNormalStatic(stub, endpoint, pieces);
-                    System.out.println("2 4");
-                } else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN)){
-                    System.out.println("2 5");
+                else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
                     handleStateRemoving(endpoint, pieces);
-                    System.out.println("2 6");
-                } else if (moveName.equals(VersionedValue.STATUS_LEAVING)){
-                    System.out.println("2 7");
+                else if (moveName.equals(VersionedValue.STATUS_LEAVING))
                     handleStateLeaving(endpoint, pieces);
-                    System.out.println("2 8");
-                } else if (moveName.equals(VersionedValue.STATUS_LEFT)){
-                    System.out.println("2 9");
+                else if (moveName.equals(VersionedValue.STATUS_LEFT))
                     handleStateLeft(endpoint, pieces);
-                    System.out.println("2 10");
-                } else if (moveName.equals(VersionedValue.STATUS_MOVING)){
-                    System.out.println("2 11");
+                else if (moveName.equals(VersionedValue.STATUS_MOVING))
                     handleStateMoving(endpoint, pieces);
-                    System.out.println("2 12");
-                } else if (moveName.equals(VersionedValue.STATUS_RELOCATING)){
-                    System.out.println("2 13");
+                else if (moveName.equals(VersionedValue.STATUS_RELOCATING))
                     handleStateRelocating(endpoint, pieces);
-                    System.out.println("2 14");
-                }
                 break;
             case RELEASE_VERSION:
-                System.out.println("rv");
                 SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
                 break;
             case DC:
-                System.out.println("dc");
                 SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
                 break;
             case RACK:
-                System.out.println("rack");
                 SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
                 break;
             case RPC_ADDRESS:
-                System.out.println("rpc");
                 SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
                 break;
             case SCHEMA:
-                System.out.println("sc");
                 SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
                 break;
             case HOST_ID:
-                System.out.println("hid");
                 SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
                 break;
         }
@@ -1617,7 +1595,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     
     private static void handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
-//        System.out.println("3 1");
         assert pieces.length >= 2;
 
         // Parse versioned values according to end-point version:
@@ -1627,7 +1604,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         final TokenMetadata tokenMetadata = stub.getTokenMetadata();
         Collection<Token> tokens;
 
-//        System.out.println("3 2");
         tokens = getTokensForStatic(stub, endpoint, pieces[1]);
 
         if (logger.isDebugEnabled())
@@ -1639,46 +1615,37 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         // Order Matters, TM.updateHostID() should be called before TM.updateNormalToken(), (see CASSANDRA-4300).
 //        if (Gossiper.instance.usesHostId(endpoint))
 //            tokenMetadata.updateHostId(Gossiper.instance.getHostId(endpoint), endpoint);
-//        System.out.println("3 3");
-        if (Gossiper.usesHostIdStatic(stub, endpoint))
+        if (Gossiper.instance.usesHostIdStatic(stub, endpoint))
             tokenMetadata.updateHostId(Gossiper.getHostIdStatic(stub, endpoint), endpoint);
 
-//        System.out.println("3 4");
         Set<Token> tokensToUpdateInMetadata = new HashSet<Token>();
         Set<Token> tokensToUpdateInSystemTable = new HashSet<Token>();
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
 //        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
         Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
-//        System.out.println("3 5");
 
         for (final Token token : tokens)
         {
             // we don't want to update if this node is responsible for the token and it has a later startup time than endpoint.
-//        System.out.println("3 6");
             InetAddress currentOwner = tokenMetadata.getEndpoint(token);
             if (currentOwner == null)
             {
-//        System.out.println("3 7");
                 logger.debug("New node " + endpoint + " at token " + token);
                 tokensToUpdateInMetadata.add(token);
 //                if (!isClientMode)
 //                    tokensToUpdateInSystemTable.add(token);
                 // Added by Korn for scale check isClientMode always be false
                 tokensToUpdateInSystemTable.add(token);
-//        System.out.println("3 8");
             }
             else if (endpoint.equals(currentOwner))
             {
-//        System.out.println("3 9");
                 // set state back to normal, since the node may have tried to leave, but failed and is now back up
                 // no need to persist, token/ip did not change
                 tokensToUpdateInMetadata.add(token);
-//        System.out.println("3 10");
             }
             else if (tokenMetadata.isRelocating(token) && tokenMetadata.getRelocatingRanges().get(token).equals(endpoint))
             {
-//        System.out.println("3 11");
                 // Token was relocating, this is the bookkeeping that makes it official.
                 tokensToUpdateInMetadata.add(token);
 //                if (!isClientMode)
@@ -1701,18 +1668,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     localTokensToRemove.add(token);
 
                 logger.info("Token {} relocated to {}", token, endpoint);
-//        System.out.println("3 12");
             }
             else if (tokenMetadata.isRelocating(token))
             {
-//        System.out.println("3 13");
                 logger.info("Token {} is relocating to {}, ignoring update from {}",
                         new Object[]{token, tokenMetadata.getRelocatingRanges().get(token), endpoint});
-//        System.out.println("3 14");
             }
             else if (Gossiper.instance.compareEndpointStartup(endpoint, currentOwner) > 0)
             {
-//        System.out.println("3 15");
                 tokensToUpdateInMetadata.add(token);
 //                if (!isClientMode)
 //                    tokensToUpdateInSystemTable.add(token);
@@ -1732,11 +1695,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                                           endpoint));
                 if (logger.isDebugEnabled())
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
-//        System.out.println("3 16");
             }
             else
             {
-//        System.out.println("3 17");
                 logger.info(String.format("Nodes %s and %s have the same token %s.  Ignoring %s",
                                            endpoint,
                                            currentOwner,
@@ -1744,33 +1705,19 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                                            endpoint));
                 if (logger.isDebugEnabled())
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
-//        System.out.println("3 18");
             }
         }
 
-//        System.out.println("3 19");
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
-//        System.out.println("3 19 1");
-        for (InetAddress ep : endpointsToRemove) {
-//        System.out.println("3 19 2");
+        for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
-//        System.out.println("3 19 3");
-        }
-        if (!tokensToUpdateInSystemTable.isEmpty()) {
-//        System.out.println("3 19 4");
+        if (!tokensToUpdateInSystemTable.isEmpty())
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-//        System.out.println("3 19 5");
-        }
-        if (!localTokensToRemove.isEmpty()) {
-//        System.out.println("3 19 6");
+        if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
-//        System.out.println("3 19 7");
-        }
-//        System.out.println("3 20");
 
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
-//        System.out.println("3 21");
             tokenMetadata.removeFromMoving(endpoint);
 
 //            if (!isClientMode)
@@ -1782,12 +1729,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
             // **************** Check this again *****************
             for (IEndpointLifecycleSubscriber subscriber : lifecycleSubscribersStatic)
                 subscriber.onMove(endpoint);
-//        System.out.println("3 22");
         }
 
-//        System.out.println("3 23");
         calculatePendingRangesStatic(stub);
-//        System.out.println("3 24");
     }
 
     /**

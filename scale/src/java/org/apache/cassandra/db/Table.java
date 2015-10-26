@@ -20,22 +20,19 @@ package org.apache.cassandra.db;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.cassandra.config.CFMetaData;
-import org.apache.cassandra.config.DatabaseDescriptor;
-import org.apache.cassandra.config.KSMetaData;
-import org.apache.cassandra.config.Schema;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.cassandra.config.*;
 import org.apache.cassandra.db.commitlog.CommitLog;
 import org.apache.cassandra.db.filter.ColumnSlice;
 import org.apache.cassandra.db.filter.QueryFilter;
@@ -45,11 +42,6 @@ import org.apache.cassandra.io.sstable.SSTableReader;
 import org.apache.cassandra.locator.AbstractReplicationStrategy;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.tracing.Tracing;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 /**
  * It represents a Keyspace.
@@ -376,33 +368,24 @@ public class Table
         switchLock.readLock().lock();
         try
         {
-                System.out.println("app 1");
             if (writeCommitLog)
             {
-                System.out.println("app 2");
                 Tracing.trace("Appending to commitlog");
-                System.out.println("app 3");
                 CommitLog.instance.add(mutation);
-                System.out.println("app 4");
             }
 
-                System.out.println("app 5");
             DecoratedKey key = StorageService.getPartitioner().decorateKey(mutation.key());
             for (ColumnFamily cf : mutation.getColumnFamilies())
             {
-                System.out.println("app 6");
                 ColumnFamilyStore cfs = columnFamilyStores.get(cf.id());
-                System.out.println("app 7");
                 if (cfs == null)
                 {
                     logger.error("Attempting to mutate non-existant column family " + cf.id());
                     continue;
                 }
 
-                System.out.println("app 8");
                 Tracing.trace("Adding to {} memtable", cf.metadata().cfName);
                 cfs.apply(key, cf, updateIndexes ? cfs.indexManager.updaterFor(key) : SecondaryIndexManager.nullUpdater);
-                System.out.println("app 9");
             }
         }
         finally

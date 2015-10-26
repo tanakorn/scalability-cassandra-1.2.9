@@ -32,7 +32,6 @@ import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +49,6 @@ import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
-import org.apache.cassandra.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.concurrent.TracingAwareExecutorService;
@@ -630,7 +628,6 @@ public final class MessagingService implements MessagingServiceMBean
         OutboundTcpConnection connection = getConnection(to, processedMessage);
 
         // write it
-        System.out.println("send network message to " + to);
         connection.enqueue(processedMessage, id);
     }
 
@@ -772,24 +769,24 @@ public final class MessagingService implements MessagingServiceMBean
             }
         }
         
-//        int[] messageInfo = MessagingService.instance().getMessageInfo();
-//        MessagingService.instance().resetMessageInfo();
-//        StringBuilder strBuilder = new StringBuilder("sc_debug: MessageInfo\n");
-//        strBuilder.append("node in GDA = ");
-//        strBuilder.append(messageInfo[0]);
-//        strBuilder.append('\n');
-//        strBuilder.append("node in GDA2 = ");
-//        strBuilder.append(messageInfo[1]);
-//        strBuilder.append('\n');
-//        strBuilder.append("vnode in GDA = ");
-//        strBuilder.append(messageInfo[2]);
-//        strBuilder.append('\n');
-//        strBuilder.append("vnode in GDA2 = ");
-//        strBuilder.append(messageInfo[3]);
+        int[] messageInfo = MessagingService.instance().getMessageInfo();
+        MessagingService.instance().resetMessageInfo();
+        StringBuilder strBuilder = new StringBuilder("sc_debug: MessageInfo\n");
+        strBuilder.append("node in GDA = ");
+        strBuilder.append(messageInfo[0]);
+        strBuilder.append('\n');
+        strBuilder.append("node in GDA2 = ");
+        strBuilder.append(messageInfo[1]);
+        strBuilder.append('\n');
+        strBuilder.append("vnode in GDA = ");
+        strBuilder.append(messageInfo[2]);
+        strBuilder.append('\n');
+        strBuilder.append("vnode in GDA2 = ");
+        strBuilder.append(messageInfo[3]);
 //        logger.info(strBuilder.toString());
         
-//        resetCount();
-//        resetMessageInfo();
+        resetCount();
+        resetMessageInfo();
         
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
@@ -810,13 +807,6 @@ public final class MessagingService implements MessagingServiceMBean
         }
 
         stage.execute(runnable, state);
-//        if (message.getMessageType() == Stage.GOSSIP) {
-//            BlockingQueue<Runnable> q = ((JMXEnabledThreadPoolExecutor) stage).getQueue();
-//            MessageDeliveryTask task = (MessageDeliveryTask) q.peek();
-//            if (task != null) {
-//                System.out.println("head = " + task.id + " " + task.message.from);
-//            }
-//        }
     }
     
     // For instrument

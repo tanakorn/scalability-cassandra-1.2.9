@@ -113,11 +113,8 @@ public abstract class ModificationStatement extends CFStatement implements CQLSt
 
     public ResultMessage executeInternal(QueryState queryState) throws RequestValidationException, RequestExecutionException
     {
-        for (IMutation mutation : getMutations(Collections.<ByteBuffer>emptyList(), true, null, queryState.getTimestamp())) {
-            System.out.println("aa 1 " + mutation.getClass());
+        for (IMutation mutation : getMutations(Collections.<ByteBuffer>emptyList(), true, null, queryState.getTimestamp()))
             mutation.apply();
-            System.out.println("aa 2;");
-        }
         return null;
     }
 

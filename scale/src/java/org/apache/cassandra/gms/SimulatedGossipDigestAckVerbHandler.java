@@ -56,9 +56,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
         GossiperStub stub = OneMachineScaleSimulator.stubGroup.getStub(to);
-        if (stub.getHasContactedSeed()) {
-            System.out.println(to + " receiving gossip ack from " + from);
-        }
 
         if (stub.getHasContactedSeed() && !OneMachineScaleSimulator.isTestNodesStarted && from.equals(OneMachineScaleSimulator.seed)) {
             GossipDigest digestForStub = null;
@@ -91,8 +88,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             for (InetAddress address : epStateMap.keySet()) {
                 if (OneMachineScaleSimulator.testNodes.contains(address)) {
                     // Implement here
-//                    OneMachineScaleSimulator.startForwarding(address, to);
-//                    break;
+                    OneMachineScaleSimulator.startForwarding(address, to);
 //                    EndpointState epState = epStateMap.get(address);
 //                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
                 }

@@ -204,7 +204,6 @@ public class IncomingTcpConnection extends Thread
         }
 
         MessageIn message = MessageIn.read(input, version, id);
-//        System.out.println("receive from " + message.from);
         if (message == null)
         {
             // callback expired; nothing to do

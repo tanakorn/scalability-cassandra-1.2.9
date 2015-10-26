@@ -270,15 +270,9 @@ public class RowMutation implements IMutation
      */
     public void apply()
     {
-        System.out.println("bb 1");
         KSMetaData ksm = Schema.instance.getTableDefinition(table);
-        System.out.println("bb 2");
         assert ksm != null : "Attempting to mutate non-existant keyspace " + table;
-//        Table.open(table).apply(this, ksm.durableWrites);
-        Table t = Table.open(table); 
-        System.out.println("bb 3");
-        t.apply(this, ksm.durableWrites);
-        System.out.println("bb 4");
+        Table.open(table).apply(this, ksm.durableWrites);
     }
 
     public void applyUnsafe()
