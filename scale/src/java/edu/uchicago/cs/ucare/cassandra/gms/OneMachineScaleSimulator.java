@@ -50,13 +50,12 @@ public class OneMachineScaleSimulator {
     public static boolean isTestNodesStarted = false;
     
     public static final int numTestNodes = 1;
-    public static final int numStubs = 125;
+    public static final int numStubs = 13;
     public static final int allNodes = numTestNodes + numStubs + 2;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
     static Map<InetAddress, LinkedList<ForwardedGossip>> propagationModels;
-    static Set<InetAddress> startedTestNodes;
     
     static LinkedBlockingQueue<InetAddress[]> gossipQueue;
     
@@ -90,8 +89,8 @@ public class OneMachineScaleSimulator {
         {
             // first try URL.getFile() which works for opaque URLs (file:foo) and paths without spaces
             configFileName = configLocation.getFile();
+            System.out.println(configFileName);
             File configFile = new File(configFileName);
-            System.out.println(configFile.getAbsolutePath());
             // then try alternative approach which works for all hierarchical URLs with or without spaces
             if (!configFile.exists())
                 configFileName = new File(configLocation.toURI()).getCanonicalPath();
@@ -106,6 +105,7 @@ public class OneMachineScaleSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
+        System.out.println("Start scale check");
         Gossiper.registerStatic(StorageService.instance);
         Gossiper.registerStatic(LoadBroadcaster.instance);
         Random rand = new Random();
@@ -113,10 +113,10 @@ public class OneMachineScaleSimulator {
         final CassandraProcess observerProcess = new CassandraProcess("/tmp/cass_scale", 2);
         PeerState[] peers = GossipPropagationSim.simulate(allNodes, 3000);
         propagationModels = new HashMap<InetAddress, LinkedList<ForwardedGossip>>();
-        startedTestNodes = new HashSet<InetAddress>();
         gossipQueue = new LinkedBlockingQueue<InetAddress[]>();
         // It needs some delay to start seed node
 //        Thread.sleep(5000);
+        System.out.println("Initializing scale environment");
         try {
             seed = InetAddress.getByName("127.0.0.1");
             observer = InetAddress.getByName("127.0.0.2");
@@ -154,38 +154,53 @@ public class OneMachineScaleSimulator {
 
             @Override
             public void run() {
-                Random random = new Random();
+                System.out.println("Start heartbeat thread");
+//                Random random = new Random();
                 int i = 0;
+                GossiperStub clusterStub;
+                try {
+                    clusterStub = new GossiperStub(InetAddress.getByName("127.0.0.4"), "Test Cluster", "", 1024, new Murmur3Partitioner());
+                } catch (UnknownHostException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                    return;
+                }
                 while (true) {
                     try {
                         Thread.sleep(1000);
                         stubGroup.updateHeartBeat();
                         for (InetAddress address : addressList) {
-                            int r = random.nextInt(allNodes);
-                            boolean gossipToSeed = false;
-                            if (r == 0) {
-                                GossiperStub stub = stubGroup.getStub(address);
-                                stub.sendGossip(seed);
-                                gossipToSeed = true;
-                            }
-                            if (!gossipToSeed || allNodes < 1) {
-                                GossiperStub stub = stubGroup.getStub(address);
-                                stub.sendGossip(seed);
-                            }
+                            GossiperStub stub = stubGroup.getStub(address);
+                            clusterStub.getEndpointStateMap().put(address, stub.getEndpointState());
+//                            int r = random.nextInt(allNodes);
+//                            boolean gossipToSeed = false;
+//                            if (r == 0) {
+//                                GossiperStub stub = stubGroup.getStub(address);
+//                                stub.sendGossip(seed);
+//                                gossipToSeed = true;
+//                            }
+//                            if (!gossipToSeed || allNodes < 1) {
+//                                GossiperStub stub = stubGroup.getStub(address);
+//                                stub.sendGossip(seed);
+//                            }
                         }
+//                        System.out.println(clusterStub.getEndpointStateMap().size());
+                        clusterStub.sendGossip(seed);
+                        clusterStub.sendGossip(observer);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     if (i % 10 == 0) {
-                        for (GossiperStub stub : stubGroup) {
-                            logger.info(stub.getInetAddress() + " state is " + stub.getEndpointStateMap().size() + " " + stub.getEndpointStateMap().keySet());
-                        }
+//                        for (GossiperStub stub : stubGroup) {
+//                            logger.info(stub.getInetAddress() + " state is " + stub.getEndpointStateMap().size() + " " + stub.getEndpointStateMap().keySet());
+//                        }
                     }
                     ++i;
                 }
             }
             
         });
+        System.out.println("Start first gossip with seed");
         for (GossiperStub stub : stubGroup) {
             logger.info("sc_debug: " + stub.getInetAddress() + " send gossip to seed");
             stub.sendGossip(seed);
@@ -194,6 +209,8 @@ public class OneMachineScaleSimulator {
                 logger.info(stub.getInetAddress() + " finished first gossip with seed with " + stub.getEndpointStateMap().keySet());
             }
         }
+//        System.out.println("Finish first gossip with seed");
+        System.out.println("Initialize gossip state of each node");
         GossiperStub prevInitStub = null;
         for (GossiperStub stub : stubGroup) {
             if (prevInitStub != null) {
@@ -222,6 +239,7 @@ public class OneMachineScaleSimulator {
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
         final List<CassandraProcess> testNodeProcesses = new LinkedList<CassandraProcess>();
+        System.out.println("Start Cassandra test node");
         for (int i = 0; i < numTestNodes; ++i) {
             testNodeProcesses.add(new CassandraProcess("/tmp/cass_scale", i + 3));
         }
@@ -248,6 +266,7 @@ public class OneMachineScaleSimulator {
                         InetAddress[] detail = gossipQueue.take();
                         InetAddress testNode = detail[0];
                         InetAddress startNode = detail[1];
+                        System.out.println("A gossip from " + testNode + " is being simulated propagation to " + startNode);
                         LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
                         ForwardedGossip model = null;
                         boolean isThereNextModel = false;
@@ -270,26 +289,34 @@ public class OneMachineScaleSimulator {
                         }
                         LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
                         logger.info("Forward chain for " + testNode + " = " + forwardChain);
+                        System.out.println("Forward chain for " + testNode + " = " + forwardChain);
                         ForwardEvent start = forwardChain.removeFirst();
                         ForwardEvent end = forwardChain.removeLast();
                         int previousReceivedTime = start.receivedTime;
                         GossiperStub sendingStub = stubGroup.getStub(startNode);
+                        long a = 0;
                         for (ForwardEvent forward : forwardChain) {
                             int receivedTime = forward.receivedTime;
                             int waitTime = receivedTime - previousReceivedTime;
                             try {
                                 Thread.sleep(waitTime * 1000);
+                                a += waitTime * 1000;
                                 GossiperStub receivingStub = stubGroup.getRandomStub();
-                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
+                                System.out.println("Start sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
                                         " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
+//                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
+//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
                                 MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
                                 msgIn.setTo(receivingStub.getInetAddress());
                                 long s = System.currentTimeMillis();
                                 MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
                                         .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
                                 long t = System.currentTimeMillis() - s;
+                                a += t;
                                 logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
-                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
+//                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
+//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
+                                System.out.println("Finish sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
                                         " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
 //                                logger.info("sc_debug: Receiving stub is " + receivingStub.getInetAddress() + " with ring " + receivingStub.getEndpointStateMap().keySet());
                                 sendingStub = receivingStub;
@@ -300,10 +327,12 @@ public class OneMachineScaleSimulator {
                         }
                         int waitTime = end.receivedTime - previousReceivedTime;
                         try {
+                            a += waitTime * 1000;
                             Thread.sleep(waitTime * 1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        System.out.println("Forwarding to observer:" + observer + " at " + System.currentTimeMillis());
                         logger.info("Forwarding to observer:" + observer + " at " + System.currentTimeMillis());
                         sendingStub.sendGossip(observer);
                     } catch (InterruptedException e) {
@@ -313,12 +342,14 @@ public class OneMachineScaleSimulator {
             }
             
         });
+        gossipForwarder.setName("Forwarder");
         gossipForwarder.start();
 
     }
     
     public static void startForwarding(final InetAddress testNode, final InetAddress startNode) {
         InetAddress[] detail = { testNode, startNode };
+        System.out.println("A gossip from " + testNode + " is sent to " + startNode);
         gossipQueue.add(detail);
     }
     
