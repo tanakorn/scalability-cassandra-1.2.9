@@ -57,7 +57,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         for (InetAddress address : remoteEpStateMap.keySet()) {
             if (OneMachineScaleSimulator.testNodes.contains(address)) {
                 // Implement here
-                OneMachineScaleSimulator.startForwarding(address, to);
+                OneMachineScaleSimulator.startForwarding(from, address, to);
 //                EndpointState epState = remoteEpStateMap.get(address);
 //                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
             }

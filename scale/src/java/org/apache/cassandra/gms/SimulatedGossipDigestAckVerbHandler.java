@@ -88,7 +88,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             for (InetAddress address : epStateMap.keySet()) {
                 if (OneMachineScaleSimulator.testNodes.contains(address)) {
                     // Implement here
-                    OneMachineScaleSimulator.startForwarding(address, to);
+                    OneMachineScaleSimulator.startForwarding(from, address, to);
 //                    EndpointState epState = epStateMap.get(address);
 //                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
                 }
@@ -139,7 +139,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (!stub.getHasContactedSeed() && from.equals(OneMachineScaleSimulator.seed)) {
             synchronized (stub) {
                 stub.setHasContactedSeed(true);
-                stub.notify();
+//                stub.notify();
             }
         }
     }

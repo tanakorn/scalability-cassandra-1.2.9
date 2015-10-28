@@ -130,27 +130,33 @@ public class QueryProcessor
 
     public static UntypedResultSet processInternal(String query)
     {
-        try
-        {
-            ClientState state = new ClientState(true);
-            QueryState qState = new QueryState(state);
-            state.setKeyspace(Table.SYSTEM_KS);
-            CQLStatement statement = getStatement(query, state).statement;
-            statement.validate(state);
-            ResultMessage result = statement.executeInternal(qState);
-            if (result instanceof ResultMessage.Rows)
-                return new UntypedResultSet(((ResultMessage.Rows)result).result);
-            else
-                return null;
-        }
-        catch (RequestExecutionException e)
-        {
-            throw new RuntimeException(e);
-        }
-        catch (RequestValidationException e)
-        {
-            throw new AssertionError(e);
-        }
+        return null;
+//        try
+//        {
+//            System.out.println("3 1");
+//            ClientState state = new ClientState(true);
+//            QueryState qState = new QueryState(state);
+//            state.setKeyspace(Table.SYSTEM_KS);
+//            System.out.println("3 2");
+//            CQLStatement statement = getStatement(query, state).statement;
+//            System.out.println("3 3");
+//            statement.validate(state);
+//            System.out.println("3 4 " + statement.getClass());
+//            ResultMessage result = statement.executeInternal(qState);
+//            System.out.println("3 5");
+//            if (result instanceof ResultMessage.Rows)
+//                return new UntypedResultSet(((ResultMessage.Rows)result).result);
+//            else
+//                return null;
+//        }
+//        catch (RequestExecutionException e)
+//        {
+//            throw new RuntimeException(e);
+//        }
+//        catch (RequestValidationException e)
+//        {
+//            throw new AssertionError(e);
+//        }
     }
 
     public static UntypedResultSet resultify(String query, Row row)
