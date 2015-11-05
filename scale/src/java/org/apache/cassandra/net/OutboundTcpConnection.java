@@ -96,6 +96,7 @@ public class OutboundTcpConnection extends Thread
         try
         {
             backlog.put(new QueuedMessage(message, id));
+            System.out.println(message.payload);
         }
         catch (InterruptedException e)
         {

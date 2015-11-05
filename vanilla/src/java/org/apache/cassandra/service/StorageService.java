@@ -1341,7 +1341,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     {
         assert pieces.length >= 2;
         
-//        logger.info("sc_debug: isClientMode = " + isClientMode);
+//        Klogger.logger().info("isClientMode = " + isClientMode);
 
         // Parse versioned values according to end-point version:
         //   versions  < 1.2 .....: STATUS,TOKEN

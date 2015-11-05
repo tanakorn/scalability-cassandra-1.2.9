@@ -20,6 +20,8 @@ package org.apache.cassandra.net;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.util.Klogger;
+
 public class MessageDeliveryTask implements Runnable
 {
     private static final Logger logger = LoggerFactory.getLogger(MessageDeliveryTask.class);
@@ -56,6 +58,6 @@ public class MessageDeliveryTask implements Runnable
         long s = System.currentTimeMillis();
         verbHandler.doVerb(message, id);
         long t = System.currentTimeMillis() - s;
-        logger.info("sc_debug: Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
+        Klogger.logger.info("Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
     }
 }

@@ -1,6 +1,7 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class GossiperStub implements InetAddressStub {
 	InetAddress broadcastAddress;
 	UUID hostId;
 	UUID schema;
-	HeartBeatState heartBeatState;
+	public HeartBeatState heartBeatState;
 	int numTokens;
 	EndpointState state;
 	ConcurrentMap<InetAddress, EndpointState> endpointStateMap;
@@ -152,6 +153,14 @@ public class GossiperStub implements InetAddressStub {
             if (epState != null) {
                 generation = epState.getHeartBeatState().getGeneration();
                 maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
+                try {
+                    if (broadcastAddress.equals(InetAddress.getByName("127.0.0.4"))) {
+                        System.out.println(broadcastAddress + " " + endpoint + " " + generation + " " + maxVersion);
+                    }
+                } catch (UnknownHostException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
             gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
         }

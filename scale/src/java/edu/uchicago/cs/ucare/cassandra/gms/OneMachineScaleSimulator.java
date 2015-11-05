@@ -6,7 +6,8 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Collection;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +61,7 @@ public class OneMachineScaleSimulator {
     static Map<InetAddress, LinkedList<ForwardedGossip>> propagationModels;
     
     static LinkedBlockingQueue<InetAddress[]> gossipQueue;
+    static Timer timer = new Timer();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
@@ -156,7 +160,6 @@ public class OneMachineScaleSimulator {
             public void run() {
                 System.out.println("Start heartbeat thread");
 //                Random random = new Random();
-                int i = 0;
                 GossiperStub clusterStub;
                 try {
                     clusterStub = new GossiperStub(InetAddress.getByName("127.0.0.4"), "Test Cluster", "", 1024, new Murmur3Partitioner());
@@ -169,33 +172,25 @@ public class OneMachineScaleSimulator {
                     try {
                         Thread.sleep(1000);
                         stubGroup.updateHeartBeat();
+                        clusterStub.updateHeartBeat();
                         for (InetAddress address : addressList) {
                             GossiperStub stub = stubGroup.getStub(address);
                             clusterStub.getEndpointStateMap().put(address, stub.getEndpointState());
-//                            int r = random.nextInt(allNodes);
-//                            boolean gossipToSeed = false;
-//                            if (r == 0) {
-//                                GossiperStub stub = stubGroup.getStub(address);
-//                                stub.sendGossip(seed);
-//                                gossipToSeed = true;
-//                            }
-//                            if (!gossipToSeed || allNodes < 1) {
-//                                GossiperStub stub = stubGroup.getStub(address);
-//                                stub.sendGossip(seed);
-//                            }
                         }
-//                        System.out.println(clusterStub.getEndpointStateMap().size());
                         clusterStub.sendGossip(seed);
-//                        clusterStub.sendGossip(observer);
+                        for (InetAddress testNode : testNodes) {
+                            clusterStub.sendGossip(testNode);
+                        }
+                        int gen = clusterStub.getEndpointStateMap().get(InetAddress.getByName("127.0.0.4")).getHeartBeatState().getGeneration();
+                        int ver = clusterStub.getEndpointStateMap().get(InetAddress.getByName("127.0.0.4")).getHeartBeatState().getHeartBeatVersion();
+//                        System.out.println(gen + " " + ver);
+//                        System.out.println(clusterStub.heartBeatState.getGeneration() + " " + clusterStub.heartBeatState.getHeartBeatVersion());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    } catch (UnknownHostException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
                     }
-                    if (i % 10 == 0) {
-//                        for (GossiperStub stub : stubGroup) {
-//                            logger.info(stub.getInetAddress() + " state is " + stub.getEndpointStateMap().size() + " " + stub.getEndpointStateMap().keySet());
-//                        }
-                    }
-                    ++i;
                 }
             }
             
@@ -240,6 +235,7 @@ public class OneMachineScaleSimulator {
         stubGroup.setLoad(10000);
         final List<CassandraProcess> testNodeProcesses = new LinkedList<CassandraProcess>();
         System.out.println("Start Cassandra test node");
+        Thread.sleep(3000);
         for (int i = 0; i < numTestNodes; ++i) {
             testNodeProcesses.add(new CassandraProcess("/tmp/cass_scale", i + 3));
         }
@@ -257,102 +253,35 @@ public class OneMachineScaleSimulator {
             
         });
         
-        Thread gossipForwarder = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        InetAddress[] detail = gossipQueue.take();
-                        InetAddress testNode = detail[0];
-                        InetAddress startNode = detail[1];
-                        InetAddress from = detail[2];
-                        System.out.println("A gossip of " + testNode + " from " + from + " is sent to " + startNode);
-//                        System.out.println("A gossip from " + testNode + " is being simulated propagation to " + startNode);
-                        LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
-                        ForwardedGossip model = null;
-                        boolean isThereNextModel = false;
-                        synchronized (forwardedGossip) {
-                            while ((model == null || model.forwardHistory().size() == 2) && !forwardedGossip.isEmpty()) {
-                                model = forwardedGossip.removeFirst();
-                                isThereNextModel = true;
-                            }
-                        }
-                        if (!isThereNextModel) {
-                            logger.info("There is no forwarding model left, generate more");
-                            PeerState[] peers = GossipPropagationSim.simulate(allNodes, 1000);
-                            Random rand = new Random();
-                            int modelIndex = 0;
-                            while (modelIndex == 0) {
-                                modelIndex = rand.nextInt(peers.length);
-                            }
-                            propagationModels.put(testNode, peers[modelIndex].getModel());
-                            continue;
-                        }
-                        LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
-                        logger.info("Forward chain for " + testNode + " = " + forwardChain);
-                        System.out.println("Forward chain for " + testNode + " = " + forwardChain);
-                        ForwardEvent start = forwardChain.removeFirst();
-                        ForwardEvent end = forwardChain.removeLast();
-                        int previousReceivedTime = start.receivedTime;
-                        GossiperStub sendingStub = stubGroup.getStub(startNode);
-                        long startTime = System.currentTimeMillis();
-                        for (ForwardEvent forward : forwardChain) {
-                            int receivedTime = forward.receivedTime;
-                            int waitTime = receivedTime - previousReceivedTime;
-                            try {
-                                Thread.sleep(waitTime * 1000);
-                                GossiperStub receivingStub = stubGroup.getRandomStub();
-//                                System.out.println("Start sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-                                MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
-                                msgIn.setTo(receivingStub.getInetAddress());
-//                                long s = System.currentTimeMillis();
-                                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
-                                        .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-//                                long t = System.currentTimeMillis() - s;
-//                                logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
-//                                logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                                System.out.println("Finish sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                        " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                                logger.info("sc_debug: Receiving stub is " + receivingStub.getInetAddress() + " with ring " + receivingStub.getEndpointStateMap().keySet());
-                                sendingStub = receivingStub;
-                                previousReceivedTime = receivedTime;
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        int waitTime = end.receivedTime - previousReceivedTime;
-                        try {
-                            Thread.sleep(waitTime * 1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        sendingStub.sendGossip(observer);
-                        long endTime = System.currentTimeMillis();
-                        long forwardTime = endTime - startTime;
-                        System.out.println("Forwarding to observer:" + observer + " at " + System.currentTimeMillis() + " took " + forwardTime + " ms");
-                        logger.info("Forwarding to observer:" + observer + " at " + System.currentTimeMillis() + " took " + forwardTime + " ms");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            
-        });
-        gossipForwarder.setName("Forwarder");
-//        gossipForwarder.start();
-
     }
     
-    public static void startForwarding(final InetAddress from, final InetAddress testNode, final InetAddress startNode) {
-        InetAddress[] detail = { testNode, startNode, from };
-//        System.out.println("A gossip of " + testNode + " from " + from + " is sent to " + startNode);
-        gossipQueue.add(detail);
-//        new GossipForwarder(testNode, startNode).start();
+    public static void startForwarding(final InetAddress fromNode, final InetAddress testNode, final InetAddress startNode) {
+        ForwardedGossip model = null;
+        boolean isThereNextModel = false;
+        while (!isThereNextModel) {
+            LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
+            synchronized (forwardedGossip) {
+                while ((model == null || model.forwardHistory().size() == 2) && !forwardedGossip.isEmpty()) {
+                    model = forwardedGossip.removeFirst();
+                    isThereNextModel = true;
+                } 
+            }
+            if (!isThereNextModel) {
+                logger.info("There is no forwarding model left, generate more");
+                PeerState[] peers = GossipPropagationSim.simulate(allNodes, 1000);
+                Random rand = new Random();
+                int modelIndex = 0;
+                while (modelIndex == 0) {
+                    modelIndex = rand.nextInt(peers.length);
+                }
+                propagationModels.put(testNode, peers[modelIndex].getModel());
+                continue;
+            }
+        }
+        LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
+//        System.out.println("Forward chain for " + testNode + " = " + forwardChain);
+        IntermediateGossip intGossip = new IntermediateGossip(fromNode, testNode, startNode, forwardChain);
+        timer.schedule(new GossipForwardTask(intGossip), intGossip.getDelayAndShift());
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
@@ -360,87 +289,99 @@ public class OneMachineScaleSimulator {
         return msgIn;
     }
     
-    static class GossipForwarder extends Thread {
+    static class IntermediateGossip {
         
-        private InetAddress testNode;
-        private InetAddress startNode;
+        private final InetAddress fromNode;
+        private final InetAddress testNode;
+        private InetAddress currentNode;
+        private final LinkedList<ForwardEvent> forwardChain;
         
-        public GossipForwarder(InetAddress testNode, InetAddress startNode) {
+        private ForwardEvent prevEvent;
+        
+        public IntermediateGossip(InetAddress fromNode, InetAddress testNode,
+                InetAddress currentNode, LinkedList<ForwardEvent> forwardChain) {
+            this.fromNode = fromNode;
             this.testNode = testNode;
-            this.startNode = startNode;
+            this.currentNode = currentNode;
+            this.forwardChain = forwardChain;
+            this.forwardChain.removeFirst();
+            prevEvent = null;
+        }
+
+        public InetAddress getCurrentNode() {
+            return currentNode;
+        }
+
+        public void setCurrentNode(InetAddress currentNode) {
+            this.currentNode = currentNode;
+        }
+
+        public InetAddress getFromNode() {
+            return fromNode;
+        }
+
+        public InetAddress getTestNode() {
+            return testNode;
+        }
+
+        public LinkedList<ForwardEvent> getForwardChain() {
+            return forwardChain;
+        }
+
+        public ForwardEvent getPrevEvent() {
+            return prevEvent;
+        }
+
+        public void setPrevEvent(ForwardEvent prevEvent) {
+            this.prevEvent = prevEvent;
         }
         
+        public long getDelayAndShift() {
+            ForwardEvent nextEvent = forwardChain.removeFirst();
+            long delay = prevEvent == null ? 0 : (nextEvent.receivedTime - prevEvent.receivedTime) * 1000;
+            prevEvent = nextEvent;
+            return delay;
+        }
+        
+    }
+    
+    static class GossipForwardTask extends TimerTask {
+        
+        final IntermediateGossip intGossip;
+
+        public GossipForwardTask(IntermediateGossip intGossip) {
+            this.intGossip = intGossip;
+        }
+
+        @Override
         public void run() {
-//            System.out.println("A gossip from " + testNode + " is being simulated propagation to " + startNode);
-            LinkedList<ForwardedGossip> forwardedGossip = propagationModels.get(testNode);
-            ForwardedGossip model = null;
-            boolean isThereNextModel = false;
-            while (!isThereNextModel) {
-                synchronized (forwardedGossip) {
-                    while ((model == null || model.forwardHistory().size() == 2) && !forwardedGossip.isEmpty()) {
-                        model = forwardedGossip.removeFirst();
-                        isThereNextModel = true;
+            Thread t = new Thread(new Runnable() {
+                
+                @Override
+                public void run() {
+                    if (intGossip.getForwardChain().size() != 1) {
+//                        System.out.println(intGossip.getPrevEvent() + " " + intGossip.getForwardChain());
+                        GossiperStub sendingStub = stubGroup.getStub(intGossip.getCurrentNode());
+                        GossiperStub receivingStub;
+                        do {
+                            receivingStub = stubGroup.getRandomStub();
+                        } while (sendingStub.equals(receivingStub));
+//                        System.out.println(Calendar.getInstance().getTime() + "[" + intGossip + "] from " + sendingStub.getInetAddress() + " to " + receivingStub.getInetAddress());
+                        MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
+                        msgIn.setTo(receivingStub.getInetAddress());
+                        MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
+                                .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
+                        intGossip.setCurrentNode(receivingStub.getInetAddress());
+                        long delay = intGossip.getDelayAndShift();
+//                        System.out.println(delay);
+                        timer.schedule(new GossipForwardTask(intGossip), delay);
+                    } else {
+//                        System.out.println(Calendar.getInstance().getTime() + "[" + intGossip + "] from " + intGossip.getCurrentNode() + " to observer");
+                        stubGroup.getStub(intGossip.getCurrentNode()).sendGossip(observer);
                     }
                 }
-                if (!isThereNextModel) {
-                    logger.info("There is no forwarding model left, generate more");
-                    PeerState[] peers = GossipPropagationSim.simulate(allNodes, 1000);
-                    Random rand = new Random();
-                    int modelIndex = 0;
-                    while (modelIndex == 0) {
-                        modelIndex = rand.nextInt(peers.length);
-                    }
-                    propagationModels.put(testNode, peers[modelIndex].getModel());
-                    continue;
-                }
-            }
-            LinkedList<ForwardEvent> forwardChain = model.forwardHistory();
-            logger.info("Forward chain for " + testNode + " = " + forwardChain);
-            System.out.println("Forward chain for " + testNode + " = " + forwardChain);
-            ForwardEvent start = forwardChain.removeFirst();
-            ForwardEvent end = forwardChain.removeLast();
-            int previousReceivedTime = start.receivedTime;
-            GossiperStub sendingStub = stubGroup.getStub(startNode);
-            long startTime = System.currentTimeMillis();
-            for (ForwardEvent forward : forwardChain) {
-                int receivedTime = forward.receivedTime;
-                int waitTime = receivedTime - previousReceivedTime;
-                try {
-                    Thread.sleep(waitTime * 1000);
-                    GossiperStub receivingStub = stubGroup.getRandomStub();
-//                    System.out.println("Start sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                            " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                        logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-                    MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
-                    msgIn.setTo(receivingStub.getInetAddress());
-//                    long s = System.currentTimeMillis();
-                    MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
-                            .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-//                    long t = System.currentTimeMillis() - s;
-//                    logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
-//                        logger.info("sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                                " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                    System.out.println("Finish sending " + sendingStub.getInetAddress() + " state = " + sendingStub.endpointStateMap.size() + 
-//                            " ; receiving " + receivingStub.getInetAddress() + " state = " + receivingStub.endpointStateMap.size());
-//                        logger.info("sc_debug: Receiving stub is " + receivingStub.getInetAddress() + " with ring " + receivingStub.getEndpointStateMap().keySet());
-                    sendingStub = receivingStub;
-                    previousReceivedTime = receivedTime;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            int waitTime = end.receivedTime - previousReceivedTime;
-            try {
-                Thread.sleep(waitTime * 1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            sendingStub.sendGossip(observer);
-            long endTime = System.currentTimeMillis();
-            long forwardTime = endTime - startTime;
-            System.out.println("Forwarding to observer:" + observer + " at " + System.currentTimeMillis() + " took " + forwardTime + " ms");
-            logger.info("Forwarding to observer:" + observer + " at " + System.currentTimeMillis() + " took " + forwardTime + " ms");
+            });
+            t.start();
         }
         
     }
