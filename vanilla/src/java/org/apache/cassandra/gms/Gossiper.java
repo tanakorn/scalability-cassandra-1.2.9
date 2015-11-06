@@ -167,41 +167,42 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
                     doStatusCheck();
-                    Map<MessagingService.Verb, Integer> messageCount = MessagingService.instance().getCount();
-                    MessagingService.instance().resetCount();
-                    StringBuilder strBuilder = new StringBuilder("MessageCount\n");
-                    MessagingService.Verb verb;
-                    verb = MessagingService.Verb.GOSSIP_DIGEST_SYN;
-                    strBuilder.append(verb);
-                    strBuilder.append(" : ");
-                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-                    strBuilder.append('\n');
-                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK;
-                    strBuilder.append(verb);
-                    strBuilder.append(" : ");
-                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-                    strBuilder.append('\n');
-                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK2;
-                    strBuilder.append(verb);
-                    strBuilder.append(" : ");
-                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-                    Klogger.logger.info(strBuilder.toString());
-                    
-                    int[] messageInfo = MessagingService.instance().getMessageInfo();
-                    MessagingService.instance().resetMessageInfo();
-                    strBuilder = new StringBuilder("MessageInfo\n");
-                    strBuilder.append("node in GDA = ");
-                    strBuilder.append(messageInfo[0]);
-                    strBuilder.append('\n');
-                    strBuilder.append("node in GDA2 = ");
-                    strBuilder.append(messageInfo[1]);
-                    strBuilder.append('\n');
-                    strBuilder.append("vnode in GDA = ");
-                    strBuilder.append(messageInfo[2]);
-                    strBuilder.append('\n');
-                    strBuilder.append("vnode in GDA2 = ");
-                    strBuilder.append(messageInfo[3]);
-                    Klogger.logger.info(strBuilder.toString());
+                    StringBuilder strBuilder;
+//                    Map<MessagingService.Verb, Integer> messageCount = MessagingService.instance().getCount();
+//                    MessagingService.instance().resetCount();
+//                    strBuilder = new StringBuilder("MessageCount : ");
+//                    MessagingService.Verb verb;
+//                    verb = MessagingService.Verb.GOSSIP_DIGEST_SYN;
+//                    strBuilder.append(verb);
+//                    strBuilder.append(" : ");
+//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+//                    strBuilder.append(" ; ");
+//                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK;
+//                    strBuilder.append(verb);
+//                    strBuilder.append(" : ");
+//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+//                    strBuilder.append(" ; ");
+//                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK2;
+//                    strBuilder.append(verb);
+//                    strBuilder.append(" : ");
+//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
+//                    Klogger.logger.info(strBuilder.toString());
+//                    
+//                    int[] messageInfo = MessagingService.instance().getMessageInfo();
+//                    MessagingService.instance().resetMessageInfo();
+//                    strBuilder = new StringBuilder("MessageInfo\n");
+//                    strBuilder.append("node in GDA = ");
+//                    strBuilder.append(messageInfo[0]);
+//                    strBuilder.append(" ; ");
+//                    strBuilder.append("node in GDA2 = ");
+//                    strBuilder.append(messageInfo[1]);
+//                    strBuilder.append(" ; ");
+//                    strBuilder.append("vnode in GDA = ");
+//                    strBuilder.append(messageInfo[2]);
+//                    strBuilder.append(" ; ");
+//                    strBuilder.append("vnode in GDA2 = ");
+//                    strBuilder.append(messageInfo[3]);
+//                    Klogger.logger.info(strBuilder.toString());
                     int seenNode = endpointStateMap.size();
                     int deadNode = 0;
                     int nonMemberNode = 0;
@@ -603,7 +604,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-        Klogger.logger.info("Sending a GDS to {}", to);
+        Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
@@ -1047,10 +1048,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
         {
-            long s = System.currentTimeMillis();
+//            long s = System.currentTimeMillis();
             subscriber.onChange(addr, state, value);
-            long e = System.currentTimeMillis();
-            Klogger.logger.info("subscriber do noti = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
+//            long e = System.currentTimeMillis();
+//            Klogger.logger.info("subscriber do noti = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
     }
 
