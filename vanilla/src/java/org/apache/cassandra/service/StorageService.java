@@ -29,20 +29,22 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.management.MBeanServer;
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 import javax.management.ObjectName;
 
 import com.google.common.collect.*;
-
 import com.google.common.util.concurrent.AtomicDouble;
+
+import edu.uchicago.cs.ucare.util.Klogger;
+
 import org.apache.cassandra.db.index.SecondaryIndex;
 import org.apache.log4j.Level;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.auth.Auth;
 import org.apache.cassandra.concurrent.DebuggableScheduledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.Stage;
@@ -1690,13 +1692,18 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private void calculatePendingRanges()
     {
+        Klogger.logger.info("Executing calculatePendingRanges");
+        long s = System.currentTimeMillis();
         for (String table : Schema.instance.getNonSystemTables())
             calculatePendingRanges(Table.open(table).getReplicationStrategy(), table);
+        long e = System.currentTimeMillis();
+        Klogger.logger.info("calculatePendingRanges took " + (e - s) + " ms");
     }
 
     // public & static for testing purposes
     public static void calculatePendingRanges(AbstractReplicationStrategy strategy, String table)
     {
+        Klogger.logger.info("calculatePendingRanges for table " + table);
         TokenMetadata tm = StorageService.instance.getTokenMetadata();
         Multimap<Range<Token>, InetAddress> pendingRanges = HashMultimap.create();
         BiMultiValMap<Token, InetAddress> bootstrapTokens = tm.getBootstrapTokens();
@@ -1714,6 +1721,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         // Copy of metadata reflecting the situation after all leave operations are finished.
         TokenMetadata allLeftMetadata = tm.cloneAfterAllLeft();
+//        Klogger.logger.info("all left metadata = " + allLeftMetadata);
 
         // get all ranges that will be affected by leaving nodes
         Set<Range<Token>> affectedRanges = new HashSet<Range<Token>>();
@@ -1739,8 +1747,10 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             Collection<Token> tokens = bootstrapTokens.inverse().get(endpoint);
 
             allLeftMetadata.updateNormalTokens(tokens, endpoint);
-            for (Range<Token> range : strategy.getAddressRanges(allLeftMetadata).get(endpoint))
+            for (Range<Token> range : strategy.getAddressRanges(allLeftMetadata).get(endpoint)) {
+//                Klogger.logger.info("nested range = " + range.toString());
                 pendingRanges.put(range, endpoint);
+            }
             allLeftMetadata.removeEndpoint(endpoint);
         }
 

@@ -289,6 +289,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      */
     public void register(IEndpointStateChangeSubscriber subscriber)
     {
+        Klogger.logger.info("Register endpoint state subscriber " + subscriber.getClass());
         subscribers.add(subscriber);
     }
 
