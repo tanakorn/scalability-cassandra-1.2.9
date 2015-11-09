@@ -924,7 +924,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             long s = System.currentTimeMillis();
             subscriber.onRestart(ep, epState);
             long e = System.currentTimeMillis();
-            Klogger.logger.info("subscriber handle major " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
 
         if (!isDeadState(epState))
