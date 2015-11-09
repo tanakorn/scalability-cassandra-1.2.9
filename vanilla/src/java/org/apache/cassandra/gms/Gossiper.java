@@ -1057,7 +1057,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
         }
         long e = System.currentTimeMillis();
-        Klogger.logger.info("apply new states do noti took " + (e - s) + " ms");
     }
 
     // notify that an application state has changed

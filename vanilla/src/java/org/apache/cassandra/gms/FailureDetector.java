@@ -341,7 +341,9 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
+        if (FailureDetector.observedNodes.contains(address)) {
+            Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
+        }
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
