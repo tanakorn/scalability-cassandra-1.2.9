@@ -51,7 +51,6 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
 
         int ack2Hash = message.payload.hashCode();
-        Klogger.logger.info("Receive ack2:" + ack2Hash);
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
@@ -106,7 +105,15 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
-        Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        Integer[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        int newNode = result[0];
+        int newNodeToken = result[1];
+        int newRestart = result[2];
+        int newVersion = result[3];
+        int newVersionToken = result[4];
+        Klogger.logger.info("Receive ack2:" + ack2Hash +
+                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         end = System.currentTimeMillis();
         long applyState = end - start;
 //        for (InetAddress observedNode : FailureDetector.observedNodes) {
