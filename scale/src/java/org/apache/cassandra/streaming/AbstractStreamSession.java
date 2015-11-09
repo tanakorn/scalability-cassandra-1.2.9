@@ -45,6 +45,7 @@ public abstract class AbstractStreamSession implements IEndpointStateChangeSubsc
         this.table = table;
         this.callback = callback;
         Gossiper.instance.register(this);
+//        Gossiper.registerStatic(this);
         FailureDetector.instance.registerFailureDetectionEventListener(this);
     }
 

@@ -24,13 +24,11 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.config.CFMetaData;
@@ -50,7 +48,9 @@ import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.UUIDGen;
 import org.apache.cassandra.utils.WrappedRunnable;
 
-public class MigrationManager implements IEndpointStateChangeSubscriber
+import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+
+public class MigrationManager implements IEndpointStateChangeSubscriber, IScaleEndpointStateChangeSubscriber
 {
     private static final Logger logger = LoggerFactory.getLogger(MigrationManager.class);
 
@@ -79,7 +79,18 @@ public class MigrationManager implements IEndpointStateChangeSubscriber
     public void onJoin(InetAddress endpoint, EndpointState epState)
     {}
 
+    public void onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    {}
+
     public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    {
+        if (state != ApplicationState.SCHEMA || endpoint.equals(FBUtilities.getBroadcastAddress()))
+            return;
+
+        maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
+    }
+
+    public void onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.SCHEMA || endpoint.equals(FBUtilities.getBroadcastAddress()))
             return;
@@ -95,13 +106,30 @@ public class MigrationManager implements IEndpointStateChangeSubscriber
             maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
     }
 
+    public void onAlive(GossiperStub stub, InetAddress endpoint, EndpointState state)
+    {
+        VersionedValue value = state.getApplicationState(ApplicationState.SCHEMA);
+
+        if (value != null)
+            maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
+    }
+
     public void onDead(InetAddress endpoint, EndpointState state)
+    {}
+
+    public void onDead(GossiperStub stub, InetAddress endpoint, EndpointState state)
     {}
 
     public void onRestart(InetAddress endpoint, EndpointState state)
     {}
 
+    public void onRestart(GossiperStub stub, InetAddress endpoint, EndpointState state)
+    {}
+
     public void onRemove(InetAddress endpoint)
+    {}
+
+    public void onRemove(GossiperStub stub, InetAddress endpoint)
     {}
 
     /**

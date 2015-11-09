@@ -128,5 +128,6 @@ public class GossipingPropertyFileSnitch extends AbstractNetworkTopologySnitch//
         Gossiper.instance.addLocalApplicationState(ApplicationState.INTERNAL_IP,
                                                    StorageService.instance.valueFactory.internalIP(FBUtilities.getLocalAddress().getHostAddress()));
         Gossiper.instance.register(new ReconnectableSnitchHelper(this, myDC, preferLocal));
+//        Gossiper.registerStatic(new ReconnectableSnitchHelper(this, myDC, preferLocal));
     }
 }

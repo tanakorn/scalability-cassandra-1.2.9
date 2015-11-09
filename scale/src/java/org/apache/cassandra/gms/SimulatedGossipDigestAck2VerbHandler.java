@@ -52,12 +52,12 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Gossiper.notifyFailureDetectorStatic(OneMachineScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
-        Gossiper.applyStateLocallyStatic(OneMachineScaleSimulator.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        Gossiper.applyStateLocallyStatic(OneMachineScaleSimulator.stubGroup.getStub(to), remoteEpStateMap);
         
         for (InetAddress address : remoteEpStateMap.keySet()) {
             if (OneMachineScaleSimulator.testNodes.contains(address)) {
                 // Implement here
-                OneMachineScaleSimulator.startForwarding(address, to);
+                OneMachineScaleSimulator.startForwarding(from, address, to);
 //                EndpointState epState = remoteEpStateMap.get(address);
 //                ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
             }

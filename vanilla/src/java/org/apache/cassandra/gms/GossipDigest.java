@@ -75,6 +75,38 @@ public class GossipDigest implements Comparable<GossipDigest>
         sb.append(maxVersion);
         return sb.toString();
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((endpoint == null) ? 0 : endpoint.hashCode());
+        result = prime * result + generation;
+        result = prime * result + maxVersion;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GossipDigest other = (GossipDigest) obj;
+        if (endpoint == null) {
+            if (other.endpoint != null)
+                return false;
+        } else if (!endpoint.equals(other.endpoint))
+            return false;
+        if (generation != other.generation)
+            return false;
+        if (maxVersion != other.maxVersion)
+            return false;
+        return true;
+    }
 }
 
 class GossipDigestSerializer implements IVersionedSerializer<GossipDigest>

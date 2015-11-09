@@ -677,6 +677,7 @@ public class AntiEntropyService
 
             AntiEntropyService.instance.sessions.put(getName(), this);
             Gossiper.instance.register(this);
+//            Gossiper.registerStatic(this);
             FailureDetector.instance.registerFailureDetectionEventListener(this);
             try
             {

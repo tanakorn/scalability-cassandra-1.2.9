@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
+import edu.uchicago.cs.ucare.util.Klogger;
+
 public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {
     private static final Logger logger = LoggerFactory.getLogger(GossipDigestAck2VerbHandler.class);
@@ -48,6 +50,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             return;
         }
 
+        int ack2Hash = message.payload.hashCode();
+        Klogger.logger.info("Receive ack2:" + ack2Hash);
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
@@ -64,8 +68,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         		}
 //        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
         	}
-//            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-            logger.info("sc_debug: Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
+//            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
+            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
         }
         */
         for (InetAddress observedNode : FailureDetector.observedNodes) {
@@ -91,7 +95,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
                     }
                 }
                 if (newer) {
-                    logger.info("sc_debug: receive info of " + observedNode + " from " + from + 
+                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
                             " generation " + remoteGen + " version " + remoteVersion);
                 }
             }
@@ -108,14 +112,14 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 //        for (InetAddress observedNode : FailureDetector.observedNodes) {
 //            if (remoteEpStateMap.keySet().contains(observedNode)) {
 //                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));
-//                logger.info("sc_debug: receive info of " + observedNode + " from " + from + " version " + version);
+//                Klogger.logger.info("receive info of " + observedNode + " from " + from + " version " + version);
 //            }
 //        }
         int after = Gossiper.instance.endpointStateMap.size();
-        logger.info("sc_debug: Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
-        logger.info("sc_debug: Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
+        Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
+        Klogger.logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
         if (!seenAddresses.contains(from)) {
-            logger.info("sc_debug: see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
+            Klogger.logger.info("see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
             seenAddresses.add(from);
         }
     }

@@ -1,6 +1,7 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -46,11 +47,12 @@ public class GossiperStub implements InetAddressStub {
 	InetAddress broadcastAddress;
 	UUID hostId;
 	UUID schema;
-	HeartBeatState heartBeatState;
+	public HeartBeatState heartBeatState;
 	int numTokens;
 	EndpointState state;
 	ConcurrentMap<InetAddress, EndpointState> endpointStateMap;
 	VersionedValueFactory versionedValueFactory;
+	TokenMetadata tokenMetadata;
 	@SuppressWarnings("rawtypes") Collection<Token> tokens;
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
@@ -79,6 +81,7 @@ public class GossiperStub implements InetAddressStub {
 		state = new EndpointState(heartBeatState);
 		versionedValueFactory = new VersionedValueFactory(partitioner);
 		hasContactedSeed = false;
+		tokenMetadata = new TokenMetadata();
 	}
 	
 	public void prepareInitialState() {
@@ -91,7 +94,6 @@ public class GossiperStub implements InetAddressStub {
 	}
 	
 	private void initTokens() {
-		TokenMetadata tokenMetadata = new TokenMetadata();
 		tokens = BootStrapper.getRandomTokens(tokenMetadata, numTokens);
 	}
 	
@@ -126,6 +128,10 @@ public class GossiperStub implements InetAddressStub {
 		return endpointStateMap;
 	}
 	
+	public TokenMetadata getTokenMetadata() {
+	    return tokenMetadata;
+	}
+	
 	public void updateHeartBeat() {
 		heartBeatState.updateHeartBeat();
 	}
@@ -147,6 +153,14 @@ public class GossiperStub implements InetAddressStub {
             if (epState != null) {
                 generation = epState.getHeartBeatState().getGeneration();
                 maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
+                try {
+                    if (broadcastAddress.equals(InetAddress.getByName("127.0.0.4"))) {
+                        System.out.println(broadcastAddress + " " + endpoint + " " + generation + " " + maxVersion);
+                    }
+                } catch (UnknownHostException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
             gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
         }
