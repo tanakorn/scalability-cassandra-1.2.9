@@ -87,6 +87,11 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
         long notifyFD = 0;
         long applyState = 0;
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionToken = 0;
         if ( epStateMap.size() > 0 )
         {
             for (InetAddress observedNode : FailureDetector.observedNodes) {
@@ -123,7 +128,12 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             end = System.currentTimeMillis();
             notifyFD = end - start;
         	start = System.currentTimeMillis();
-            Gossiper.instance.applyStateLocally(epStateMap);
+            Integer[] result = Gossiper.instance.applyStateLocally(epStateMap);
+            newNode = result[0];
+            newNodeToken = result[1];
+            newRestart = result[2];
+            newVersion = result[3];
+            newVersionToken = result[4];
             end = System.currentTimeMillis();
             applyState = end - start;
         }
@@ -149,7 +159,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
         int ack2Hash = gDigestAck2Message.payload.hashCode();
-        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash);
+        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);
