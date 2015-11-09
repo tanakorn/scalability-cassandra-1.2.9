@@ -31,8 +31,8 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
-import edu.uchicago.cs.ucare.cassandra.gms.OneMachineScaleSimulator;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
@@ -55,28 +55,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
-        GossiperStub stub = OneMachineScaleSimulator.stubGroup.getStub(to);
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
 
-        if (stub.getHasContactedSeed() && !OneMachineScaleSimulator.isTestNodesStarted && from.equals(OneMachineScaleSimulator.seed)) {
-            GossipDigest digestForStub = null;
-            for (GossipDigest gDigest : gDigestList) {
-                if (gDigest.endpoint.equals(to)) {
-                    digestForStub = gDigest;
-                }
-            }
-            assert digestForStub != null;
-            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
-            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
-            MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(
-                   to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
-                   new GossipDigestAck2(deltaEpStateMap),
-                   GossipDigestAck2.serializer);
-            Gossiper.instance.checkSeedContact(from);
-            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-            return;
-        }
-        
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
@@ -85,15 +65,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
             Gossiper.applyStateLocallyStatic(stub, epStateMap);
 
-            for (InetAddress address : epStateMap.keySet()) {
-                if (OneMachineScaleSimulator.testNodes.contains(address)) {
-                    // Implement here
-                    OneMachineScaleSimulator.startForwarding(from, address, to);
-//                    EndpointState epState = epStateMap.get(address);
-//                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
-                }
-            }
-            
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -124,23 +95,17 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        }
-        if (OneMachineScaleSimulator.stubGroup.contains(from)) {
-            MessageIn<GossipDigestAck2> msgIn = OneMachineScaleSimulator.convertOutToIn(gDigestAck2Message);
+        if (GossipProcessingMetric.stubGroup.contains(from)) {
+            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
             msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-                    Integer.toString(OneMachineScaleSimulator.idGen.incrementAndGet()));
+                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
         } else {
             MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         }
 //        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-        if (!stub.getHasContactedSeed() && from.equals(OneMachineScaleSimulator.seed)) {
-            synchronized (stub) {
-                stub.setHasContactedSeed(true);
-//                stub.notify();
-            }
-        }
     }
 }

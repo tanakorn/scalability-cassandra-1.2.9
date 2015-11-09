@@ -29,8 +29,8 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
-import edu.uchicago.cs.ucare.cassandra.gms.OneMachineScaleSimulator;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 {
@@ -62,7 +62,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-        GossiperStub stub = OneMachineScaleSimulator.stubGroup.getStub(to);
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -75,25 +75,25 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
 
-        if (stub.getHasContactedSeed() && !OneMachineScaleSimulator.isTestNodesStarted) {
-            GossipDigest digestForStub = null;
-            for (GossipDigest gDigest : gDigestList) {
-                if (gDigest.endpoint.equals(to)) {
-                    digestForStub = gDigest;
-                }
-            }
-            assert digestForStub != null;
-            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
-            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
-            MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
-                    to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
-                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                    GossipDigestAck.serializer);
-            Gossiper.instance.checkSeedContact(from);
-            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-            return;
-        }
+//        if (stub.getHasContactedSeed() && !GossipProcessingMetric.isTestNodesStarted) {
+//            GossipDigest digestForStub = null;
+//            for (GossipDigest gDigest : gDigestList) {
+//                if (gDigest.endpoint.equals(to)) {
+//                    digestForStub = gDigest;
+//                }
+//            }
+//            assert digestForStub != null;
+//            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
+//            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
+//            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
+//            MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
+//                    to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
+//                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
+//                    GossipDigestAck.serializer);
+//            Gossiper.instance.checkSeedContact(from);
+//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+//            return;
+//        }
 
         doSort(gDigestList);
 
@@ -110,12 +110,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        if (OneMachineScaleSimulator.stubGroup.contains(from)) {
-        	MessageIn<GossipDigestAck> msgIn = OneMachineScaleSimulator.convertOutToIn(gDigestAckMessage);
+        if (GossipProcessingMetric.stubGroup.contains(from)) {
+        	MessageIn<GossipDigestAck> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAckMessage);
         	msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-            		Integer.toString(OneMachineScaleSimulator.idGen.incrementAndGet()));
+            		Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
         } else {

@@ -30,7 +30,7 @@ public class GossipProcessingMetric {
 
     public static GossiperStubGroup stubGroup;
     
-    public static final int numStubs = 64;
+    public static final int numStubs = 128;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
@@ -64,7 +64,7 @@ public class GossipProcessingMetric {
         {
             // first try URL.getFile() which works for opaque URLs (file:foo) and paths without spaces
             configFileName = configLocation.getFile();
-            System.out.println(configFileName);
+//            System.out.println(configFileName);
             File configFile = new File(configFileName);
             // then try alternative approach which works for all hierarchical URLs with or without spaces
             if (!configFile.exists())
@@ -80,7 +80,14 @@ public class GossipProcessingMetric {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        
+        Gossiper.registerStatic(StorageService.instance);
+        Gossiper.registerStatic(LoadBroadcaster.instance);
+        DatabaseDescriptor.loadYaml();
+        InetAddress firstNode = InetAddress.getByName("127.0.0.1");
+        for (int i = 1; i <= numStubs; ++i) {
+            test(InetAddress.getByName("127.0.0." + i), firstNode);
+        }
+        System.exit(0);
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
@@ -89,9 +96,6 @@ public class GossipProcessingMetric {
     }
     
     public static void test(InetAddress gossiperAddress, InetAddress gossipeeAddress) throws UnknownHostException {
-        Gossiper.registerStatic(StorageService.instance);
-        Gossiper.registerStatic(LoadBroadcaster.instance);
-        DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
         for (int i = 1; i <= numStubs; ++i) {
@@ -103,14 +107,18 @@ public class GossipProcessingMetric {
                 .setDataCenter("").setNumTokens(1024).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
-//        stubGroup.listen();
-        System.out.println("Initialize gossip state of each node");
         GossiperStub prevInitStub = null;
-        for (GossiperStub stub : stubGroup) {
+//        for (GossiperStub stub : stubGroup) {
+//            if (prevInitStub != null) {
+//                stub.endpointStateMap.putAll(prevInitStub.endpointStateMap);
+//            }
+//            prevInitStub = stub;
+//        }
+        for (int i = 1; i <= numStubs; ++i) {
+            GossiperStub stub = stubGroup.getStub(InetAddress.getByName("127.0.0." + i));
             if (prevInitStub != null) {
                 stub.endpointStateMap.putAll(prevInitStub.endpointStateMap);
             }
-            logger.info(stub.getInetAddress() + " finished random initialization with " + stub.getEndpointStateMap().size() + " nodes");
             prevInitStub = stub;
         }
         stubGroup.setupTokenState();
@@ -118,11 +126,17 @@ public class GossipProcessingMetric {
         stubGroup.setNormalStatusState();
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
+//        System.out.println(gossiperAddress + " " + gossipeeAddress);
         GossiperStub gossiper = stubGroup.getStub(gossiperAddress);
         GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
+        int gossiperSize = gossiper.getEndpointStateMap().size();
+        int gossipeeSize = gossipee.getEndpointStateMap().size();
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
+        long s = System.currentTimeMillis();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
+        long e = System.currentTimeMillis();
+        System.out.println((gossiperSize - gossipeeSize) + " " + (e - s));
     }
     
 }

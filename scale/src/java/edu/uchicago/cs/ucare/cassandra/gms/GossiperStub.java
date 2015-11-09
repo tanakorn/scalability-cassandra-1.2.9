@@ -153,14 +153,14 @@ public class GossiperStub implements InetAddressStub {
             if (epState != null) {
                 generation = epState.getHeartBeatState().getGeneration();
                 maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
-                try {
-                    if (broadcastAddress.equals(InetAddress.getByName("127.0.0.4"))) {
-                        System.out.println(broadcastAddress + " " + endpoint + " " + generation + " " + maxVersion);
-                    }
-                } catch (UnknownHostException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+//                try {
+//                    if (broadcastAddress.equals(InetAddress.getByName("127.0.0.4"))) {
+//                        System.out.println(broadcastAddress + " " + endpoint + " " + generation + " " + maxVersion);
+//                    }
+//                } catch (UnknownHostException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                }
             }
             gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
         }
