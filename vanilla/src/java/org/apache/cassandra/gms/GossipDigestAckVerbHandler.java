@@ -50,6 +50,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         }
 
         GossipDigestAck gDigestAckMessage = message.payload;
+        int ackHash = gDigestAckMessage.hashCode();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         /*
         StringBuilder sb = new StringBuilder();
@@ -147,6 +148,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
+        int ack2Hash = gDigestAck2Message.payload.hashCode();
+        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash);
         /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);

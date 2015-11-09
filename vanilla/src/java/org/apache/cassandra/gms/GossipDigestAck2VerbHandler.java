@@ -50,6 +50,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             return;
         }
 
+        int ack2Hash = message.payload.hashCode();
+        Klogger.logger.info("Receive ack2:" + ack2Hash);
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();

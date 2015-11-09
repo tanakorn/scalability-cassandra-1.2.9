@@ -45,6 +45,32 @@ public class GossipDigestAck2
     {
          return epStateMap;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((epStateMap == null) ? 0 : epStateMap.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GossipDigestAck2 other = (GossipDigestAck2) obj;
+        if (epStateMap == null) {
+            if (other.epStateMap != null)
+                return false;
+        } else if (!epStateMap.equals(other.epStateMap))
+            return false;
+        return true;
+    }
 }
 
 class GossipDigestAck2Serializer implements IVersionedSerializer<GossipDigestAck2>

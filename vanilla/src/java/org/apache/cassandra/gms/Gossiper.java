@@ -135,10 +135,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     GossipDigestSyn digestSynMessage = new GossipDigestSyn(DatabaseDescriptor.getClusterName(),
                                                                            DatabaseDescriptor.getPartitionerName(),
                                                                            gDigests);
+                    int syncHash = digestSynMessage.hashCode();
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                                         digestSynMessage,
                                                                                                         GossipDigestSyn.serializer);
-                    Klogger.logger.info("Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
+                    Klogger.logger.info("Send sync:" + syncHash);
+//                    Klogger.logger.info("Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
 

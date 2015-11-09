@@ -36,6 +36,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
+//        Klogger.logger.info("Processing gds " + )
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
@@ -47,6 +48,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         }
 
         GossipDigestSyn gDigestMessage = message.payload;
+        int syncHash = gDigestMessage.hashCode();
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {
@@ -96,14 +98,18 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(d.getEndpoint());
             sb.append(',');
         }
-        Klogger.logger.info("delta digest list = " + sb.toString());
-        Klogger.logger.info("delta ep state map = " + deltaEpStateMap.keySet());
+//        Klogger.logger.info("delta digest list = " + sb.toString());
+//        Klogger.logger.info("delta ep state map = " + deltaEpStateMap.keySet());
         end = System.currentTimeMillis();
         long examine = end - start;
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
+        int ackHash = gDigestAckMessage.payload.hashCode();
+        
+        Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash);
+        
         /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);
