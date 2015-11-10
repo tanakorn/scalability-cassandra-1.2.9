@@ -11,19 +11,23 @@ if len(sys.argv) != 2:
 logdir = sys.argv[1]
 
 pyutil.read_machinelist(logdir)
-num_node = pyutil.num_node
+num_mach = pyutil.num_mach
+num_ins = pyutil.num_ins
+ins_per_mach = pyutil.ins_per_mach
 
 max_exe = 0
 sum_exe = 0
-for i in range(1, num_node + 1):
-  logfile = open(logdir + '/node' + str(i) + '/node1.log')
-  for line in logfile:
-    if 'GOSSIP_DIGEST_ACK' in line:
-      entries = line.split()
-      exetime = int(entries[14])
-      sum_exe += exetime
-      if max_exe < exetime:
-        max_exe = exetime
+for i in range(1, num_mach + 1):
+  for j in range(1, ins_per_mach + 1):
+    logfile = open('%s/node%d/scale%d.log' % (logdir, i, j))
+    for line in logfile:
+      if 'GOSSIP_DIGEST_ACK' in line:
+        entries = line.split()
+        exetime = int(entries[13])
+        sum_exe += exetime
+        if max_exe < exetime:
+          max_exe = exetime
 
-print 'avg=%d max=%d' % (sum_exe / num_node, max_exe)
+print 'avg=%d' % (sum_exe / num_ins)
+#print 'avg=%d max=%d' % (sum_exe / num_ins, max_exe)
 

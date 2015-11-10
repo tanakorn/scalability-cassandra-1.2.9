@@ -14,13 +14,15 @@ logdir = sys.argv[1]
 observer = int(sys.argv[2])
 observed_node = int(sys.argv[3])
 
-machinelist = open(logdir + '/machinelist')
 pyutil.read_machinelist(logdir)
+num_mach = pyutil.num_mach
+num_ins = pyutil.num_ins
 observer_ip = pyutil.nid2ip[observer]
 observed_node_ip = pyutil.nid2ip[observed_node]
 
-logfile = open(logdir + '/node' + str(observer) + '/node1.log')
-recline = 'receive info of /' + observed_node_ip
+mach, ins = pyutil.nid2ind[observer]
+logfile = open('%s/node%d/scale%d.log' % (logdir, mach, ins))
+recline = 'receive info of /' + observed_node_ip + ' '
 rectimehist = []
 for logline in logfile:
   if recline in logline:

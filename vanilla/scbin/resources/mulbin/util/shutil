@@ -1,15 +1,23 @@
 #!/bin/sh
 
+ins_per_mach=4
+
 read_machinelist() {
-  num_node=0
-  while read line; do
-    id=`echo $line | awk '{print $1}'`
-    ip=`echo $line | awk '{print $2}'`
-    eval "id_$id=$ip"
-    dumb_ip=`echo $ip | sed 's/\./_/g'`
-    eval "ip_$dumb_ip=$id"
-    num_node=`expr $num_node + 1`
-  done < $1
+  num_mach=`wc -l $1 | awk '{print $1}'`
+  num_ins=`expr $num_mach \* $ins_per_mach`
+  i=0
+  while [ $i -lt $num_mach ] ; do
+    j=0
+    while [ $j -lt $ins_per_mach ]; do
+      id=`expr $i \* ins_per_mach + $j`
+      maj=`expr $i + 1`
+      min=`expr $j + 1`
+      ip=192.168.${maj}.${min}
+      eval "id_$id=$ip"
+      dumb_ip=`echo $ip | sed 's/\./_/g'`
+      eval "ip_$dumb_ip=$id"
+    done
+  done
 }
 
 getip() {
