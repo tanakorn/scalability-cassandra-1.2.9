@@ -138,8 +138,6 @@ public class EndpointState
                 + ((applicationState == null) ? 0 : applicationState.hashCode());
         result = prime * result + ((hbState == null) ? 0 : hbState.hashCode());
         result = prime * result + (isAlive ? 1231 : 1237);
-        result = prime * result
-                + (int) (updateTimestamp ^ (updateTimestamp >>> 32));
         return result;
     }
 
