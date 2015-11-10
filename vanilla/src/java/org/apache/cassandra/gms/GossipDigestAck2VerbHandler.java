@@ -122,7 +122,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             Klogger.logger.info("Receive ack2:" + ack2Hash + 
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " ; Absorbing " + address + " to " + from + " version " + newerVersion.get(address));
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
         }
         end = System.currentTimeMillis();
         long applyState = end - start;

@@ -203,7 +203,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " ; Absorbing " + address + " to " + from + " version " + newerVersion.get(address));
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
             
         }
         Klogger.logger.info("GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
