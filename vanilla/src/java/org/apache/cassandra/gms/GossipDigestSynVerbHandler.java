@@ -79,7 +79,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(gDigest);
             sb.append(", ");
         }
-//        Klogger.logger.info("GDS digests from " + from + " are (" + sb.toString() + ")");
         
         long start;
         long end;
@@ -98,8 +97,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(d.getEndpoint());
             sb.append(',');
         }
-//        Klogger.logger.info("delta digest list = " + sb.toString());
-//        Klogger.logger.info("delta ep state map = " + deltaEpStateMap.keySet());
         end = System.currentTimeMillis();
         long examine = end - start;
 
@@ -107,29 +104,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
         int ackHash = gDigestAckMessage.payload.hashCode();
-        
-//        Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash);
-        
-        /*
-        for (InetAddress address : deltaEpStateMap.keySet()) {
-        	EndpointState eps = deltaEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Sending GDA to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-        }
-        sb = new StringBuilder();
-        for (GossipDigest gDigest : deltaGossipDigestList)
-        {
-            sb.append(gDigest);
-            sb.append(", ");
-        }
-//        Klogger.logger.info("GDA digests to " + from + " are (" + sb.toString() + ") with size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
-        */
-//        if (deltaEpStateMap.keySet())
         for (InetAddress observedNode : FailureDetector.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));

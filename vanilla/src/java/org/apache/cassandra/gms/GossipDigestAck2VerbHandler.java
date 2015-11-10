@@ -55,23 +55,6 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
-        /*
-        for (InetAddress address : remoteEpStateMap.keySet()) {
-        	EndpointState eps = remoteEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-            int maxVersion = 0;
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		if (value.version > maxVersion) {
-        			maxVersion = value.version;
-        		}
-//        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
-        }
-        */
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
             if (remoteEpStateMap.keySet().contains(observedNode)) {
