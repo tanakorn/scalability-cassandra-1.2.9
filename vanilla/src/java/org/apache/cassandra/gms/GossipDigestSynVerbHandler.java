@@ -108,7 +108,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
                                                                                                       GossipDigestAck.serializer);
         int ackHash = gDigestAckMessage.payload.hashCode();
         
-        Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash);
+//        Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash);
         
         /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
@@ -134,6 +134,8 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash + 
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }
         Klogger.logger.info("GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
