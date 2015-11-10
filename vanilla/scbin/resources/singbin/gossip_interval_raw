@@ -6,9 +6,9 @@ from datetime import *
 import pyutil
 
 if len(sys.argv) < 4:
-  print 'usage: gossip_interval <logdir> <observer> <observed_node> [time_period]'
-  print 'example: gossip_interval n 3 4'
-  print 'example: gossip_interval n 3 4 60'
+  print 'usage: gossip_interval_raw <logdir> <observer> <observed_node> [time_period]'
+  print 'example: gossip_interval_raw n 3 4'
+  print 'example: gossip_interval_raw n 3 4 60'
   exit(1)
   
 logdir = sys.argv[1]
@@ -50,11 +50,6 @@ prevrec = time_period_list[0]
 for rectime in time_period_list[1:]:
   recinthist.append((rectime - prevrec).total_seconds())
   prevrec = rectime
-recinthist.sort()
-datasize = len(recinthist)
-lqpos = datasize / 4
-medpos = datasize / 2
-uqpos = lqpos * 3
-print 'datasize=%d min=%f lq=%f med=%f uq=%f max=%f' % \
-    (datasize, recinthist[0], recinthist[lqpos], recinthist[medpos], recinthist[uqpos], recinthist[-1])
+for diff in recinthist:
+  print diff
 
