@@ -71,6 +71,24 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
         }
         */
+        
+        /* Notify the Failure Detector */
+        start = System.currentTimeMillis();
+        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
+        end = System.currentTimeMillis();
+        long notifyFD = end - start;
+        start = System.currentTimeMillis();
+        Integer[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        int newNode = result[0];
+        int newNodeToken = result[1];
+        int newRestart = result[2];
+        int newVersion = result[3];
+        int newVersionToken = result[4];
+        Klogger.logger.info("Receive ack2:" + ack2Hash +
+                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
+        end = System.currentTimeMillis();
+        long applyState = end - start;
         for (InetAddress observedNode : FailureDetector.observedNodes) {
             if (remoteEpStateMap.keySet().contains(observedNode)) {
                 EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
@@ -96,26 +114,13 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
                 if (newer) {
                     Klogger.logger.info("receive info of " + observedNode + " from " + from + 
                             " generation " + remoteGen + " version " + remoteVersion);
+                    Klogger.logger.info("Receive ack2:" + ack2Hash +
+                            " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                            " newVersion=" + newVersion + " newVersionToken=" + newVersionToken + 
+                            " ; Absorbing " + observedNode + " to " + from + " version " + remoteVersion);
                 }
             }
         }
-        /* Notify the Failure Detector */
-        start = System.currentTimeMillis();
-        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
-        end = System.currentTimeMillis();
-        long notifyFD = end - start;
-        start = System.currentTimeMillis();
-        Integer[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        int newNode = result[0];
-        int newNodeToken = result[1];
-        int newRestart = result[2];
-        int newVersion = result[3];
-        int newVersionToken = result[4];
-        Klogger.logger.info("Receive ack2:" + ack2Hash +
-                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
-        end = System.currentTimeMillis();
-        long applyState = end - start;
 //        for (InetAddress observedNode : FailureDetector.observedNodes) {
 //            if (remoteEpStateMap.keySet().contains(observedNode)) {
 //                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));

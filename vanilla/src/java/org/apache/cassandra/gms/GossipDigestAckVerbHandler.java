@@ -94,34 +94,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         int newVersionToken = 0;
         if ( epStateMap.size() > 0 )
         {
-            for (InetAddress observedNode : FailureDetector.observedNodes) {
-                if (epStateMap.keySet().contains(observedNode)) {
-                    EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
-                    EndpointState remoteEpState = epStateMap.get(observedNode);
-                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                    boolean newer = false;
-                    if (localEpState == null) {
-                        newer = true;
-                    } else {
-                        synchronized (localEpState) {
-                            int localGen = localEpState.getHeartBeatState().getGeneration();
-                            if (localGen < remoteGen) {
-                                newer = true;
-                            } else if (localGen == remoteGen) {
-                                int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                                if (localVersion < remoteVersion) {
-                                    newer = true;
-                                }
-                            }
-                        }
-                    }
-                    if (newer) {
-                        Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                                " generation " + remoteGen + " version " + remoteVersion);
-                    }
-                }
-            }
+            
             /* Notify the Failure Detector */
         	start = System.currentTimeMillis();
             Gossiper.instance.notifyFailureDetector(epStateMap);
@@ -159,9 +132,41 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
         int ack2Hash = gDigestAck2Message.payload.hashCode();
-        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
-                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
+        for (InetAddress observedNode : FailureDetector.observedNodes) {
+            if (epStateMap.keySet().contains(observedNode)) {
+                EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+                EndpointState remoteEpState = epStateMap.get(observedNode);
+                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                boolean newer = false;
+                if (localEpState == null) {
+                    newer = true;
+                } else {
+                    synchronized (localEpState) {
+                        int localGen = localEpState.getHeartBeatState().getGeneration();
+                        if (localGen < remoteGen) {
+                            newer = true;
+                        } else if (localGen == remoteGen) {
+                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                            if (localVersion < remoteVersion) {
+                                newer = true;
+                            }
+                        }
+                    }
+                }
+                if (newer) {
+                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
+                            " generation " + remoteGen + " version " + remoteVersion);
+                    Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                            " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                            " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                            " ; Absorbing " + observedNode + " to " + from + " version " + remoteVersion);
+                }
+            }
+        }
+//        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+//                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         /*
         for (InetAddress address : deltaEpStateMap.keySet()) {
         	EndpointState eps = deltaEpStateMap.get(address);
@@ -185,6 +190,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                        " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                        " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }
         Klogger.logger.info("GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
