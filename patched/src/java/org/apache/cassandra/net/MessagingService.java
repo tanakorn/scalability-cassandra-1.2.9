@@ -40,6 +40,8 @@ import javax.management.ObjectName;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.util.Klogger;
+
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -715,7 +717,7 @@ public final class MessagingService implements MessagingServiceMBean
     public void receive(MessageIn message, String id, long timestamp)
     {
         TraceState state = Tracing.instance().initializeFromMessage(message);
-        logger.info("Message received from {}", message.from);
+        Klogger.logger.debug("Message received from {}", message.from);
         if (state != null)
             state.trace("Message received from {}", message.from);
 
