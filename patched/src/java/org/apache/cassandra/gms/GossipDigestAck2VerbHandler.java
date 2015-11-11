@@ -92,7 +92,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
-        Integer[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        int[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
         int newNode = result[0];
         int newNodeToken = result[1];
         int newRestart = result[2];

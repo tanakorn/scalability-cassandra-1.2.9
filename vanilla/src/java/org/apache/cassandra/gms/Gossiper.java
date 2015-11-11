@@ -953,7 +953,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         return false;
     }
 
-    Integer[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
+    int[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
     {
         int newNode = 0;
         int newNodeToken = 0;
@@ -1030,7 +1030,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 }
             }
         }
-        return new Integer[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens };
+        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)

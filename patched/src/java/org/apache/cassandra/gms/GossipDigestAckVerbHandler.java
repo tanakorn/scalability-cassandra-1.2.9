@@ -67,21 +67,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         if ( epStateMap.size() > 0 )
         {
-            
-            /* Notify the Failure Detector */
-        	start = System.currentTimeMillis();
-            Gossiper.instance.notifyFailureDetector(epStateMap);
-            end = System.currentTimeMillis();
-            notifyFD = end - start;
-        	start = System.currentTimeMillis();
-            Integer[] result = Gossiper.instance.applyStateLocally(epStateMap);
-            newNode = result[0];
-            newNodeToken = result[1];
-            newRestart = result[2];
-            newVersion = result[3];
-            newVersionToken = result[4];
-            end = System.currentTimeMillis();
-            applyState = end - start;
             for (InetAddress observedNode : FailureDetector.observedNodes) {
                 if (epStateMap.keySet().contains(observedNode)) {
                     EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
@@ -111,6 +96,21 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                     }
                 }
             }
+            
+            /* Notify the Failure Detector */
+        	start = System.currentTimeMillis();
+            Gossiper.instance.notifyFailureDetector(epStateMap);
+            end = System.currentTimeMillis();
+            notifyFD = end - start;
+        	start = System.currentTimeMillis();
+            int[] result = Gossiper.instance.applyStateLocally(epStateMap);
+            newNode = result[0];
+            newNodeToken = result[1];
+            newRestart = result[2];
+            newVersion = result[3];
+            newVersionToken = result[4];
+            end = System.currentTimeMillis();
+            applyState = end - start;
         }
         int after = Gossiper.instance.endpointStateMap.size();
 
