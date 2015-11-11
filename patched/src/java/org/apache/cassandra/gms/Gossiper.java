@@ -42,6 +42,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.util.Klogger;
 import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
@@ -137,7 +138,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                                         digestSynMessage,
                                                                                                         GossipDigestSyn.serializer);
-                    logger.info("sc_debug: Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
+//                    Klogger.logger.info("Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
 
@@ -166,48 +167,50 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
                     doStatusCheck();
+                    StringBuilder strBuilder;
 //                    Map<MessagingService.Verb, Integer> messageCount = MessagingService.instance().getCount();
 //                    MessagingService.instance().resetCount();
-//                    StringBuilder strBuilder = new StringBuilder("sc_debug: MessageCount\n");
+//                    strBuilder = new StringBuilder("MessageCount : ");
 //                    MessagingService.Verb verb;
 //                    verb = MessagingService.Verb.GOSSIP_DIGEST_SYN;
 //                    strBuilder.append(verb);
 //                    strBuilder.append(" : ");
 //                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    strBuilder.append('\n');
+//                    strBuilder.append(" ; ");
 //                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK;
 //                    strBuilder.append(verb);
 //                    strBuilder.append(" : ");
 //                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    strBuilder.append('\n');
+//                    strBuilder.append(" ; ");
 //                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK2;
 //                    strBuilder.append(verb);
 //                    strBuilder.append(" : ");
 //                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    logger.info(strBuilder.toString());
-                    
+//                    Klogger.logger.info(strBuilder.toString());
+//                    
 //                    int[] messageInfo = MessagingService.instance().getMessageInfo();
 //                    MessagingService.instance().resetMessageInfo();
-//                    strBuilder = new StringBuilder("sc_debug: MessageInfo\n");
+//                    strBuilder = new StringBuilder("MessageInfo\n");
 //                    strBuilder.append("node in GDA = ");
 //                    strBuilder.append(messageInfo[0]);
-//                    strBuilder.append('\n');
+//                    strBuilder.append(" ; ");
 //                    strBuilder.append("node in GDA2 = ");
 //                    strBuilder.append(messageInfo[1]);
-//                    strBuilder.append('\n');
+//                    strBuilder.append(" ; ");
 //                    strBuilder.append("vnode in GDA = ");
 //                    strBuilder.append(messageInfo[2]);
-//                    strBuilder.append('\n');
+//                    strBuilder.append(" ; ");
 //                    strBuilder.append("vnode in GDA2 = ");
 //                    strBuilder.append(messageInfo[3]);
-//                    logger.info(strBuilder.toString());
+//                    Klogger.logger.info(strBuilder.toString());
                     int seenNode = endpointStateMap.size();
                     int deadNode = 0;
                     int nonMemberNode = 0;
                     int notCompletedNode = 0;
-                    StringBuilder strBuilder = new StringBuilder("sc_dbug: Dead nodes: ");
-                    StringBuilder strBuilder2 = new StringBuilder("sc_dbug: Non-member nodes: ");
-                    StringBuilder strBuilder3 = new StringBuilder("sc_dbug: Not-completed nodes: ");
+//                    StringBuilder strBuilder = new StringBuilder("Dead nodes: ");
+                    strBuilder = new StringBuilder("Dead nodes: ");
+                    StringBuilder strBuilder2 = new StringBuilder("Non-member nodes: ");
+                    StringBuilder strBuilder3 = new StringBuilder("Not-completed nodes: ");
                     for (InetAddress address : endpointStateMap.keySet()) {
                     	EndpointState state = endpointStateMap.get(address);
                         int thisNumTokens = StorageService.instance.getTokenMetadata().getTokenSize(address);
@@ -228,18 +231,18 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     		strBuilder3.append(", ");
                     	}
                     }
-                    logger.info("sc_debug: RingInfo: seen nodes = " + seenNode + 
+                    Klogger.logger.info("RingInfo: seen nodes = " + seenNode + 
                     		", non-member nodes = " + nonMemberNode + 
                     		", not-completed nodes = " + notCompletedNode + 
                     		", dead nodes = " + deadNode);
                     if (deadNode > 0) {
-                        logger.info(strBuilder.toString());
+                        Klogger.logger.info(strBuilder.toString());
                     }
                     if (nonMemberNode > 0) {
-                    	logger.info(strBuilder2.toString());
+                    	Klogger.logger.info(strBuilder2.toString());
                     }
                     if (notCompletedNode > 0) {
-                        logger.info(strBuilder3.toString());
+                        Klogger.logger.info(strBuilder3.toString());
                     }
                 }
             }
@@ -286,6 +289,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      */
     public void register(IEndpointStateChangeSubscriber subscriber)
     {
+        Klogger.logger.info("Register endpoint state subscriber " + subscriber.getClass());
         subscribers.add(subscriber);
     }
 
@@ -601,7 +605,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-        logger.info("sc_debug: Sending a GDS to {}", to);
+        Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
+//        int syncHash = message.payload.hashCode();
+//        Klogger.logger.info("Send sync:" + syncHash + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
@@ -914,8 +920,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         endpointStateMap.put(ep, epState);
 
         // the node restarted: it is up to the subscriber to take whatever action is necessary
-        for (IEndpointStateChangeSubscriber subscriber : subscribers)
+        for (IEndpointStateChangeSubscriber subscriber : subscribers) {
+            long s = System.currentTimeMillis();
             subscriber.onRestart(ep, epState);
+            long e = System.currentTimeMillis();
+        }
 
         if (!isDeadState(epState))
             markAlive(ep, epState);
@@ -944,8 +953,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         return false;
     }
 
-    void applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
+    Integer[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
     {
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionTokens = 0;
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -977,6 +991,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
                     handleMajorStateChange(ep, remoteState);
+                    newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
                 {
@@ -993,6 +1008,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) { // unless of course, it was dead
                         markAlive(ep, localEpStatePtr);
                     }
+                    newVersion++;
+                    if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                        newVersionTokens++;
+                    }
                 }
                 else
                 {
@@ -1005,8 +1024,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
                 FailureDetector.instance.report(ep);
                 handleMajorStateChange(ep, remoteState);
+                newNode++;
+                if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                    newNodeToken++;
+                }
             }
         }
+        return new Integer[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
@@ -1027,10 +1051,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             assert remoteState.getHeartBeatState().getGeneration() == localState.getHeartBeatState().getGeneration();
             localState.addApplicationState(remoteKey, remoteValue);
         }
+        long s = System.currentTimeMillis();
         for (Entry<ApplicationState, VersionedValue> remoteEntry : remoteState.getApplicationStateMap().entrySet())
         {
             doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
         }
+        long e = System.currentTimeMillis();
     }
 
     // notify that an application state has changed
@@ -1038,7 +1064,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
         {
+//            long s = System.currentTimeMillis();
             subscriber.onChange(addr, state, value);
+//            long e = System.currentTimeMillis();
+//            Klogger.logger.info("subscriber do noti = " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
     }
 

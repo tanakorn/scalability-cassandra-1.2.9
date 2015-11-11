@@ -36,6 +36,8 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.BoundedStatsDeque;
 import org.apache.cassandra.utils.FBUtilities;
 
+import edu.uchicago.cs.ucare.util.Klogger;
+
 /**
  * This FailureDetector is an implementation of the paper titled
  * "The Phi Accrual Failure Detector" by Hayashibara.
@@ -182,7 +184,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
         if (observedNodes.contains(ep)) {
-        	logger.info("sc_debug : See " + ep + " at time " + now);
+        	Klogger.logger.info("See " + ep + " at time " + now);
         }
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
@@ -204,7 +206,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         long now = System.currentTimeMillis();
 //        double phi = hbWnd.phi(now);
         double phi = hbWnd.phi(now, ep);
-//        logger.info("sc_debug: PHI for " + ep + " : " + phi);
+//        Klogger.logger.info("PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
@@ -339,7 +341,9 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        logger.info("sc_debug: arrival for " + address + " : " + interArrivalTime + " ms ");
+        if (FailureDetector.observedNodes.contains(address)) {
+            Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
+        }
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
@@ -379,11 +383,11 @@ class ArrivalWindow
         double phi2 = (size2 > 40) ? PHI_FACTOR * t / mean2 : 0.0;
         double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
         if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi || observedNodes.contains(address)) {
-            logger.info("sc_debug: PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
+            Klogger.logger.info("PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(address, phi);
         }
         if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
-            logger.info("sc_debug: PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
+            Klogger.logger.info("PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
             maxObservedPhi2.put(address, phi2);
         }
         return phi;

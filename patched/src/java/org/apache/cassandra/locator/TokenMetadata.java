@@ -28,13 +28,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.collect.*;
 
+import edu.uchicago.cs.ucare.util.Klogger;
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 import org.apache.cassandra.utils.BiMultiValMap;
 import org.apache.cassandra.utils.Pair;
 import org.apache.cassandra.utils.SortedBiMultiValMap;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
