@@ -3,16 +3,16 @@
 scriptdir=`dirname $0`
 cd $scriptdir
 
-for n in 8 16 32; do
+for n in 4 8 16; do
   ./gen_nmc_machines.sh $n
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6127/n$n" >> scdeploy.conf.$n
   node3=192.168.1.3
-  node10=192.168.4.1
+  node13=192.168.4.1
   h=`expr $n / 2`
   nodeh=192.168.${h}.1
   noden=192.168.${n}.1
-  echo "observed_nodes=$node3,$node10,$nodeh,$noden" >> scdeploy.conf.$n
+  echo "observed_nodes=$node3,$node13,$nodeh,$noden" >> scdeploy.conf.$n
   ./cluster_dir_setup scdeploy.conf.$n
   ./cluster_start scdeploy.conf.$n
   sleep 300

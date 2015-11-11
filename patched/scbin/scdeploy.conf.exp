@@ -1,5 +1,5 @@
-operating_dir=/public/cass_scale
-num_node=1
+operating_dir=/tmp/cass_scale
+num_node=8
 property_file=$operating_dir/sc.properties
 rawdata_dir=$operating_dir/output
 machinelist=machinelist
