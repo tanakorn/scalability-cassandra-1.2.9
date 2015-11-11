@@ -50,6 +50,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestSyn gDigestMessage = message.payload;
+        int syncHash = gDigestMessage.hashCode();
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {
@@ -106,6 +107,15 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         		to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                 GossipDigestAck.serializer);
+        int ackHash = gDigestAckMessage.payload.hashCode();
+        for (InetAddress observedNode : OneMachineScaleSimulator.testNodes) {
+            if (deltaEpStateMap.keySet().contains(observedNode)) {
+                int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+                logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash + 
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
+            }
+        }
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
@@ -123,15 +133,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         }
 //        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
 
-//        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
-//        if (WorstCaseGossiperStub.addressSet.contains(from)) {
-//        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
-//        	msgIn.setTo(from);
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-//            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-//        }
     }
 
     /*

@@ -52,6 +52,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
+        int ackHash = gDigestAckMessage.hashCode();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
@@ -77,8 +78,43 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             return;
         }
         
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionToken = 0;
+        Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         if ( epStateMap.size() > 0 )
         {
+            for (InetAddress observedNode : OneMachineScaleSimulator.testNodes) {
+                if (epStateMap.keySet().contains(observedNode)) {
+                    EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+                    EndpointState remoteEpState = epStateMap.get(observedNode);
+                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                    boolean newer = false;
+                    if (localEpState == null) {
+                        newer = true;
+                    } else {
+                        synchronized (localEpState) {
+                            int localGen = localEpState.getHeartBeatState().getGeneration();
+                            if (localGen < remoteGen) {
+                                newer = true;
+                            } else if (localGen == remoteGen) {
+                                int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                                if (localVersion < remoteVersion) {
+                                    newer = true;
+                                }
+                            }
+                        }
+                    }
+                    if (newer) {
+                        logger.info("receive info of " + observedNode + " from " + from + 
+                                " generation " + remoteGen + " version " + remoteVersion);
+                        newerVersion.put(observedNode, remoteVersion);
+                    }
+                }
+            }
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
@@ -89,6 +125,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 if (OneMachineScaleSimulator.testNodes.contains(address)) {
                     // Implement here
                     OneMachineScaleSimulator.startForwarding(from, address, to);
+                    break;
 //                    EndpointState epState = epStateMap.get(address);
 //                    ScaleSimulator.stubGroup.getOmniscientGossiperStub().addClockEndpointStateIfNotExist(address, epState);
                 }
@@ -114,16 +151,26 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         		to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                new GossipDigestAck2(deltaEpStateMap),
                GossipDigestAck2.serializer);
+        int ack2Hash = gDigestAck2Message.payload.hashCode();
+        for (InetAddress observedNode : OneMachineScaleSimulator.testNodes) {
+            if (deltaEpStateMap.keySet().contains(observedNode)) {
+                int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+                logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                        " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                        " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
+            }
+        }
+        for (InetAddress address : newerVersion.keySet()) {
+            logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+            
+        }
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-//        if (WorstCaseGossiperStub.addressSet.contains(from)) {
-//        	MessageIn<GossipDigestAck2> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAck2Message);
-//        	msgIn.setTo(from);
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-//            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-//        }
         if (OneMachineScaleSimulator.stubGroup.contains(from)) {
             MessageIn<GossipDigestAck2> msgIn = OneMachineScaleSimulator.convertOutToIn(gDigestAck2Message);
             msgIn.setTo(from);

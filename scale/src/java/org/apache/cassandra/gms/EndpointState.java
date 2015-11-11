@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
@@ -107,6 +106,42 @@ public class EndpointState
     void markDead()
     {
         isAlive = false;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime
+                * result
+                + ((applicationState == null) ? 0 : applicationState.hashCode());
+        result = prime * result + ((hbState == null) ? 0 : hbState.hashCode());
+        result = prime * result + (isAlive ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        EndpointState other = (EndpointState) obj;
+        if (applicationState == null) {
+            if (other.applicationState != null)
+                return false;
+        } else if (!applicationState.equals(other.applicationState))
+            return false;
+        if (hbState == null) {
+            if (other.hbState != null)
+                return false;
+        } else if (!hbState.equals(other.hbState))
+            return false;
+        if (isAlive != other.isAlive)
+            return false;
+        return true;
     }
 
     public String toString()
