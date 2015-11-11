@@ -11,7 +11,7 @@ i=1
 j=1
 while [ $i -le $numnode ]; do
   if ! grep -q "^$j\$" skiplist; then
-    ip=`nslookup node-$j.scale.ucare | awk 'BEGIN { flag = 0 } /Name/ { flag = 1 } /Address/ { if (flag == 1) print $2 }'`
+    ip=`nslookup node-$j.scale.ucare.nome.nx | awk 'BEGIN { flag = 0 } /Name/ { flag = 1 } /Address/ { if (flag == 1) print $2 }'`
     echo $i $ip >> machinelist
     i=`expr $i + 1`
   else
