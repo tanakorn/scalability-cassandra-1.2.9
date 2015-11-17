@@ -20,7 +20,7 @@ def main():
   numInfect = 1.0
   time = 0
   infectRecord = [ numInfect ]
-  while round(numInfect) < numNode:
+  while round(numInfect, 2) < numNode:
     increaseInfect = [ 0.0 ] * len(infectRecord)
     for i, inf1 in enumerate(infectRecord):
       increaseInfect[i] = infectionProb(numNode, inf1)
