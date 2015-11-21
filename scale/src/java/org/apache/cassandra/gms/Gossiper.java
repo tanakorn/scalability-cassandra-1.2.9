@@ -911,11 +911,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
     
     static void notifyFailureDetectorStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
-    		Map<InetAddress, EndpointState> remoteEpStateMap)
+    		Map<InetAddress, EndpointState> remoteEpStateMap, IFailureDetector failureDetector)
     {
         for (Entry<InetAddress, EndpointState> entry : remoteEpStateMap.entrySet())
         {
-            notifyFailureDetectorStatic(endpointStateMap, entry.getKey(), entry.getValue());
+            notifyFailureDetectorStatic(endpointStateMap, entry.getKey(), entry.getValue(), failureDetector);
         }
     }
 
@@ -961,7 +961,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
     
     static void notifyFailureDetectorStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
-    		InetAddress endpoint, EndpointState remoteEndpointState)
+    		InetAddress endpoint, EndpointState remoteEndpointState, IFailureDetector failureDetector)
     {
         EndpointState localEndpointState = endpointStateMap.get(endpoint);
         /*
@@ -970,7 +970,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         */
         if ( localEndpointState != null )
         {
-            IFailureDetector fd = FailureDetector.instance;
+//            IFailureDetector fd = FailureDetector.instance;
+            IFailureDetector fd = failureDetector;
             int localGeneration = localEndpointState.getHeartBeatState().getGeneration();
             int remoteGeneration = remoteEndpointState.getHeartBeatState().getGeneration();
             if ( remoteGeneration > localGeneration )
@@ -1285,7 +1286,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             else
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
-                FailureDetector.instance.report(ep);
+//                FailureDetector.instance.report(ep);
+                stub.getFailureDetector().report(ep);
                 handleMajorStateChangeStatic(stub, ep, remoteState);
             }
         }

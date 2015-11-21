@@ -41,11 +41,14 @@ import static org.apache.cassandra.tracing.Tracing.isTracing;
 public class MessageOut<T>
 {
     public final InetAddress from;
+    public final InetAddress to;
     public final MessagingService.Verb verb;
     public final T payload;
     public final IVersionedSerializer<T> serializer;
     public final Map<String, byte[]> parameters;
-
+    
+    public long wakeUpTime;
+    
     // we do support messages that just consist of a verb
     public MessageOut(MessagingService.Verb verb)
     {
@@ -69,6 +72,15 @@ public class MessageOut<T>
              isTracing() ? ImmutableMap.of(TRACE_HEADER, UUIDGen.decompose(Tracing.instance().getSessionId()))
                          : Collections.<String, byte[]>emptyMap());
     }
+    
+    public MessageOut(InetAddress from, InetAddress to, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer)
+    {
+        this(from, to, verb,
+             payload,
+             serializer,
+             isTracing() ? ImmutableMap.of(TRACE_HEADER, UUIDGen.decompose(Tracing.instance().getSessionId()))
+                         : Collections.<String, byte[]>emptyMap());
+    }
 
     private MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
     {
@@ -78,6 +90,17 @@ public class MessageOut<T>
     public MessageOut(InetAddress from, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
     {
         this.from = from;
+        this.to = null;
+        this.verb = verb;
+        this.payload = payload;
+        this.serializer = serializer;
+        this.parameters = parameters;
+    }
+
+    public MessageOut(InetAddress from, InetAddress to, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
+    {
+        this.from = from;
+        this.to = to;
         this.verb = verb;
         this.payload = payload;
         this.serializer = serializer;
@@ -169,7 +192,15 @@ public class MessageOut<T>
 		return result;
 	}
 
-	@Override
+	public long getWakeUpTime() {
+        return wakeUpTime;
+    }
+
+    public void setWakeUpTime(long wakeUpTime) {
+        this.wakeUpTime = wakeUpTime;
+    }
+
+    @Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

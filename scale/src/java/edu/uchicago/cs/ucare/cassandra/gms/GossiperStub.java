@@ -1,7 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -9,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,11 +20,13 @@ import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.gms.ApplicationState;
 import org.apache.cassandra.gms.EndpointState;
+import org.apache.cassandra.gms.FailureDetector;
 import org.apache.cassandra.gms.GossipDigest;
 import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.HeartBeatState;
 import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 
@@ -56,6 +58,7 @@ public class GossiperStub implements InetAddressStub {
 	@SuppressWarnings("rawtypes") Collection<Token> tokens;
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
+	FailureDetector failureDetector;
 	
 	boolean hasContactedSeed;
 	
@@ -82,6 +85,7 @@ public class GossiperStub implements InetAddressStub {
 		versionedValueFactory = new VersionedValueFactory(partitioner);
 		hasContactedSeed = false;
 		tokenMetadata = new TokenMetadata();
+		failureDetector = new FailureDetector();
 	}
 	
 	public void prepareInitialState() {
@@ -153,14 +157,6 @@ public class GossiperStub implements InetAddressStub {
             if (epState != null) {
                 generation = epState.getHeartBeatState().getGeneration();
                 maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
-//                try {
-//                    if (broadcastAddress.equals(InetAddress.getByName("127.0.0.4"))) {
-//                        System.out.println(broadcastAddress + " " + endpoint + " " + generation + " " + maxVersion);
-//                    }
-//                } catch (UnknownHostException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
             }
             gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
         }
@@ -170,6 +166,52 @@ public class GossiperStub implements InetAddressStub {
         		MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
         return message;
 	}
+	
+   public MessageOut<GossipDigestSyn> genGossipDigestSyncMsgOut(InetAddress to) {
+        Random random = new Random();
+        List<GossipDigest> gossipDigestList = new LinkedList<GossipDigest>();
+        EndpointState epState;
+        int generation = 0;
+        int maxVersion = 0;
+        List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMap.keySet());
+        Collections.shuffle(endpoints, random);
+        for (InetAddress endpoint : endpoints) {
+            epState = endpointStateMap.get(endpoint);
+            if (epState != null) {
+                generation = epState.getHeartBeatState().getGeneration();
+                maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
+            }
+            gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
+        }
+        GossipDigestSyn digestSynMessage = new GossipDigestSyn(clusterId, partitionerName, 
+                gossipDigestList);
+        MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(broadcastAddress, to,
+                MessagingService.Verb.GOSSIP_DIGEST_SYN, digestSynMessage, GossipDigestSyn.serializer);
+        return message;
+    }
+   
+   private static Map<String, byte[]> emptyMap = Collections.<String, byte[]>emptyMap();
+   public MessageIn<GossipDigestSyn> genGossipDigestSyncMsgIn(InetAddress to) {
+       Random random = new Random();
+       List<GossipDigest> gossipDigestList = new LinkedList<GossipDigest>();
+       EndpointState epState;
+       int generation = 0;
+       int maxVersion = 0;
+       List<InetAddress> endpoints = new ArrayList<InetAddress>(endpointStateMap.keySet());
+       Collections.shuffle(endpoints, random);
+       for (InetAddress endpoint : endpoints) {
+           epState = endpointStateMap.get(endpoint);
+           if (epState != null) {
+               generation = epState.getHeartBeatState().getGeneration();
+               maxVersion = epState.getHeartBeatState().getHeartBeatVersion();
+           }
+           gossipDigestList.add(new GossipDigest(endpoint, generation, maxVersion));
+       }
+       GossipDigestSyn digestSynMessage = new GossipDigestSyn(clusterId, partitionerName, 
+               gossipDigestList);
+       MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
+       return message;
+   }
 	
 	public GossipDigest createGossipDigest() {
 	    EndpointState endpointState = endpointStateMap.get(broadcastAddress);
@@ -211,6 +253,14 @@ public class GossiperStub implements InetAddressStub {
 
     public void setHasContactedSeed(boolean hasContactedSeed) {
         this.hasContactedSeed = hasContactedSeed;
+    }
+
+    public FailureDetector getFailureDetector() {
+        return failureDetector;
+    }
+
+    public void setFailureDetector(FailureDetector failureDetector) {
+        this.failureDetector = failureDetector;
     }
 
 }

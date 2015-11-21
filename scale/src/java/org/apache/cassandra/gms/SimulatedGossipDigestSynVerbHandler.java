@@ -27,10 +27,9 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.net.MessagingService.Verb;
 
-import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 {
@@ -62,7 +61,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -106,21 +105,23 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         		to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                 GossipDigestAck.serializer);
+        gDigestAckMessage.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        if (GossipProcessingMetric.stubGroup.contains(from)) {
-        	MessageIn<GossipDigestAck> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAckMessage);
-        	msgIn.setTo(from);
-            long s = System.currentTimeMillis();
-            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-            		Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
-            long t = System.currentTimeMillis() - s;
-            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
-        } else {
-            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-        }
+        WholeClusterSimulator.ackQueue.add(gDigestAckMessage);
+//        if (GossipProcessingMetric.stubGroup.contains(from)) {
+//        	MessageIn<GossipDigestAck> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAckMessage);
+//        	msgIn.setTo(from);
+//            long s = System.currentTimeMillis();
+//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
+//            		Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
+//            long t = System.currentTimeMillis() - s;
+//            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
+//        } else {
+//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+//        }
 //        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
 
 //        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));

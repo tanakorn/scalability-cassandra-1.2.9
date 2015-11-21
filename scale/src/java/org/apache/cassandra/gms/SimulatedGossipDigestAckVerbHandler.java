@@ -31,8 +31,8 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
-import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
@@ -55,14 +55,14 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
-        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
 
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
-            Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
+            Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap, stub.getFailureDetector());
             Gossiper.applyStateLocallyStatic(stub, epStateMap);
 
         }
@@ -87,6 +87,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
+        gDigestAck2Message.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
 //        if (WorstCaseGossiperStub.addressSet.contains(from)) {
 //        	MessageIn<GossipDigestAck2> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAck2Message);
 //        	msgIn.setTo(from);
@@ -95,17 +96,17 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        }
-        if (GossipProcessingMetric.stubGroup.contains(from)) {
-            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
-            msgIn.setTo(from);
-            long s = System.currentTimeMillis();
-            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
-            long t = System.currentTimeMillis() - s;
-            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
-        } else {
-            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-        }
+//        if (GossipProcessingMetric.stubGroup.contains(from)) {
+//            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
+//            msgIn.setTo(from);
+//            long s = System.currentTimeMillis();
+//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
+//                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
+//            long t = System.currentTimeMillis() - s;
+//            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
+//        } else {
+//            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+//        }
 //        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
     }
 }
