@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -26,13 +28,16 @@ import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.FailureDetector;
 import org.apache.cassandra.gms.GossipDigest;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.gms.HeartBeatState;
 import org.apache.cassandra.gms.IFailureDetectionEventListener;
+import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.StorageService;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStub;
 
@@ -47,6 +52,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             throw new AssertionError();
         }
     }
+    static final List<String> DEAD_STATES = Arrays.asList(VersionedValue.REMOVING_TOKEN, VersionedValue.REMOVED_TOKEN,
+            VersionedValue.STATUS_LEFT, VersionedValue.HIBERNATE);
     
     private static final Comparator<InetAddress> inetcomparator = new Comparator<InetAddress>()
     {
@@ -116,6 +123,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 		hasContactedSeed = false;
 		tokenMetadata = new TokenMetadata();
 		failureDetector = new FailureDetector();
+		failureDetector.registerFailureDetectionEventListener(this);
         liveEndpoints = new ConcurrentSkipListSet<InetAddress>();
         unreachableEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
@@ -245,7 +253,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
        }
        GossipDigestSyn digestSynMessage = new GossipDigestSyn(clusterId, partitionerName, 
                gossipDigestList);
-       MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
+       MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, 
+               emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        return message;
    }
 	
@@ -322,11 +331,89 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     public void setSeeds(Set<InetAddress> seeds) {
         this.seeds = seeds;
     }
+    
+    public void doStatusCheck() {
+        long now = System.currentTimeMillis();
+
+        Set<InetAddress> eps = endpointStateMap.keySet();
+        for ( InetAddress endpoint : eps ) {
+            if (endpoint.equals(broadcastAddress)) {
+                continue;
+            }
+
+            FailureDetector.instance.interpret(endpoint);
+            EndpointState epState = endpointStateMap.get(endpoint);
+            if ( epState != null ) {
+                // check for dead state removal
+                long expireTime = getExpireTimeForEndpoint(endpoint);
+                if (!epState.isAlive() && (now > expireTime)
+                        && (!StorageService.instance.getTokenMetadata().isMember(endpoint))) {
+                    evictFromMembership(endpoint);
+                }
+            }
+        }
+
+        if (!justRemovedEndpoints.isEmpty()) {
+            for (Entry<InetAddress, Long> entry : justRemovedEndpoints.entrySet()) {
+                if ((now - entry.getValue()) > WholeClusterSimulator.QUARANTINE_DELAY) {
+                    justRemovedEndpoints.remove(entry.getKey());
+                }
+            }
+        }
+    }
+
+    public static long computeExpireTime() {
+        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+    }
+
+    protected long getExpireTimeForEndpoint(InetAddress endpoint) {
+        /* default expireTime is aVeryLongTime */
+        Long storedTime = expireTimeEndpointMap.get(endpoint);
+        return storedTime == null ? computeExpireTime() : storedTime;
+    }
+    
+    private void evictFromMembership(InetAddress endpoint) {
+        unreachableEndpoints.remove(endpoint);
+        endpointStateMap.remove(endpoint);
+        expireTimeEndpointMap.remove(endpoint);
+        quarantineEndpoint(endpoint);
+    }
+    
+    private void quarantineEndpoint(InetAddress endpoint) {
+        justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
+    }
+    
+    private Boolean isDeadState(EndpointState epState)
+    {
+        if (epState.getApplicationState(ApplicationState.STATUS) == null)
+            return false;
+        String value = epState.getApplicationState(ApplicationState.STATUS).value;
+        String[] pieces = value.split(VersionedValue.DELIMITER_STR, -1);
+        assert (pieces.length > 0);
+        String state = pieces[0];
+        for (String deadstate : DEAD_STATES) {
+            if (state.equals(deadstate))
+                return true;
+        }
+        return false;
+    }
+    
+    private void markDead(InetAddress addr, EndpointState localState) {
+        localState.markDead();
+        liveEndpoints.remove(addr);
+        unreachableEndpoints.put(addr, System.currentTimeMillis());
+    }
 
     @Override
     public void convict(InetAddress ep, double phi) {
         // TODO Auto-generated method stub
-        
+        EndpointState epState = endpointStateMap.get(ep);
+        if (epState.isAlive() && !isDeadState(epState)) {
+            markDead(ep, epState);
+        }
+        else {
+            epState.markDead();
+        }
     }
 
 }

@@ -104,7 +104,7 @@ public class EndpointState
         isAlive = true;
     }
 
-    void markDead()
+    public void markDead()
     {
         isAlive = false;
     }

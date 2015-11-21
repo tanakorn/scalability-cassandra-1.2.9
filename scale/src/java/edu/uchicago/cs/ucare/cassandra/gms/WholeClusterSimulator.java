@@ -42,7 +42,8 @@ public class WholeClusterSimulator {
     public static final Set<InetAddress> seeds = new HashSet<InetAddress>();
     public static GossiperStubGroup stubGroup;
     
-    public static final int numStubs = 128;
+    public static final int NUM_STUBS = 128;
+    public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
@@ -54,7 +55,7 @@ public class WholeClusterSimulator {
     public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
             new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
     
-    public static long[] gossipExecTimeRecords = new long[numStubs];
+    public static long[] gossipExecTimeRecords = new long[NUM_STUBS];
 
     public static PriorityBlockingQueue<MessageOut<?>> ackQueue = new PriorityBlockingQueue<MessageOut<?>>(100, new Comparator<MessageOut<?>>() {
 
@@ -130,10 +131,10 @@ public class WholeClusterSimulator {
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
-        for (int i = 0; i < numStubs; ++i) {
+        for (int i = 0; i < NUM_STUBS; ++i) {
             addressList.add(InetAddress.getByName("127.0.0." + i));
         }
-        logger.info("Simulate " + numStubs + " nodes = " + addressList);
+        logger.info("Simulate " + NUM_STUBS + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
                 .setNumTokens(1024).setSeeds(seeds).setAddressList(addressList)
@@ -182,6 +183,7 @@ public class WholeClusterSimulator {
                         logger.error("Cannot add more message to message queue");
                     }
                 }
+                stub.doStatusCheck();
             }
             long finish = System.currentTimeMillis();
             if (finish - start > 1000) {
@@ -198,7 +200,8 @@ public class WholeClusterSimulator {
            while (true) {
                try {
                 MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
+                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, 
+                        Integer.toString(idGen.incrementAndGet()));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
