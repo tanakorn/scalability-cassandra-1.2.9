@@ -6,13 +6,16 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.cassandra.dht.BootStrapper;
 import org.apache.cassandra.dht.IPartitioner;
@@ -24,6 +27,7 @@ import org.apache.cassandra.gms.FailureDetector;
 import org.apache.cassandra.gms.GossipDigest;
 import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.HeartBeatState;
+import org.apache.cassandra.gms.IFailureDetectionEventListener;
 import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
 import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageIn;
@@ -32,7 +36,7 @@ import org.apache.cassandra.net.MessagingService;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStub;
 
-public class GossiperStub implements InetAddressStub {
+public class GossiperStub implements InetAddressStub, IFailureDetectionEventListener {
 	
 	private static final UUID EMPTY_SCHEMA;
     static {
@@ -43,7 +47,15 @@ public class GossiperStub implements InetAddressStub {
             throw new AssertionError();
         }
     }
-	
+    
+    private static final Comparator<InetAddress> inetcomparator = new Comparator<InetAddress>()
+    {
+        public int compare(InetAddress addr1,  InetAddress addr2)
+        {
+            return addr1.getHostAddress().compareTo(addr2.getHostAddress());
+        }
+    };
+
     String clusterId;
 	String dataCenter;
 	InetAddress broadcastAddress;
@@ -59,18 +71,36 @@ public class GossiperStub implements InetAddressStub {
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
 	FailureDetector failureDetector;
+	Set<InetAddress> liveEndpoints;
+    Map<InetAddress, Long> unreachableEndpoints;
+    Map<InetAddress, Long> justRemovedEndpoints;
+    Map<InetAddress, Long> expireTimeEndpointMap;
+    Set<InetAddress> seeds;
 	
 	boolean hasContactedSeed;
 	
+	private static final Random random = new Random();
+	public static InetAddress getRandomAddress(Collection<InetAddress> addressCollection) {
+	    if (addressCollection.isEmpty()) {
+	        return null;
+	    }
+	    int size = addressCollection.size();
+	    InetAddress[] addresses = new InetAddress[size];
+	    addresses = addressCollection.toArray(addresses);
+	    int randNum = random.nextInt(size);
+	    return addresses[randNum];
+	}
+	
 	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, int numTokens,
-			@SuppressWarnings("rawtypes") IPartitioner partitioner) {
+			Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA, 
-				new HeartBeatState((int) System.currentTimeMillis()), numTokens, partitioner);
+				new HeartBeatState((int) System.currentTimeMillis()), 
+				numTokens, seeds, partitioner);
 	}
 	
 	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, 
 			UUID hostId, UUID schema, HeartBeatState heartBeatState, int numTokens,
-			@SuppressWarnings("rawtypes") IPartitioner partitioner) {
+			Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this.clusterId = clusterId;
 		this.dataCenter = dataCenter;
 		this.broadcastAddress = broadcastAddress;
@@ -86,6 +116,12 @@ public class GossiperStub implements InetAddressStub {
 		hasContactedSeed = false;
 		tokenMetadata = new TokenMetadata();
 		failureDetector = new FailureDetector();
+        liveEndpoints = new ConcurrentSkipListSet<InetAddress>();
+        unreachableEndpoints = new ConcurrentHashMap<InetAddress, Long>();
+        justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
+        expireTimeEndpointMap = new ConcurrentHashMap<InetAddress, Long>();
+        this.seeds = new ConcurrentSkipListSet<InetAddress>(inetcomparator);
+        this.seeds.addAll(seeds);
 	}
 	
 	public void prepareInitialState() {
@@ -261,6 +297,36 @@ public class GossiperStub implements InetAddressStub {
 
     public void setFailureDetector(FailureDetector failureDetector) {
         this.failureDetector = failureDetector;
+    }
+    
+    public Set<InetAddress> getLiveEndpoints() {
+        return liveEndpoints;
+    }
+
+    public void setLiveEndpoints(Set<InetAddress> liveEndpoints) {
+        this.liveEndpoints = liveEndpoints;
+    }
+
+    public Map<InetAddress, Long> getUnreachableEndpoints() {
+        return unreachableEndpoints;
+    }
+
+    public void setUnreachableEndpoints(Map<InetAddress, Long> unreachableEndpoints) {
+        this.unreachableEndpoints = unreachableEndpoints;
+    }
+
+    public Set<InetAddress> getSeeds() {
+        return seeds;
+    }
+
+    public void setSeeds(Set<InetAddress> seeds) {
+        this.seeds = seeds;
+    }
+
+    @Override
+    public void convict(InetAddress ep, double phi) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

@@ -7,11 +7,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
+import java.net.UnknownHostException;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,13 +39,15 @@ import org.slf4j.LoggerFactory;
 
 public class WholeClusterSimulator {
 
+    public static final Set<InetAddress> seeds = new HashSet<InetAddress>();
     public static GossiperStubGroup stubGroup;
     
     public static final int numStubs = 128;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
-    static Timer timer = new Timer();
+    private static Timer timer = new Timer();
+    private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
@@ -63,6 +68,11 @@ public class WholeClusterSimulator {
     static
     {
         initLog4j();
+        try {
+            seeds.add(InetAddress.getByName("127.0.0.1"));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
     public static void initLog4j()
     {
@@ -125,8 +135,8 @@ public class WholeClusterSimulator {
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
-        stubGroup = stubGroupBuilder.setClusterId("Test Cluster")
-                .setDataCenter("").setNumTokens(1024).setAddressList(addressList)
+        stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
+                .setNumTokens(1024).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
 //        stubGroup.listen();
@@ -143,10 +153,34 @@ public class WholeClusterSimulator {
         public void run() {
             long start = System.currentTimeMillis();
             for (GossiperStub stub : stubGroup) {
-                GossiperStub randStub = stubGroup.getRandomStub();
-                MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(randStub.getInetAddress());
-                if (syncQueue.add(synMsg)) {
-                    logger.error("Cannot add more message to message queue");
+                boolean gossipToSeed = false;
+                Set<InetAddress> liveEndpoints = stub.getLiveEndpoints();
+                Set<InetAddress> seeds = stub.getSeeds();
+                if (!liveEndpoints.isEmpty()) {
+                    InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
+                    gossipToSeed = seeds.contains(liveEndpoints);
+                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(liveReceiver);
+                    if (syncQueue.add(synMsg)) {
+                        logger.error("Cannot add more message to message queue");
+                    }
+                }
+                Map<InetAddress, Long> unreachableEndpoints = stub.getUnreachableEndpoints();
+                if (!unreachableEndpoints.isEmpty()) {
+                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(unreachableReceiver);
+                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+                    if (prob > random.nextDouble()) {
+                        if (syncQueue.add(synMsg)) {
+                            logger.error("Cannot add more message to message queue");
+                        }
+                    }
+                }
+                if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
+                    InetAddress seed = GossiperStub.getRandomAddress(seeds);
+                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
+                    if (syncQueue.add(synMsg)) {
+                        logger.error("Cannot add more message to message queue");
+                    }
                 }
             }
             long finish = System.currentTimeMillis();

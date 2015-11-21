@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
@@ -22,7 +23,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
     @SuppressWarnings("rawtypes") IPartitioner partitioner;
 
     GossiperStubGroup(String clusterId, String dataCenter, int numNodes, int numTokens,
-            @SuppressWarnings("rawtypes") IPartitioner partitioner)
+            Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner)
             throws UnknownHostException {
         this.clusterId = clusterId;
         this.numNodes = numNodes;
@@ -32,7 +33,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         for (int i = 0; i < numNodes; ++i) {
             InetAddress address = InetAddress.getByName("127.0.0." + (i + 2));
             stubs.put(address, new GossiperStub(address, clusterId, dataCenter, 
-                    numTokens, partitioner));
+                    numTokens, seeds, partitioner));
         }
     }
     

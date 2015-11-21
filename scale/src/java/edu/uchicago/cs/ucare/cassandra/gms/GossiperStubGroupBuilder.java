@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.cassandra.dht.IPartitioner;
 
@@ -13,6 +14,7 @@ public class GossiperStubGroupBuilder {
     String dataCenter;
     Collection<InetAddress> addressList;
     int numTokens;
+    Set<InetAddress> seeds;
     @SuppressWarnings("rawtypes") IPartitioner partitioner;
 
     public String getClusterId() {
@@ -51,6 +53,15 @@ public class GossiperStubGroupBuilder {
         return this;
     }
     
+    public Set<InetAddress> getSeeds() {
+        return seeds;
+    }
+
+    public GossiperStubGroupBuilder setSeeds(Set<InetAddress> seeds) {
+        this.seeds = seeds;
+        return this;
+    }
+
     @SuppressWarnings("rawtypes")
     public IPartitioner getPartitioner() {
         return partitioner;
@@ -66,14 +77,15 @@ public class GossiperStubGroupBuilder {
         List<GossiperStub> stubs = new LinkedList<GossiperStub>();
         if (addressList != null) {
             for (InetAddress address : addressList) {
-                stubs.add(createGossiperStub(address));
+                GossiperStub stub = createGossiperStub(address);
+                stubs.add(stub);
             }
         }
         return new GossiperStubGroup(clusterId, dataCenter, stubs, numTokens, partitioner);
     }
     
     GossiperStub createGossiperStub(InetAddress address) {
-        return new GossiperStub(address, clusterId, dataCenter, numTokens, partitioner);
+        return new GossiperStub(address, clusterId, dataCenter, numTokens, seeds, partitioner);
     }
     
 }
