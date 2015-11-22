@@ -80,12 +80,25 @@ public class GossipProcessingMetric {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
+        if (args.length < 1) {
+            System.err.println("Please specify node status (boot/normal)");
+            System.exit(1);
+        }
+        String testStatus = args[0];
+        if (testStatus.equals("boot")) {
+            
+        } else if (testStatus.equals("normal")) {
+            
+        } else {
+            System.err.println("status must be boot/normal");
+            System.exit(2);
+        }
         Gossiper.registerStatic(StorageService.instance);
         Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         InetAddress firstNode = InetAddress.getByName("127.0.0.1");
         for (int i = 1; i <= numStubs; ++i) {
-            test(InetAddress.getByName("127.0.0." + i), firstNode);
+            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
         }
         System.exit(0);
     }
@@ -95,7 +108,7 @@ public class GossipProcessingMetric {
         return msgIn;
     }
     
-    public static void test(InetAddress gossiperAddress, InetAddress gossipeeAddress) throws UnknownHostException {
+    public static void test(InetAddress gossiperAddress, InetAddress gossipeeAddress, String testStatus) throws UnknownHostException {
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
         for (int i = 1; i <= numStubs; ++i) {
@@ -122,8 +135,13 @@ public class GossipProcessingMetric {
             prevInitStub = stub;
         }
         stubGroup.setupTokenState();
-        stubGroup.setBootStrappingStatusState();
-        stubGroup.setNormalStatusState();
+        if (testStatus.equals("boot")) {
+            stubGroup.setBootStrappingStatusState();
+        } else if (testStatus.equals("normal")) {
+            stubGroup.setNormalStatusState();
+        } else {
+            assert false;
+        }
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
 //        System.out.println(gossiperAddress + " " + gossipeeAddress);

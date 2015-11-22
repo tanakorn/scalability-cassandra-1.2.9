@@ -39,7 +39,6 @@ import com.google.common.collect.*;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
-import edu.uchicago.cs.ucare.scale.Stub;
 
 import org.apache.cassandra.db.index.SecondaryIndex;
 import org.apache.log4j.Level;
