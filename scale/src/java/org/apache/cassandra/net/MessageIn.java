@@ -41,9 +41,7 @@ public class MessageIn<T>
     public final int version;
     
     public InetAddress to;
-    
-//    public static int count = 0;
-//    public static int totalSize = 0;
+    public long wakeUpTime;
     
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
@@ -63,14 +61,9 @@ public class MessageIn<T>
 
     public static <T2> MessageIn<T2> read(DataInput in, int version, String id) throws IOException
     {
-//    	count++;
         InetAddress from = CompactEndpointSerializationHelper.deserialize(in);
-//        int size = 0;
-
         MessagingService.Verb verb = MessagingService.Verb.values()[in.readInt()];
-//        size += Integer.SIZE;
         int parameterCount = in.readInt();
-//        size += Integer.SIZE;
         Map<String, byte[]> parameters;
         if (parameterCount == 0)
         {
@@ -83,21 +76,13 @@ public class MessageIn<T>
             {
                 String key = in.readUTF();
                 byte[] value = new byte[in.readInt()];
-//                size += Integer.SIZE;
                 in.readFully(value);
-//                size += value.length;
                 builder.put(key, value);
             }
             parameters = builder.build();
         }
 
         int payloadSize = in.readInt();
-//        size += Integer.SIZE;
-//        size += payloadSize;
-//        totalSize += size;
-//        if (count == 100) {
-//            logger.info("korn reading messages = " + totalSize);
-//        }
         IVersionedSerializer<T2> serializer = (IVersionedSerializer<T2>) MessagingService.verbSerializers.get(verb);
         if (serializer instanceof MessagingService.CallbackDeterminedSerializer)
         {
@@ -141,7 +126,15 @@ public class MessageIn<T>
         return sbuf.toString();
     }
 
-	@Override
+	public long getWakeUpTime() {
+        return wakeUpTime;
+    }
+
+    public void setWakeUpTime(long wakeUpTime) {
+        this.wakeUpTime = wakeUpTime;
+    }
+
+    @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

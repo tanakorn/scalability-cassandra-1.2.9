@@ -55,6 +55,17 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
         Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), remoteEpStateMap, stub.getFailureDetector());
         Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
+        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+        if (mockExecTime > 0) {
+            try {
+                Thread.sleep(mockExecTime);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } else {
+            logger.warn("Executing past message");
+        }
         
     }
 }

@@ -55,12 +55,13 @@ public class WholeClusterSimulator {
     public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
             new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
     
-    public static long[] gossipExecTimeRecords = new long[NUM_STUBS];
+    public static long[] bootGossipExecRecords = new long[NUM_STUBS];
+    public static long[] normalGossipExecRecords = new long[NUM_STUBS];
 
-    public static PriorityBlockingQueue<MessageOut<?>> ackQueue = new PriorityBlockingQueue<MessageOut<?>>(100, new Comparator<MessageOut<?>>() {
+    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
 
         @Override
-        public int compare(MessageOut<?> o1, MessageOut<?> o2) {
+        public int compare(MessageIn<?> o1, MessageIn<?> o2) {
             return (int) (o1.getWakeUpTime() - o2.getWakeUpTime());
         }
 
@@ -115,15 +116,22 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 1) {
-            System.err.println("Please enter gossip_exec_time file name");
+        if (args.length < 2) {
+            System.err.println("Please enter execution_time files");
+            System.err.println("usage: WholeClusterSimulator <boot_exec> <normal_exec>");
             System.exit(1);
         }
         BufferedReader buffReader = new BufferedReader(new FileReader(args[0]));
         String line;
         while ((line = buffReader.readLine().trim()) != null) {
             String[] tokens = line.split(" ");
-            gossipExecTimeRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
+            bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
+        }
+        buffReader.close();
+        buffReader = new BufferedReader(new FileReader(args[1]));
+        while ((line = buffReader.readLine().trim()) != null) {
+            String[] tokens = line.split(" ");
+            normalGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
 //        Gossiper.registerStatic(StorageService.instance);
@@ -141,6 +149,19 @@ public class WholeClusterSimulator {
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
 //        stubGroup.listen();
+        // I should start MyGossiperTask here
+        Thread syncProcessThread = new Thread(new SyncProcessor());
+        syncProcessThread.start();
+        Thread ackProcessThread = new Thread(new AckProcessor());
+        ackProcessThread.start();
+        timer.schedule(new MyGossiperTask(), 0, 1000);
+        stubGroup.setupTokenState();
+        stubGroup.setBootStrappingStatusState();
+        // Replace hard-coded number here with ring_deplay
+        Thread.sleep(10000);
+        stubGroup.setNormalStatusState();
+        stubGroup.setSeverityState(0.0);
+        stubGroup.setLoad(10000);
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
@@ -197,15 +218,14 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-           while (true) {
-               try {
+            while (true) {
+                try {
                 MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, 
-                        Integer.toString(idGen.incrementAndGet()));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-           }
         }
         
     }
@@ -214,7 +234,14 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            
+            while (true) {
+                try {
+                MessageIn<?> ackMessage = ackQueue.take();
+                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         
     }

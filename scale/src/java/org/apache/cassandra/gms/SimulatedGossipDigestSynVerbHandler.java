@@ -34,6 +34,7 @@ import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 {
     private static final Logger logger = LoggerFactory.getLogger( SimulatedGossipDigestSynVerbHandler.class);
+    private static final Map<String, byte[]> emptyMap = Collections.<String, byte[]>emptyMap();
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
@@ -80,13 +81,32 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         // I let this got executed because it's not expensive
         Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
-//        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
-        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(to, 
-                MessagingService.Verb.GOSSIP_DIGEST_ACK,
-                new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                GossipDigestAck.serializer);
-        gDigestAckMessage.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
+        MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
+                new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap), emptyMap, 
+                MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
+        int bootNodeNum = 0;
+        int normalNodeNum = 0;
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+            EndpointState ep = deltaEpStateMap.get(address);
+            for (ApplicationState appState : ep.applicationState.keySet()) {
+                if (appState == ApplicationState.STATUS) {
+                    VersionedValue value = ep.applicationState.get(appState);
+                    String apStateValue = value.value;
+                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
+                    assert (pieces.length > 0);
+                    String moveName = pieces[0];
+                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
+                        bootNodeNum++;
+                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
+                        normalNodeNum++;
+                    }
+                }
+            }
+        }
+        long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
+                WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
+        gDigestAckMessage.setWakeUpTime(wakeUpTime);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?

@@ -18,6 +18,7 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAckVerbHandler.class);
+    private static final Map<String, byte[]> emptyMap = Collections.<String, byte[]>emptyMap();
     
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
@@ -64,6 +66,17 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             Gossiper.applyStateLocallyStatic(stub, epStateMap);
 
         }
+        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+        if (mockExecTime > 0) {
+            try {
+                Thread.sleep(mockExecTime);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        } else {
+            logger.warn("Executing past message");
+        }
 
         Gossiper.instance.checkSeedContact(from);
 
@@ -79,11 +92,30 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 deltaEpStateMap.put(addr, localEpStatePtr);
         }
 
-        MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(
-        		to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
-               new GossipDigestAck2(deltaEpStateMap),
-               GossipDigestAck2.serializer);
-        gDigestAck2Message.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
+        MessageIn<GossipDigestAck2> gDigestAck2Message = MessageIn.create(to,  new GossipDigestAck2(deltaEpStateMap), emptyMap, 
+                MessagingService.Verb.GOSSIP_DIGEST_ACK2, MessagingService.VERSION_12);
+        int bootNodeNum = 0;
+        int normalNodeNum = 0;
+        for (InetAddress address : deltaEpStateMap.keySet()) {
+            EndpointState ep = deltaEpStateMap.get(address);
+            for (ApplicationState appState : ep.applicationState.keySet()) {
+                if (appState == ApplicationState.STATUS) {
+                    VersionedValue value = ep.applicationState.get(appState);
+                    String apStateValue = value.value;
+                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
+                    assert (pieces.length > 0);
+                    String moveName = pieces[0];
+                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
+                        bootNodeNum++;
+                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
+                        normalNodeNum++;
+                    }
+                }
+            }
+        }
+        long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
+                WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
+        gDigestAck2Message.setWakeUpTime(wakeUpTime);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         WholeClusterSimulator.ackQueue.add(gDigestAck2Message);
