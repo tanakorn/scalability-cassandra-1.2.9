@@ -332,6 +332,14 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         this.seeds = seeds;
     }
     
+    public Map<InetAddress, Long> getJustRemovedEndpoints() {
+        return justRemovedEndpoints;
+    }
+
+    public void setJustRemovedEndpoints(Map<InetAddress, Long> justRemovedEndpoints) {
+        this.justRemovedEndpoints = justRemovedEndpoints;
+    }
+
     public void doStatusCheck() {
         long now = System.currentTimeMillis();
 

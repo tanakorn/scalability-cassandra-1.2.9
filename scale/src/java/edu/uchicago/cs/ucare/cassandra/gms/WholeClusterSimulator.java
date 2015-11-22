@@ -126,8 +126,8 @@ public class WholeClusterSimulator {
             gossipExecTimeRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
-        Gossiper.registerStatic(StorageService.instance);
-        Gossiper.registerStatic(LoadBroadcaster.instance);
+//        Gossiper.registerStatic(StorageService.instance);
+//        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();

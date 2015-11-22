@@ -74,35 +74,16 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
 
-//        if (stub.getHasContactedSeed() && !GossipProcessingMetric.isTestNodesStarted) {
-//            GossipDigest digestForStub = null;
-//            for (GossipDigest gDigest : gDigestList) {
-//                if (gDigest.endpoint.equals(to)) {
-//                    digestForStub = gDigest;
-//                }
-//            }
-//            assert digestForStub != null;
-//            List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
-//            Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-//            Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), digestForStub, deltaGossipDigestList, deltaEpStateMap);
-//            MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
-//                    to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
-//                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-//                    GossipDigestAck.serializer);
-//            Gossiper.instance.checkSeedContact(from);
-//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-//            return;
-//        }
-
         doSort(gDigestList);
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
+        // I let this got executed because it's not expensive
         Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
-        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(
-        		to, MessagingService.Verb.GOSSIP_DIGEST_ACK,
+        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(to, 
+                MessagingService.Verb.GOSSIP_DIGEST_ACK,
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                 GossipDigestAck.serializer);
         gDigestAckMessage.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
@@ -111,28 +92,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         WholeClusterSimulator.ackQueue.add(gDigestAckMessage);
-//        if (GossipProcessingMetric.stubGroup.contains(from)) {
-//        	MessageIn<GossipDigestAck> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAckMessage);
-//        	msgIn.setTo(from);
-//            long s = System.currentTimeMillis();
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-//            		Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
-//            long t = System.currentTimeMillis() - s;
-//            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-//        }
-//        MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-
-//        logger.info("korn GDA size = " + gDigestAckMessage.serializedSize(MessagingService.current_version));
-//        if (WorstCaseGossiperStub.addressSet.contains(from)) {
-//        	MessageIn<GossipDigestAck> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAckMessage);
-//        	msgIn.setTo(from);
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-//            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-//        }
     }
 
     /*

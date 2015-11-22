@@ -18,7 +18,6 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,6 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.net.MessagingService.Verb;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
@@ -85,28 +83,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         		to, MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                new GossipDigestAck2(deltaEpStateMap),
                GossipDigestAck2.serializer);
+        gDigestAck2Message.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        gDigestAck2Message.setWakeUpTime(System.currentTimeMillis() + WholeClusterSimulator.gossipExecTimeRecords[deltaEpStateMap.size()]);
-//        if (WorstCaseGossiperStub.addressSet.contains(from)) {
-//        	MessageIn<GossipDigestAck2> msgIn = WorstCaseGossiperStub.convertOutToIn(gDigestAck2Message);
-//        	msgIn.setTo(from);
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-//            		Integer.toString(WorstCaseGossiperStub.idGen.incrementAndGet()));
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-//        }
-//        if (GossipProcessingMetric.stubGroup.contains(from)) {
-//            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
-//            msgIn.setTo(from);
-//            long s = System.currentTimeMillis();
-//            MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-//                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
-//            long t = System.currentTimeMillis() - s;
-//            logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
-//        } else {
-//            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
-//        }
-//        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        WholeClusterSimulator.ackQueue.add(gDigestAck2Message);
     }
 }
