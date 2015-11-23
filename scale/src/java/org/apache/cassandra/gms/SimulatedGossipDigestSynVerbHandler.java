@@ -74,6 +74,13 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
+        StringBuilder sb = new StringBuilder();
+        for ( GossipDigest gDigest : gDigestList )
+        {
+            sb.append(gDigest);
+            sb.append(" ");
+        }
+        logger.debug(stub + " receieve syn digests : " + sb.toString());
 
 //        if (stub.getHasContactedSeed() && !GossipProcessingMetric.isTestNodesStarted) {
 //            GossipDigest digestForStub = null;
@@ -99,7 +106,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        Gossiper.examineGossiperStatic(stub, stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
 //        Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(

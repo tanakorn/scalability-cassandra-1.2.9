@@ -869,7 +869,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             int localHbVersion = epState.getHeartBeatState().getHeartBeatVersion();
             if ( localHbVersion > version )
             {
-                reqdEndpointState = new EndpointState(epState.getHeartBeatState());
+                reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy());
                 if (logger.isTraceEnabled())
                     logger.trace("local heartbeat version " + localHbVersion + " greater than " + version + " for " + forEndpoint);
             }
@@ -881,7 +881,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 {
                     if ( reqdEndpointState == null )
                     {
-                        reqdEndpointState = new EndpointState(epState.getHeartBeatState());
+                        reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy());
                     }
                     final ApplicationState key = entry.getKey();
                     if (logger.isTraceEnabled())
@@ -991,6 +991,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 int localVersion = getMaxEndpointStateVersionStatic(localEndpointState);
                 int remoteVersion = remoteEndpointState.getHeartBeatState().getHeartBeatVersion();
+//                System.out.println("b " + stub.getInetAddress() + " " + localVersion + " " + endpoint + " " + remoteVersion);
                 if ( remoteVersion > localVersion )
                 {
                     localEndpointState.updateTimestamp();
@@ -1029,7 +1030,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //        unreachableEndpoints.remove(addr);
 //        expireTimeEndpointMap.remove(addr);
         logger.debug("removing expire time for endpoint : " + addr);
-//        logger.info("InetAddress {} is now UP", addr);
+        logger.info("InetAddress {} is now UP", addr);
         for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
             subscriber.onAlive(stub, addr, localState);
 //        if (logger.isTraceEnabled())
@@ -1390,7 +1391,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         EndpointState localEpStatePtr = getStateForVersionBiggerThanStatic(endpointStateMap, gDigest.getEndpoint(), maxRemoteVersion) ;
         if ( localEpStatePtr != null )
-            deltaEpStateMap.put(gDigest.getEndpoint(), localEpStatePtr);
+            deltaEpStateMap.put(gDigest.getEndpoint(), localEpStatePtr.copy());
     }
 
     /*
@@ -1456,7 +1457,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         }
     }
     
-    static void examineGossiperStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
+    static void examineGossiperStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
     		List<GossipDigest> gDigestList, List<GossipDigest> deltaGossipDigestList, 
     		Map<InetAddress, EndpointState> deltaEpStateMap)
     {
@@ -1476,6 +1477,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 int localGeneration = epStatePtr.getHeartBeatState().getGeneration();
                 /* get the max version of all keys in the state associated with this endpoint */
                 int maxLocalVersion = getMaxEndpointStateVersionStatic(epStatePtr);
+                logger.debug(stub + " examining " + gDigest + " local=" + localGeneration + ":" + maxLocalVersion);
                 if ( remoteGeneration == localGeneration && maxRemoteVersion == maxLocalVersion )
                     continue;
 
