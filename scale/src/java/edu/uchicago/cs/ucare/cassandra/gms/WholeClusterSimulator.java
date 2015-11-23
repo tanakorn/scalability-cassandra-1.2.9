@@ -42,7 +42,7 @@ public class WholeClusterSimulator {
     public static final Set<InetAddress> seeds = new HashSet<InetAddress>();
     public static GossiperStubGroup stubGroup;
     
-    public static final int NUM_STUBS = 128;
+    public static final int NUM_STUBS = 3;
     public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
@@ -55,8 +55,8 @@ public class WholeClusterSimulator {
     public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
             new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
     
-    public static long[] bootGossipExecRecords = new long[NUM_STUBS];
-    public static long[] normalGossipExecRecords = new long[NUM_STUBS];
+    public static long[] bootGossipExecRecords = new long[128];
+    public static long[] normalGossipExecRecords = new long[128];
 
     public static PriorityBlockingQueue<MessageIn<?>> ackQueue = new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
 
@@ -123,13 +123,14 @@ public class WholeClusterSimulator {
         }
         BufferedReader buffReader = new BufferedReader(new FileReader(args[0]));
         String line;
-        while ((line = buffReader.readLine().trim()) != null) {
+//        while ((line = buffReader.readLine().trim()) != null) {
+        while ((line = buffReader.readLine()) != null) {
             String[] tokens = line.split(" ");
             bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
         buffReader = new BufferedReader(new FileReader(args[1]));
-        while ((line = buffReader.readLine().trim()) != null) {
+        while ((line = buffReader.readLine()) != null) {
             String[] tokens = line.split(" ");
             normalGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
@@ -139,7 +140,7 @@ public class WholeClusterSimulator {
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
-        for (int i = 0; i < NUM_STUBS; ++i) {
+        for (int i = 1; i <= NUM_STUBS; ++i) {
             addressList.add(InetAddress.getByName("127.0.0." + i));
         }
         logger.info("Simulate " + NUM_STUBS + " nodes = " + addressList);
@@ -221,6 +222,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
+                System.out.println("processing sync from " + syncMessage.from + " to " + syncMessage.getTo());
                 MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -237,6 +239,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
+                System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();

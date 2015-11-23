@@ -161,8 +161,10 @@ public class OneMachineScaleSimulator {
                 System.out.println("Start heartbeat thread");
 //                Random random = new Random();
                 GossiperStub clusterStub;
+                Set<InetAddress> seeds = new HashSet<InetAddress>();
+                seeds.add(seed);
                 try {
-                    clusterStub = new GossiperStub(InetAddress.getByName("127.0.0.4"), "Test Cluster", "", 1024, new Murmur3Partitioner());
+                    clusterStub = new GossiperStub(InetAddress.getByName("127.0.0.4"), "Test Cluster", "", 1024, seeds, new Murmur3Partitioner());
                 } catch (UnknownHostException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();

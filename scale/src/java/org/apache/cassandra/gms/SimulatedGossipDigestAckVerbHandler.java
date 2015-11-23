@@ -116,6 +116,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
+        gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         WholeClusterSimulator.ackQueue.add(gDigestAck2Message);

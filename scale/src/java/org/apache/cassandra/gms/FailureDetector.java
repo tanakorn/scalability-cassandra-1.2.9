@@ -55,15 +55,15 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     public FailureDetector()
     {
         // Register this instance with JMX
-        try
-        {
-            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+//        try
+//        {
+//            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+//            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+//        }
+//        catch (Exception e)
+//        {
+//            throw new RuntimeException(e);
+//        }
     }
 
     public String getAllEndpointStates()

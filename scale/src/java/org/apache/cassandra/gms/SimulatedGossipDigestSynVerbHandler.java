@@ -107,6 +107,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
+        gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
