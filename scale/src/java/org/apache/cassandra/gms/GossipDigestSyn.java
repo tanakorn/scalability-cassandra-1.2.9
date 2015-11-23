@@ -35,7 +35,7 @@ public class GossipDigestSyn
 
     final String clusterId;
     final String partioner;
-    final List<GossipDigest> gDigests;
+    public final List<GossipDigest> gDigests;
 
     public GossipDigestSyn(String clusterId, String partioner, List<GossipDigest> gDigests)
     {

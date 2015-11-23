@@ -62,20 +62,20 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
-            Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap, stub.getFailureDetector());
+            Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), epStateMap, stub.getFailureDetector());
             Gossiper.applyStateLocallyStatic(stub, epStateMap);
 
         }
         long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
-        if (mockExecTime > 0) {
+        if (mockExecTime >= 0) {
             try {
                 Thread.sleep(mockExecTime);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        } else {
-            logger.warn("Executing past message");
+        } else if (mockExecTime < -10) {
+            logger.warn("Executing past message " + mockExecTime);
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -113,8 +113,10 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
-        long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
+        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
+//        System.out.println("should sleep " + sleepTime);
+        long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())

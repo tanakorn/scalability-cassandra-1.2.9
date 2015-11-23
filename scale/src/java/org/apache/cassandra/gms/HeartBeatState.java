@@ -50,7 +50,9 @@ public class HeartBeatState
 
     public void updateHeartBeat()
     {
+//        int oldVersion = version;
         version = VersionGenerator.getNextVersion();
+//        System.out.println(oldVersion + " " + version);
     }
 
     public int getHeartBeatVersion()
@@ -91,6 +93,10 @@ public class HeartBeatState
 		if (version != other.version)
 			return false;
 		return true;
+	}
+	
+	public HeartBeatState copy() {
+	    return new HeartBeatState(generation, version);
 	}
 }
 

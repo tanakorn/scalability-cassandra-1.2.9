@@ -52,6 +52,13 @@ public class EndpointState
         updateTimestamp = System.currentTimeMillis();
         isAlive = true;
     }
+    
+    public EndpointState(HeartBeatState initialHbState, long updateTimestamp, boolean isAlive)
+    {
+        hbState = initialHbState;
+        this.updateTimestamp = updateTimestamp;
+        this.isAlive = isAlive;
+    }
 
     public HeartBeatState getHeartBeatState()
     {
@@ -99,7 +106,7 @@ public class EndpointState
         return isAlive;
     }
 
-    void markAlive()
+    public void markAlive()
     {
         isAlive = true;
     }
@@ -112,6 +119,10 @@ public class EndpointState
     public String toString()
     {
         return "EndpointState: HeartBeatState = " + hbState + ", AppStateMap = " + applicationState;
+    }
+    
+    public EndpointState copy() {
+        return new EndpointState(hbState.copy(), updateTimestamp, isAlive);
     }
 }
 

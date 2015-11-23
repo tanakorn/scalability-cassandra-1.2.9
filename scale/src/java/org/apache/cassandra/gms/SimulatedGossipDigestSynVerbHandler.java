@@ -74,13 +74,21 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
+        StringBuilder sb = new StringBuilder();
+        for ( GossipDigest gDigest : gDigestList )
+        {
+            sb.append(gDigest);
+            sb.append(" ");
+        }
+        logger.debug(stub + " receieve syn digests : " + sb.toString());
 
         doSort(gDigestList);
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         // I let this got executed because it's not expensive
-        Gossiper.examineGossiperStatic(stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        Gossiper.examineGossiperStatic(stub, stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        logger.debug(stub + " doesn't know about " + deltaGossipDigestList.toString());
 
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap), emptyMap, 
@@ -104,8 +112,16 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
-        long wakeUpTime = System.currentTimeMillis() + WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
+        if (bootNodeNum == 128) {
+            bootNodeNum = 127;
+        }
+        if (normalNodeNum == 128) {
+            normalNodeNum = 127;
+        }
+        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
+//        System.out.println("should sleep " + sleepTime);
+        long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
         gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())

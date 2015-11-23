@@ -51,6 +51,8 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
 
     private final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
+    
+    private InetAddress address;
 
     public FailureDetector()
     {
@@ -64,6 +66,14 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
 //        {
 //            throw new RuntimeException(e);
 //        }
+    }
+
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    public void setAddress(InetAddress address) {
+        this.address = address;
     }
 
     public String getAllEndpointStates()
@@ -184,11 +194,11 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             return;
         }
         long now = System.currentTimeMillis();
-        double phi = hbWnd.phi(now);
+        double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
-        logger.info("korn PHI for " + ep + " : " + phi + " ; convict threshold : " + getPhiConvictThreshold());
+//        logger.info("korn PHI for " + ep + " : " + phi + " ; convict threshold : " + getPhiConvictThreshold());
         if (phi > getPhiConvictThreshold())
         {
             logger.trace("notifying listeners that {} is down", ep);
@@ -301,9 +311,18 @@ class ArrivalWindow
     {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
-        return (size > 0)
-               ? PHI_FACTOR * t / mean()
-               : 0.0;
+        double mean = mean();
+        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        return (size > 0) ? phi : 0.0;
+    }
+
+    double phi(long tnow, InetAddress observer, InetAddress testNode) {
+        int size = arrivalIntervals.size();
+        double t = tnow - tLast;
+        double mean = mean();
+        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+        return (size > 0) ? phi : 0.0;
     }
 
     public String toString()

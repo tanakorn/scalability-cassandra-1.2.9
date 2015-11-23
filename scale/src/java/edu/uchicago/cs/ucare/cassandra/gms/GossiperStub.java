@@ -123,8 +123,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 		hasContactedSeed = false;
 		tokenMetadata = new TokenMetadata();
 		failureDetector = new FailureDetector();
+		failureDetector.setAddress(broadcastAddress);
 		failureDetector.registerFailureDetectionEventListener(this);
-        liveEndpoints = new ConcurrentSkipListSet<InetAddress>();
+        liveEndpoints = new ConcurrentSkipListSet<InetAddress>(inetcomparator);
         unreachableEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         expireTimeEndpointMap = new ConcurrentHashMap<InetAddress, Long>();
@@ -350,7 +351,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 continue;
             }
 
-            FailureDetector.instance.interpret(endpoint);
+            failureDetector.interpret(endpoint);
             EndpointState epState = endpointStateMap.get(endpoint);
             if ( epState != null ) {
                 // check for dead state removal
@@ -423,6 +424,19 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         else {
             epState.markDead();
         }
+    }
+    
+    public void markAlive(InetAddress addr, EndpointState localState) {
+        localState.markAlive();
+        localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
+        liveEndpoints.add(addr);
+        unreachableEndpoints.remove(addr);
+        expireTimeEndpointMap.remove(addr);
+    }
+    
+    @Override
+    public String toString() {
+        return broadcastAddress.toString();
     }
 
 }

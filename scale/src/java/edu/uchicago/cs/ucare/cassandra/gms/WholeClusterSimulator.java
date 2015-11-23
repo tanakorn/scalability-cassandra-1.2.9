@@ -24,6 +24,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.gms.ApplicationState;
+import org.apache.cassandra.gms.EndpointState;
+import org.apache.cassandra.gms.GossipDigest;
+import org.apache.cassandra.gms.GossipDigestAck;
+import org.apache.cassandra.gms.GossipDigestAck2;
 import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
@@ -42,7 +47,7 @@ public class WholeClusterSimulator {
     public static final Set<InetAddress> seeds = new HashSet<InetAddress>();
     public static GossiperStubGroup stubGroup;
     
-    public static final int NUM_STUBS = 3;
+    public static final int NUM_STUBS = 32;
     public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
@@ -100,7 +105,7 @@ public class WholeClusterSimulator {
         {
             // first try URL.getFile() which works for opaque URLs (file:foo) and paths without spaces
             configFileName = configLocation.getFile();
-            System.out.println(configFileName);
+//            System.out.println(configFileName);
             File configFile = new File(configFileName);
             // then try alternative approach which works for all hierarchical URLs with or without spaces
             if (!configFile.exists())
@@ -123,7 +128,6 @@ public class WholeClusterSimulator {
         }
         BufferedReader buffReader = new BufferedReader(new FileReader(args[0]));
         String line;
-//        while ((line = buffReader.readLine().trim()) != null) {
         while ((line = buffReader.readLine()) != null) {
             String[] tokens = line.split(" ");
             bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
@@ -151,11 +155,14 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
 //        stubGroup.listen();
         // I should start MyGossiperTask here
+        timer.schedule(new MyGossiperTask(), 0, 1000);
         Thread syncProcessThread = new Thread(new SyncProcessor());
         syncProcessThread.start();
-        Thread ackProcessThread = new Thread(new AckProcessor());
-        ackProcessThread.start();
-        timer.schedule(new MyGossiperTask(), 0, 1000);
+        Thread[] ackProcessThreadPool = new Thread[1];
+        for (int i = 0; i < ackProcessThreadPool.length; ++i) {
+           ackProcessThreadPool[i] = new Thread(new AckProcessor());
+           ackProcessThreadPool[i].start();
+        }
         stubGroup.setupTokenState();
         stubGroup.setBootStrappingStatusState();
         // Replace hard-coded number here with ring_deplay
@@ -176,16 +183,28 @@ public class WholeClusterSimulator {
         public void run() {
             long start = System.currentTimeMillis();
             for (GossiperStub stub : stubGroup) {
+                stub.updateHeartBeat();
+                logger.debug(stub.getInetAddress() + " has hb version " + stub.heartBeatState.getHeartBeatVersion());
+//                for (ApplicationState appState : stub.getEndpointState().getApplicationStateMap().keySet()) {
+//                    System.out.println(stub.broadcastAddress + " " + stub.getEndpointState().getApplicationState(appState).version);
+//                }
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = stub.getLiveEndpoints();
                 Set<InetAddress> seeds = stub.getSeeds();
                 if (!liveEndpoints.isEmpty()) {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
-                    gossipToSeed = seeds.contains(liveEndpoints);
+                    gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(liveReceiver);
-                    if (syncQueue.add(synMsg)) {
+//                    for (GossipDigest gd : synMsg.payload.gDigests) {
+//                        System.out.println("a " + stub.broadcastAddress + " " + stub.heartBeatState.getHeartBeatVersion() + " " + gd.getEndpoint() + " " + gd.getMaxVersion());
+//                    }
+                    if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
+                    } else {
+                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver);
                     }
+                } else {
+                    logger.info(stub.getInetAddress() + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = stub.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
@@ -193,7 +212,7 @@ public class WholeClusterSimulator {
                     MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
-                        if (syncQueue.add(synMsg)) {
+                        if (!syncQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         }
                     }
@@ -201,14 +220,16 @@ public class WholeClusterSimulator {
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                     MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
-                    if (syncQueue.add(synMsg)) {
+                    if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
+                    } else {
+                        logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
                     }
                 }
                 stub.doStatusCheck();
             }
             long finish = System.currentTimeMillis();
-            if (finish - start > 1000) {
+            if (finish - start > 3000) {
                 logger.warn("It took more than 1 s to do gossip task");
             }
         }
@@ -221,11 +242,14 @@ public class WholeClusterSimulator {
         public void run() {
             while (true) {
                 try {
-                MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-                System.out.println("processing sync from " + syncMessage.from + " to " + syncMessage.getTo());
-                MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
+                    MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
+                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
+                    MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }
+                if (syncQueue.size() > 1000) {
+                    logger.warn("Sync queue size is greater than 1000");
                 }
             }
         }
@@ -239,10 +263,21 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
-                System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+//                System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+//                if (ackMessage.payload instanceof GossipDigestAck) {
+//                    GossipDigestAck gdAck = (GossipDigestAck) ackMessage.payload;
+//                    System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo() + " " + gdAck.getEndpointStateMap().size());
+//                } else if (ackMessage.payload instanceof GossipDigestAck2) {
+//                    GossipDigestAck2 gdAck = (GossipDigestAck2) ackMessage.payload;
+//                    System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo() + " " + gdAck.getEndpointStateMap().size());
+//                }
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }
+                if (ackQueue.size() > 1000) {
+                    logger.warn("Ack queue size is greater than 1000");
                 }
             }
         }
