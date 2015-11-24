@@ -24,20 +24,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
-import org.apache.cassandra.gms.ApplicationState;
-import org.apache.cassandra.gms.EndpointState;
-import org.apache.cassandra.gms.GossipDigest;
-import org.apache.cassandra.gms.GossipDigestAck;
-import org.apache.cassandra.gms.GossipDigestAck2;
 import org.apache.cassandra.gms.GossipDigestSyn;
-import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
-import org.apache.cassandra.service.LoadBroadcaster;
-import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -185,9 +177,6 @@ public class WholeClusterSimulator {
             for (GossiperStub stub : stubGroup) {
                 stub.updateHeartBeat();
                 logger.debug(stub.getInetAddress() + " has hb version " + stub.heartBeatState.getHeartBeatVersion());
-//                for (ApplicationState appState : stub.getEndpointState().getApplicationStateMap().keySet()) {
-//                    System.out.println(stub.broadcastAddress + " " + stub.getEndpointState().getApplicationState(appState).version);
-//                }
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = stub.getLiveEndpoints();
                 Set<InetAddress> seeds = stub.getSeeds();
@@ -195,13 +184,10 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(liveReceiver);
-//                    for (GossipDigest gd : synMsg.payload.gDigests) {
-//                        System.out.println("a " + stub.broadcastAddress + " " + stub.heartBeatState.getHeartBeatVersion() + " " + gd.getEndpoint() + " " + gd.getMaxVersion());
-//                    }
                     if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver);
+                        logger.info(stub.getInetAddress() + " sending sync to " + liveReceiver);
                     }
                 } else {
                     logger.info(stub.getInetAddress() + " does not have live endpoint");
@@ -264,14 +250,6 @@ public class WholeClusterSimulator {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
                 logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
-//                System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
-//                if (ackMessage.payload instanceof GossipDigestAck) {
-//                    GossipDigestAck gdAck = (GossipDigestAck) ackMessage.payload;
-//                    System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo() + " " + gdAck.getEndpointStateMap().size());
-//                } else if (ackMessage.payload instanceof GossipDigestAck2) {
-//                    GossipDigestAck2 gdAck = (GossipDigestAck2) ackMessage.payload;
-//                    System.out.println("processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo() + " " + gdAck.getEndpointStateMap().size());
-//                }
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();

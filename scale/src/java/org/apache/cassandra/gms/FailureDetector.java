@@ -322,6 +322,9 @@ class ArrivalWindow
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
         logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+//        if (testNode.getHostAddress().equals("127.0.0.16")) {
+//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+//        }
         return (size > 0) ? phi : 0.0;
     }
 
