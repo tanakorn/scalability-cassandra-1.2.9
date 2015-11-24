@@ -1,6 +1,7 @@
 #!/bin/sh
 
 scriptdir=`dirname $0`
+. $scriptdir/readconfig
 classpath=$scriptdir/../build/classes/main:$scriptdir/../build/classes/thrift:$scriptdir/../test/conf
 for jar in ls $scriptdir/../lib/*.jar; do
   classpath=$classpath:$jar
@@ -9,5 +10,5 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
-java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric
+java -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat nome_normal.dat
 
