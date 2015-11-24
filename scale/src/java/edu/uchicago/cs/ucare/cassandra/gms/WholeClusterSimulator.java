@@ -204,12 +204,33 @@ public class WholeClusterSimulator {
                     }
                 }
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
-                    InetAddress seed = GossiperStub.getRandomAddress(seeds);
-                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
-                    if (!syncQueue.add(synMsg)) {
-                        logger.error("Cannot add more message to message queue");
-                    } else {
-                        logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
+                    int size = seeds.size();
+                    if (size > 0) {
+                        if (size == 1 && seeds.contains(stub.getInetAddress())) {
+
+                        } else {
+                            if (liveEndpoints.size() == 0) {
+                                InetAddress seed = GossiperStub.getRandomAddress(seeds);
+                                MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
+                                if (!syncQueue.add(synMsg)) {
+                                    logger.error("Cannot add more message to message queue");
+                                } else {
+                                    logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
+                                }
+                            } else {
+                                double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
+                                double randDbl = random.nextDouble();
+                                if (randDbl <= probability) {
+                                    InetAddress seed = GossiperStub.getRandomAddress(seeds);
+                                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
+                                    if (!syncQueue.add(synMsg)) {
+                                        logger.error("Cannot add more message to message queue");
+                                    } else {
+                                        logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 stub.doStatusCheck();
