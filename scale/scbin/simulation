@@ -1,0 +1,13 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+classpath=$scriptdir/../build/classes/main:$scriptdir/../build/classes/thrift:$scriptdir/../test/conf
+for jar in ls $scriptdir/../lib/*.jar; do
+  classpath=$classpath:$jar
+done
+for jar in ls $scriptdir/../build/lib/jars/*.jar; do
+  classpath=$classpath:$jar
+done
+
+java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric
+
