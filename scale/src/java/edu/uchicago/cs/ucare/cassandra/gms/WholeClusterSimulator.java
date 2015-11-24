@@ -39,7 +39,8 @@ public class WholeClusterSimulator {
     public static final Set<InetAddress> seeds = new HashSet<InetAddress>();
     public static GossiperStubGroup stubGroup;
     
-    public static int numStubs = 128;
+    public static int numStubs;
+    public static final int MAX_NODE = 128;
     public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
@@ -119,8 +120,8 @@ public class WholeClusterSimulator {
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
-        bootGossipExecRecords = new long[numStubs];
-        normalGossipExecRecords = new long[numStubs];
+        bootGossipExecRecords = new long[MAX_NODE];
+        normalGossipExecRecords = new long[MAX_NODE];
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
         while ((line = buffReader.readLine()) != null) {
