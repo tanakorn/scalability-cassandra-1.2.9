@@ -56,7 +56,8 @@ public class WholeClusterSimulator {
     public static long[] bootGossipExecRecords;
     public static long[] normalGossipExecRecords;
 
-    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
+    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
+            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
 
         @Override
         public int compare(MessageIn<?> o1, MessageIn<?> o2) {
@@ -154,7 +155,7 @@ public class WholeClusterSimulator {
         timer.schedule(new MyGossiperTask(), 0, 1000);
         Thread syncProcessThread = new Thread(new SyncProcessor());
         syncProcessThread.start();
-        Thread[] ackProcessThreadPool = new Thread[1];
+        Thread[] ackProcessThreadPool = new Thread[12];
         for (int i = 0; i < ackProcessThreadPool.length; ++i) {
            ackProcessThreadPool[i] = new Thread(new AckProcessor());
            ackProcessThreadPool[i].start();
@@ -191,10 +192,10 @@ public class WholeClusterSimulator {
                     if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-                        logger.info(stub.getInetAddress() + " sending sync to " + liveReceiver);
+                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver);
                     }
                 } else {
-                    logger.info(stub.getInetAddress() + " does not have live endpoint");
+                    logger.debug(stub.getInetAddress() + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = stub.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
@@ -219,7 +220,7 @@ public class WholeClusterSimulator {
                                 if (!syncQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
-                                    logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
+                                    logger.debug(stub.getInetAddress() + " sending sync to seed " + seed);
                                 }
                             } else {
                                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
@@ -230,7 +231,7 @@ public class WholeClusterSimulator {
                                     if (!syncQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
-                                        logger.info(stub.getInetAddress() + " sending sync to seed " + seed);
+                                        logger.debug(stub.getInetAddress() + " sending sync to seed " + seed);
                                     }
                                 }
                             }

@@ -75,7 +75,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 e.printStackTrace();
             }
         } else if (mockExecTime < -10) {
-            logger.warn("Executing past message " + mockExecTime);
+            logger.debug(to + " executing past message " + mockExecTime);
         }
 
         Gossiper.instance.checkSeedContact(from);

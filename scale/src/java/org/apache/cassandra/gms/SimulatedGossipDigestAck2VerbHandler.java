@@ -64,7 +64,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 e.printStackTrace();
             }
         } else if (mockExecTime < -10) {
-            logger.warn("Executing past message " + mockExecTime);
+            logger.debug(to + " executing past message " + mockExecTime);
         }
         
     }

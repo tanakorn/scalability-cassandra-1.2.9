@@ -38,6 +38,8 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStub;
 
@@ -62,6 +64,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             return addr1.getHostAddress().compareTo(addr2.getHostAddress());
         }
     };
+    private static final Logger logger = LoggerFactory.getLogger(GossiperStub.class);
 
     String clusterId;
 	String dataCenter;
@@ -417,6 +420,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     @Override
     public void convict(InetAddress ep, double phi) {
         // TODO Auto-generated method stub
+        logger.info(broadcastAddress + " convict " + ep + " with phi " + phi);
         EndpointState epState = endpointStateMap.get(ep);
         if (epState.isAlive() && !isDeadState(epState)) {
             markDead(ep, epState);
