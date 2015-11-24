@@ -997,7 +997,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 {
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
-                    fd.report(endpoint);
+                    fd.report(stub.getInetAddress(), endpoint);
                 }
             }
         }
