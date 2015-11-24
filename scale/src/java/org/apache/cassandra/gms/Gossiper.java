@@ -984,7 +984,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     logger.debug("Clearing interval times for {} due to generation change", endpoint);
                     fd.clear(endpoint);
                 }
-                fd.report(endpoint);
+                fd.report(stub.getInetAddress(), endpoint);
                 return;
             }
 
@@ -1289,7 +1289,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
 //                FailureDetector.instance.report(ep);
-                stub.getFailureDetector().report(ep);
+                stub.getFailureDetector().report(stub.getInetAddress(), ep);
                 handleMajorStateChangeStatic(stub, ep, remoteState);
             }
         }

@@ -23,18 +23,20 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.BoundedStatsDeque;
 import org.apache.cassandra.utils.FBUtilities;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 /**
  * This FailureDetector is an implementation of the paper titled
@@ -177,6 +179,23 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
+        if (WholeClusterSimulator.observedNodes.contains(ep)) {
+        	logger.info("See " + ep + " at time " + now);
+        }
+        ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
+        if ( heartbeatWindow == null )
+        {
+            heartbeatWindow = new ArrivalWindow(SAMPLE_SIZE);
+            arrivalSamples.put(ep, heartbeatWindow);
+        }
+        heartbeatWindow.add(now);
+    }
+    
+    public void report(InetAddress observer, InetAddress ep) {
+        long now = System.currentTimeMillis();
+        if (WholeClusterSimulator.observedNodes.contains(ep)) {
+            logger.info(observer + " see " + ep + " at time " + now);
+        }
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -273,9 +292,12 @@ class ArrivalWindow
     // rather mark it down quickly instead of adapting
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
+    public final Map<InetAddress, Double> maxObservedPhi;
+
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
+        maxObservedPhi = new HashMap<InetAddress, Double>();
     }
 
     synchronized void add(double value)
@@ -321,10 +343,10 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
-//        if (testNode.getHostAddress().equals("127.0.0.16")) {
-//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
-//        }
+        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi || WholeClusterSimulator.observedNodes.contains(testNode)) {
+            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+            maxObservedPhi.put(testNode, phi);
+        }
         return (size > 0) ? phi : 0.0;
     }
 
