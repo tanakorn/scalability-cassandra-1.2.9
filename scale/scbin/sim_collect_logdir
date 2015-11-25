@@ -1,0 +1,11 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+
+. $scriptdir/readconfig
+. $scriptdir/ipman
+
+mkdir -p $cassandra_log_dir
+rm -r $cassandra_log_dir/*
+cp -r $operating_dir/scale.log $cassandra_log_dir
+
