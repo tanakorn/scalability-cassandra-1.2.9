@@ -7,7 +7,7 @@ cd $scriptdir
 for testing in vanilla patched; do
   for n in 32 64 128; do
     cp scdeploy.conf.exp scdeploy.conf.$n
-    echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6129/n_${testing}_$n" >> scdeploy.conf.$n
+    echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6127/n_${testing}_$n" >> scdeploy.conf.$n
     echo "num_node=$n" >> scdeploy.conf.$n
     echo "testing_cassandra=$testing" >> scdeploy.conf.$n
     ./cluster_dir_setup scdeploy.conf.$n
