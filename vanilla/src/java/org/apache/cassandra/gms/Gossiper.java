@@ -611,7 +611,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         InetAddress to = liveEndpoints.get(index);
         Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
         int syncHash = message.payload.hashCode();
-        Klogger.logger.info("Send sync:" + syncHash + " ; to " + to);
+        Klogger.logger.info("Send sync:" + syncHash + " ; to " + to + " ; " + System.currentTimeMillis());
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
@@ -964,9 +964,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int newRestart = 0;
         int newVersion = 0;
         int newVersionTokens = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
+
             if ( ep.equals(FBUtilities.getBroadcastAddress()))
                 continue;
             if (justRemovedEndpoints.containsKey(ep))
@@ -982,6 +985,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 If state does not exist just add it. If it does then add it if the remote generation is greater.
                 If there is a generation tie, attempt to break it by heartbeat version.
             */
+            if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
+                VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
+                if (status.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    bootstrapCount++;
+                } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    normalCount++;
+                }
+            }
             if ( localEpStatePtr != null )
             {
                 int localGeneration = localEpStatePtr.getHeartBeatState().getGeneration();
@@ -1034,7 +1045,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 }
             }
         }
-        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens };
+        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)

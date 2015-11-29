@@ -93,22 +93,25 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         long notifyFD = end - start;
         start = System.currentTimeMillis();
         int[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        end = System.currentTimeMillis();
+        long applyState = end - start;
         int newNode = result[0];
         int newNodeToken = result[1];
         int newRestart = result[2];
         int newVersion = result[3];
         int newVersionToken = result[4];
+        int bootstrapCount = result[5];
+        int normalCount = result[6];
 //        Klogger.logger.info("Receive ack2:" + ack2Hash +
 //                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
 //                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack2:" + ack2Hash + 
+            Klogger.logger.info("Receive ack2:" + ack2Hash + " (" + (notifyFD + applyState) + "ms)" +
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
                     " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
         }
-        end = System.currentTimeMillis();
-        long applyState = end - start;
         int after = Gossiper.instance.endpointStateMap.size();
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
         Klogger.logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);

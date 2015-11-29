@@ -64,6 +64,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         int newRestart = 0;
         int newVersion = 0;
         int newVersionToken = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         if ( epStateMap.size() > 0 )
         {
@@ -104,12 +106,14 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             notifyFD = end - start;
         	start = System.currentTimeMillis();
             int[] result = Gossiper.instance.applyStateLocally(epStateMap);
+            end = System.currentTimeMillis();
             newNode = result[0];
             newNodeToken = result[1];
             newRestart = result[2];
             newVersion = result[3];
             newVersionToken = result[4];
-            end = System.currentTimeMillis();
+            bootstrapCount = result[5];
+            normalCount = result[6];
             applyState = end - start;
         }
         int after = Gossiper.instance.endpointStateMap.size();
@@ -142,16 +146,18 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+                Klogger.logger.info("Receive ack:" + ackHash + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + ack2Hash + 
                         " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                         " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                        " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
                         " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }
         for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+            Klogger.logger.info("Receive ack:" + ackHash + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + ack2Hash + 
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
                     " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
             
         }
