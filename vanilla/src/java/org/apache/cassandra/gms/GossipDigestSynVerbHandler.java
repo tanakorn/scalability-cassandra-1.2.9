@@ -108,7 +108,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive sync:" + syncHash + " ; Send ack:" + ackHash + 
+                Klogger.logger.info("Receive sync:" + syncHash + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + ackHash + 
                         " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }

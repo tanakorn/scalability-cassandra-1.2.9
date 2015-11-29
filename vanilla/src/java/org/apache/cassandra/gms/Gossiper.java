@@ -115,6 +115,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private class GossipTask implements Runnable
     {
         public final int numTokens = DatabaseDescriptor.getNumTokens();
+        
+        int round = 0;
 
         public void run()
         {
@@ -127,6 +129,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().updateHeartBeat();
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
+                ++round;
+                Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
 
@@ -606,8 +610,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
         Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
-//        int syncHash = message.payload.hashCode();
-//        Klogger.logger.info("Send sync:" + syncHash + " ; to " + to);
+        int syncHash = message.payload.hashCode();
+        Klogger.logger.info("Send sync:" + syncHash + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
