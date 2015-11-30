@@ -36,6 +36,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
 //        Klogger.logger.info("Processing gds " + )
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
@@ -104,11 +105,12 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
         int ackHash = gDigestAckMessage.payload.hashCode();
+        long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive sync:" + syncHash + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + ackHash + 
+                Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
                         " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }

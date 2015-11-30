@@ -37,6 +37,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
     	long start;
     	long end;
         InetAddress from = message.from;
@@ -142,11 +143,12 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 //        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
 //                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
 //                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
+        long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive ack:" + ackHash + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + ack2Hash + 
+                Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
                         " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                         " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
                         " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
@@ -154,7 +156,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         	}
         }
         for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack:" + ackHash + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + ack2Hash + 
+            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
                     " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +

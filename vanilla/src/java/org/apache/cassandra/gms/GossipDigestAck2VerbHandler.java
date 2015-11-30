@@ -38,6 +38,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
     	long start, end; 
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
@@ -106,7 +107,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 //                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
 //                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack2:" + ack2Hash + " (" + (notifyFD + applyState) + "ms)" +
+            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
                     " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
