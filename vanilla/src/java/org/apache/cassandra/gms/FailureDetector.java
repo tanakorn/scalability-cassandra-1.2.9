@@ -51,7 +51,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     public static final IFailureDetector instance = new FailureDetector();
     private static final Logger logger = LoggerFactory.getLogger(FailureDetector.class);
 
-    private final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
+    public final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
     
     public static final Set<InetAddress> observedNodes;
@@ -352,7 +352,7 @@ class ArrivalWindow
         tLast = value;
     }
 
-    double mean()
+    public double mean()
     {
         return arrivalIntervals.mean();
     }
