@@ -80,7 +80,11 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
                     }
                 }
                 if (newer) {
-                    double hbAverage = ((FailureDetector) FailureDetector.instance).arrivalSamples.get(observedNode).mean();
+                    double hbAverage = 0;
+                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
+                    if (fd.arrivalSamples.containsKey(observedNode)) {
+                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
+                    }
                     Klogger.logger.info("receive info of " + observedNode + " from " + from + 
                             " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
                     newerVersion.put(observedNode, remoteVersion);
