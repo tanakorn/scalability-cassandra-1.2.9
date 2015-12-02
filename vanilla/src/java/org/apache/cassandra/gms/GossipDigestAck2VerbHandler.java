@@ -18,6 +18,7 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
     	long start, end; 
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
@@ -50,26 +52,11 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             return;
         }
 
+        int ack2Hash = message.payload.hashCode();
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
-        /*
-        for (InetAddress address : remoteEpStateMap.keySet()) {
-        	EndpointState eps = remoteEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-            int maxVersion = 0;
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		if (value.version > maxVersion) {
-        			maxVersion = value.version;
-        		}
-//        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-            Klogger.logger.info("Reading GDA2 from " + from + " about node " + address + " with version " + maxVersion);
-        }
-        */
+        Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
             if (remoteEpStateMap.keySet().contains(observedNode)) {
                 EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
@@ -93,26 +80,44 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
                     }
                 }
                 if (newer) {
+                    double hbAverage = 0;
+                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
+                    if (fd.arrivalSamples.containsKey(observedNode)) {
+                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
+                    }
                     Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                            " generation " + remoteGen + " version " + remoteVersion);
+                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+                    newerVersion.put(observedNode, remoteVersion);
                 }
             }
         }
+        
         /* Notify the Failure Detector */
         start = System.currentTimeMillis();
         Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
-        Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        int[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
         end = System.currentTimeMillis();
         long applyState = end - start;
-//        for (InetAddress observedNode : FailureDetector.observedNodes) {
-//            if (remoteEpStateMap.keySet().contains(observedNode)) {
-//                int version = Gossiper.getMaxEndpointStateVersion(remoteEpStateMap.get(observedNode));
-//                Klogger.logger.info("receive info of " + observedNode + " from " + from + " version " + version);
-//            }
-//        }
+        int newNode = result[0];
+        int newNodeToken = result[1];
+        int newRestart = result[2];
+        int newVersion = result[3];
+        int newVersionToken = result[4];
+        int bootstrapCount = result[5];
+        int normalCount = result[6];
+//        Klogger.logger.info("Receive ack2:" + ack2Hash +
+//                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
+        for (InetAddress address : newerVersion.keySet()) {
+            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
+                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+        }
         int after = Gossiper.instance.endpointStateMap.size();
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
         Klogger.logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);

@@ -36,6 +36,8 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
+//        Klogger.logger.info("Processing gds " + )
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
@@ -47,6 +49,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         }
 
         GossipDigestSyn gDigestMessage = message.payload;
+        int syncHash = gDigestMessage.hashCode();
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {
@@ -77,7 +80,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(gDigest);
             sb.append(", ");
         }
-//        Klogger.logger.info("GDS digests from " + from + " are (" + sb.toString() + ")");
         
         long start;
         long end;
@@ -96,38 +98,20 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             sb.append(d.getEndpoint());
             sb.append(',');
         }
-        Klogger.logger.info("delta digest list = " + sb.toString());
-        Klogger.logger.info("delta ep state map = " + deltaEpStateMap.keySet());
         end = System.currentTimeMillis();
         long examine = end - start;
 
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
-        /*
-        for (InetAddress address : deltaEpStateMap.keySet()) {
-        	EndpointState eps = deltaEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Sending GDA to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-        }
-        sb = new StringBuilder();
-        for (GossipDigest gDigest : deltaGossipDigestList)
-        {
-            sb.append(gDigest);
-            sb.append(", ");
-        }
-//        Klogger.logger.info("GDA digests to " + from + " are (" + sb.toString() + ") with size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
-        */
-//        if (deltaEpStateMap.keySet())
+        int ackHash = gDigestAckMessage.payload.hashCode();
+        long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
         }
         Klogger.logger.info("GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");

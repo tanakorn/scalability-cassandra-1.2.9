@@ -18,12 +18,12 @@
 package org.apache.cassandra.gms;
 
 import java.io.*;
-
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.UUID;
 
 import com.google.common.collect.Iterables;
+
 import static com.google.common.base.Charsets.ISO_8859_1;
 
 import org.apache.cassandra.db.TypeSizes;
@@ -90,6 +90,34 @@ public class VersionedValue implements Comparable<VersionedValue>
     public int compareTo(VersionedValue value)
     {
         return this.version - value.version;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        result = prime * result + version;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        VersionedValue other = (VersionedValue) obj;
+        if (value == null) {
+            if (other.value != null)
+                return false;
+        } else if (!value.equals(other.value))
+            return false;
+        if (version != other.version)
+            return false;
+        return true;
     }
 
     @Override

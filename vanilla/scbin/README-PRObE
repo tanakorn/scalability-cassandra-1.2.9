@@ -8,14 +8,21 @@ to skip involving them by writing their indexes into a file name
 `skiplist`. The format is one index number per line.
 
 2. Customize scdeploy.conf
-For num_node variable, we should assign 1 to it (this variable
-specifies how many processes in one machine). And each time we swap in
-PRObE experiment, we have to re-enter new value of observed_nodes.
+For num_node variable, we should assign how many Cassandra processes in one
+machine. The number of all Cassandra instances = num_node * the number of
+machines
 
-3. Set up operating directory
+3. Set up alias IP address
+Set up alias IP address by running `cluster_ip_setup`. We have to call this on
+the machine in the cluster not Nome machine (e.g. node-1.scale.ucare-nome.nx).
+
+4. Set up operating directory
 Set up operating directory for every machine in our running by running
-`cluster_dir_setup`. We have to call this on the machine in the cluster
-not kodiak machine (e.g. node-1.scale.ucare-kodiak.nx).
+`cluster_dir_setup`. We have to call this on the machine in the cluster not
+Nome machine (e.g. node-1.scale.ucare-nome.nx).
 
-4. Run Cassandra
+5. Run Cassandra
 Running `cluster_start`
+
+6. Stop Cassandra
+Running `cluster_stop`

@@ -37,6 +37,8 @@ while [ $j -le $num_observed_nodes ]; do
 done
 observed_nodes=`echo $observed_nodes | sed 's/,$//'`
 
+my_ip=192.168.$my_id.1
+
 rm -r $operating_dir/* 2> /dev/null
 
 sudo mkdir -p $operating_dir

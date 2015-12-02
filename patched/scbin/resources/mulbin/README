@@ -1,0 +1,4 @@
+The scripts in this directory is used for processing log files
+that come from the experiment in which one machine running one
+instance of Cassandra, and the instance binds to the real IP
+address of the network interface. 

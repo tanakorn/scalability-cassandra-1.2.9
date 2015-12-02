@@ -5,14 +5,19 @@ from datetime import *
 
 import pyutil
 
-if len(sys.argv) != 4:
-  print 'usage: gossip_interval.py <logdir> <observer> <observed_node>'
-  print 'example: phi_distribute.py n 3 4'
-  exit(0)
+if len(sys.argv) < 4:
+  print 'usage: gossip_interval <logdir> <observer> <observed_node> [time_period]'
+  print 'example: gossip_interval n 3 4'
+  print 'example: gossip_interval n 3 4 60'
+  exit(1)
   
 logdir = sys.argv[1]
 observer = int(sys.argv[2])
 observed_node = int(sys.argv[3])
+if len(sys.argv) > 4:
+  time_period = int(sys.argv[4])
+else:
+  time_period = None
 
 machinelist = open(logdir + '/machinelist')
 pyutil.read_machinelist(logdir)
@@ -31,22 +36,25 @@ for logline in logfile:
 if not rectimehist:
   print 'Not see any gossip of', observed_node
   exit(0)
-firsttime = rectimehist[0]
-firstminhist = []
-for rectime in rectimehist:
-  if (rectime - firsttime).total_seconds() > 60:
-    break
-  firstminhist.append(rectime)
+if time_period:
+  firsttime = rectimehist[0]
+  time_period_list = []
+  for rectime in rectimehist:
+    if (rectime - firsttime).total_seconds() > time_period:
+      break
+    time_period_list.append(rectime)
+else:
+  time_period_list = rectimehist[:]
 recinthist = []
-prevrec = firstminhist[0]
-for rectime in firstminhist[1:]:
+prevrec = time_period_list[0]
+for rectime in time_period_list[1:]:
   recinthist.append((rectime - prevrec).total_seconds())
   prevrec = rectime
 recinthist.sort()
 datasize = len(recinthist)
 lqpos = datasize / 4
-meanpos = datasize / 2
+medpos = datasize / 2
 uqpos = lqpos * 3
-print 'datasize=%d min=%f lq=%f mean=%f uq=%f max=%f' % \
-    (datasize, recinthist[0], recinthist[lqpos], recinthist[meanpos], recinthist[uqpos], recinthist[-1])
+print 'datasize=%d min=%f lq=%f med=%f uq=%f max=%f' % \
+    (datasize, recinthist[0], recinthist[lqpos], recinthist[medpos], recinthist[uqpos], recinthist[-1])
 
