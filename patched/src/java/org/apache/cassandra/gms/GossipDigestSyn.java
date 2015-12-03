@@ -48,6 +48,46 @@ public class GossipDigestSyn
     {
         return gDigests;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((clusterId == null) ? 0 : clusterId.hashCode());
+        result = prime * result
+                + ((gDigests == null) ? 0 : gDigests.hashCode());
+        result = prime * result
+                + ((partioner == null) ? 0 : partioner.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GossipDigestSyn other = (GossipDigestSyn) obj;
+        if (clusterId == null) {
+            if (other.clusterId != null)
+                return false;
+        } else if (!clusterId.equals(other.clusterId))
+            return false;
+        if (gDigests == null) {
+            if (other.gDigests != null)
+                return false;
+        } else if (!gDigests.equals(other.gDigests))
+            return false;
+        if (partioner == null) {
+            if (other.partioner != null)
+                return false;
+        } else if (!partioner.equals(other.partioner))
+            return false;
+        return true;
+    }
 }
 
 class GossipDigestSerializationHelper

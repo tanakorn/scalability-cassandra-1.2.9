@@ -1298,6 +1298,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private void handleStateBootstrap(InetAddress endpoint, String[] pieces)
     {
+        long s = System.currentTimeMillis();
         assert pieces.length >= 2;
 
         // Parse versioned values according to end-point version:
@@ -1330,6 +1331,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         if (Gossiper.instance.usesHostId(endpoint))
             tokenMetadata.updateHostId(Gossiper.instance.getHostId(endpoint), endpoint);
+        long t = System.currentTimeMillis() - s;
+        Klogger.logger.info("Handle bootstrap for " + endpoint + " took " + t + " ms");
     }
 
     /**
@@ -1341,6 +1344,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private void handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
+        long s = System.currentTimeMillis();
         assert pieces.length >= 2;
         
 //        Klogger.logger().info("isClientMode = " + isClientMode);
@@ -1465,6 +1469,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
 
         calculatePendingRanges();
+        long t = System.currentTimeMillis() - s;
+        Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
     }
 
     /**

@@ -37,6 +37,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
     	long start;
     	long end;
         InetAddress from = message.from;
@@ -50,42 +51,23 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         }
 
         GossipDigestAck gDigestAckMessage = message.payload;
+        int ackHash = gDigestAckMessage.hashCode();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
-        /*
-        StringBuilder sb = new StringBuilder();
-        for ( GossipDigest gDigest : gDigestList )
-        {
-            sb.append(gDigest);
-            sb.append(", ");
-        }
-//        Klogger.logger.info("GDA digests from " + from + " are (" + sb.toString() + ")");
-        */
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
         int epStateMapSize = epStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
 
-        /*
-        for (InetAddress address : epStateMap.keySet()) {
-        	EndpointState eps = epStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-            int maxVersion = 0;
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		if (value.version > maxVersion) {
-        			maxVersion = value.version;
-        		}
-//        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Reading GDA from " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-            Klogger.logger.info("Reading GDA from " + from + " about node " + address + " with version " + maxVersion);
-        }
-        */
-        
-
         long notifyFD = 0;
         long applyState = 0;
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionToken = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
+        Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         if ( epStateMap.size() > 0 )
         {
             for (InetAddress observedNode : FailureDetector.observedNodes) {
@@ -111,19 +93,33 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                         }
                     }
                     if (newer) {
+                        double hbAverage = 0;
+                        FailureDetector fd = (FailureDetector) FailureDetector.instance;
+                        if (fd.arrivalSamples.containsKey(observedNode)) {
+                            hbAverage = fd.arrivalSamples.get(observedNode).mean();
+                        }
                         Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                                " generation " + remoteGen + " version " + remoteVersion);
+                                " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+                        newerVersion.put(observedNode, remoteVersion);
                     }
                 }
             }
+            
             /* Notify the Failure Detector */
         	start = System.currentTimeMillis();
             Gossiper.instance.notifyFailureDetector(epStateMap);
             end = System.currentTimeMillis();
             notifyFD = end - start;
         	start = System.currentTimeMillis();
-            Gossiper.instance.applyStateLocally(epStateMap);
+            int[] result = Gossiper.instance.applyStateLocally(epStateMap);
             end = System.currentTimeMillis();
+            newNode = result[0];
+            newNodeToken = result[1];
+            newRestart = result[2];
+            newVersion = result[3];
+            newVersionToken = result[4];
+            bootstrapCount = result[5];
+            normalCount = result[6];
             applyState = end - start;
         }
         int after = Gossiper.instance.endpointStateMap.size();
@@ -147,30 +143,30 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
-        /*
-        for (InetAddress address : deltaEpStateMap.keySet()) {
-        	EndpointState eps = deltaEpStateMap.get(address);
-        	Map<ApplicationState, VersionedValue> appStateMap = eps.getApplicationStateMap();
-            StringBuilder strBuilder = new StringBuilder();
-        	for (ApplicationState state : appStateMap.keySet()) {
-        		VersionedValue value = appStateMap.get(state);
-        		strBuilder.append(state + "=" + (state == ApplicationState.TOKENS ? "Length(" + value.value.length() + ")," + value.version + ")" : value) + ", ");
-        	}
-//            Klogger.logger.info("Sending GDA2 to " + from + " about node " + address + " with content (" + strBuilder.toString() + ")"); 
-        }
-        sb = new StringBuilder();
-        for ( GossipDigest gDigest : gDigestList )
-        {
-            sb.append(gDigest);
-            sb.append(", ");
-        }
-        */
-//        Klogger.logger.info("GDA2 digests from " + from + " are (" + sb.toString() + ") with size" + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
+        int ack2Hash = gDigestAck2Message.payload.hashCode();
+        
+//        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
+//                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
+        long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : FailureDetector.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
         		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
         		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
+                        " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                        " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                        " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
         	}
+        }
+        for (InetAddress address : newerVersion.keySet()) {
+            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
+                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+            
         }
         Klogger.logger.info("GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())

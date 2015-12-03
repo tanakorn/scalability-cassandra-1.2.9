@@ -1,0 +1,23 @@
+#!/bin/sh
+
+cwd=`pwd`
+scriptdir=`dirname $0`
+cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
+
+. $scriptdir/readconfig
+
+SSH_OPTION="StrictHostKeyChecking no"
+
+my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
+all_ip=`awk '{print $2}' $machinelist`
+
+for ip in $all_ip; do
+  if [ $ip = $my_ip ]; then
+    cd $scriptdir
+    ./each_machine_make_ramdisk $1
+  else
+    ssh -o "$SSH_OPTION" $ip "cd $scriptdir; ./each_machine_make_ramdisk $1"
+  fi
+done

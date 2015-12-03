@@ -18,7 +18,10 @@
 package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +34,15 @@ import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAck2VerbHandler.class);
+//    private Set<InetAddress> seenAddresses = new HashSet<InetAddress>();
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
+    	long start, end; 
     	InetAddress from = message.from;
         InetAddress to = message.to;
+        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -47,14 +54,53 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            return;
 //        }
 
+        int ack2Hash = message.payload.hashCode();
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
-        
+        int epStateMapSize = remoteEpStateMap.size();
+        Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
+        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+            if (remoteEpStateMap.keySet().contains(observedNode)) {
+                EndpointState localEpState = stub.getEndpointStateMap().get(observedNode);
+                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
+                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                boolean newer = false;
+                if (localEpState == null) {
+                    newer = true;
+                } else {
+                    synchronized (localEpState) {
+                        int localGen = localEpState.getHeartBeatState().getGeneration();
+                        if (localGen < remoteGen) {
+                            newer = true;
+                        } else if (localGen == remoteGen) {
+                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                            if (localVersion < remoteVersion) {
+                                newer = true;
+                            }
+                        }
+                    }
+                }
+                if (newer) {
+                    double hbAverage = 0;
+                    FailureDetector fd = (FailureDetector) stub.failureDetector;
+                    if (fd.arrivalSamples.containsKey(observedNode)) {
+                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
+                    }
+                    logger.info(to + " receive info of " + observedNode + " from " + from + 
+                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+                    newerVersion.put(observedNode, remoteVersion);
+                }
+            }
+        }
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
+        start = System.currentTimeMillis();
         Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), remoteEpStateMap, stub.getFailureDetector());
-        Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
+        end = System.currentTimeMillis();
+        long notifyFD = end - start;
+        start = System.currentTimeMillis();
+        int[] result = Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
         long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
         if (mockExecTime >= 0) {
             try {
@@ -66,6 +112,28 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         } else if (mockExecTime < -10) {
             logger.debug(to + " executing past message " + mockExecTime);
         }
-        
+        end = System.currentTimeMillis();
+        long applyState = end - start;
+        int newNode = result[0];
+        int newNodeToken = result[1];
+        int newRestart = result[2];
+        int newVersion = result[3];
+        int newVersionToken = result[4];
+        int bootstrapCount = result[5];
+        int normalCount = result[6];
+        for (InetAddress address : newerVersion.keySet()) {
+            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
+                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+        }
+//        int after = Gossiper.instance.endpointStateMap.size();
+//        logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
+//        logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
+//        if (!seenAddresses.contains(from)) {
+//            logger.info("see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
+//            seenAddresses.add(from);
+//        }
     }
 }

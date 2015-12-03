@@ -1,0 +1,35 @@
+#!/bin/sh
+
+ins_per_mach=4
+
+read_machinelist() {
+  num_mach=`wc -l $1 | awk '{print $1}'`
+  num_ins=`expr $num_mach \* $ins_per_mach`
+  i=0
+  while [ $i -lt $num_mach ] ; do
+    j=0
+    while [ $j -lt $ins_per_mach ]; do
+      id=`expr $i \* ins_per_mach + $j`
+      maj=`expr $i + 1`
+      min=`expr $j + 1`
+      ip=192.168.${maj}.${min}
+      eval "id_$id=$ip"
+      dumb_ip=`echo $ip | sed 's/\./_/g'`
+      eval "ip_$dumb_ip=$id"
+    done
+  done
+}
+
+getip() {
+  eval "echo \$id_$1"
+}
+
+getid() {
+  dumb_ip=`echo $1 | sed 's/\./_/g'`
+  eval "echo \$ip_$dumb_ip"
+}
+
+if [ "$logdir" -a ! "$hasread" ]; then
+  read_machinelist $logdir/machinelist
+  hasread=true
+fi

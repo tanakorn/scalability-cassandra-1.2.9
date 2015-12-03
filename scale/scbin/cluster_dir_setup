@@ -6,6 +6,7 @@ cd $scriptdir
 scriptdir=`pwd`
 cd $cwd
 
+config=$1
 . $scriptdir/readconfig
 
 SSH_OPTION="StrictHostKeyChecking no"
@@ -18,7 +19,7 @@ i=1
 setup_seed() {
   seed=$1
   shift
-  ssh $seed "cd $scriptdir; ./real_node_dir_setup $i"
+  ssh $seed "cd $scriptdir; ./real_node_dir_setup $i $config"
   all_ip=$@
   i=`expr $i + 1`
   num_node=`expr $num_node - 1`
@@ -28,7 +29,7 @@ setup_observers() {
   j=0
   while [ $j -lt $num_observers ]; do
     node=$1
-    ssh $node "cd $scriptdir; ./real_node_dir_setup $i"
+    ssh $node "cd $scriptdir; ./real_node_dir_setup $i $config"
     shift
     i=`expr $i + 1`
     j=`expr $j + 1`
@@ -41,7 +42,7 @@ setup_observed_nodes() {
   j=0
   while [ $j -lt $num_observed_nodes ]; do
     node=$1
-    ssh $node "cd $scriptdir; ./real_node_dir_setup $i"
+    ssh $node "cd $scriptdir; ./real_node_dir_setup $i $config"
     shift
     i=`expr $i + 1`
     j=`expr $j + 1`
@@ -52,7 +53,7 @@ setup_observed_nodes() {
 
 setup_scalesim() {
   scalesim=$1
-  ssh $scalesim "cd $scriptdir; ./scalesim_dir_setup $i $num_node"
+  ssh $scalesim "cd $scriptdir; ./scalesim_dir_setup $i $num_node $config"
   i=`expr $i + 1`
   shift
   all_ip=$@

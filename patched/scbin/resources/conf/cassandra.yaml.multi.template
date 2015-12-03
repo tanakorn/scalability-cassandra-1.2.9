@@ -25,7 +25,7 @@ commitlog_segment_size_in_mb: 32
 seed_provider:
     - class_name: org.apache.cassandra.locator.SimpleSeedProvider
       parameters:
-          - seeds: "node-1.scale.ucare"
+          - seeds: "192.168.1.1"
 flush_largest_memtables_at: 0.75
 reduce_cache_sizes_at: 0.85
 reduce_cache_capacity_to: 0.6
@@ -75,5 +75,5 @@ client_encryption_options:
     enabled: false
     keystore: conf/.keystore
     keystore_password: cassandra
-internode_compression: all
+internode_compression: none
 inter_dc_tcp_nodelay: true

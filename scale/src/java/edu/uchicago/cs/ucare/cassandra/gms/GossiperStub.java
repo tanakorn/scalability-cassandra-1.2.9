@@ -80,7 +80,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	@SuppressWarnings("rawtypes") Collection<Token> tokens;
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
-	FailureDetector failureDetector;
+	public FailureDetector failureDetector;
 	Set<InetAddress> liveEndpoints;
     Map<InetAddress, Long> unreachableEndpoints;
     Map<InetAddress, Long> justRemovedEndpoints;

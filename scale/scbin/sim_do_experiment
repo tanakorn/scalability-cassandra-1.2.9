@@ -6,14 +6,12 @@ cd $scriptdir
 for n in 32 64 128; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
-  echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6127/n$n" >> scdeploy.conf.$n
-  node16=127.0.0.16
-  node24=127.0.0.24
-  echo "observed_nodes=$node16,$node24" >> scdeploy.conf.$n
+  echo "observed_nodes=127.0.0.3,127.0.0.25" >> scdeploy.conf.$n
+  rm -r /tmp/n$n
+  mkdir /tmp/n$n
   ./onemachine_dir_setup scdeploy.conf.$n
-  ./simulation scdeploy.conf.$n &
-  sleep 180
+  ./simulation scdeploy.conf.$n
+  sleep 150
   pkill java
-  ./sim_collect_logdir scdeploy.conf.$n
+  cp /tmp/cass_scale/scale.log /tmp/n$n
 done
-

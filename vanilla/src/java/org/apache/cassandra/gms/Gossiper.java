@@ -115,6 +115,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private class GossipTask implements Runnable
     {
         public final int numTokens = DatabaseDescriptor.getNumTokens();
+        
+        int round = 0;
 
         public void run()
         {
@@ -127,6 +129,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().updateHeartBeat();
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
+                ++round;
+                Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
 
@@ -138,7 +142,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                                         digestSynMessage,
                                                                                                         GossipDigestSyn.serializer);
-                    Klogger.logger.info("Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
+//                    Klogger.logger.info("Going to send GDS with size " + message.serializedSize(MessagingService.current_version) + " bytes");
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
 
@@ -606,6 +610,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
         Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
+        int syncHash = message.payload.hashCode();
+        Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
@@ -922,7 +928,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             long s = System.currentTimeMillis();
             subscriber.onRestart(ep, epState);
             long e = System.currentTimeMillis();
-            Klogger.logger.info("subscriber handle major " + subscriber.getClass().getCanonicalName() + " took " + (e - s) + " ms");
         }
 
         if (!isDeadState(epState))
@@ -952,11 +957,19 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         return false;
     }
 
-    void applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
+    int[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
     {
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionTokens = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
+
             if ( ep.equals(FBUtilities.getBroadcastAddress()))
                 continue;
             if (justRemovedEndpoints.containsKey(ep))
@@ -972,6 +985,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 If state does not exist just add it. If it does then add it if the remote generation is greater.
                 If there is a generation tie, attempt to break it by heartbeat version.
             */
+            if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
+                VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
+                if (status.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    bootstrapCount++;
+                } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    normalCount++;
+                }
+            }
             if ( localEpStatePtr != null )
             {
                 int localGeneration = localEpStatePtr.getHeartBeatState().getGeneration();
@@ -985,6 +1006,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
                     handleMajorStateChange(ep, remoteState);
+                    newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
                 {
@@ -1001,6 +1023,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (!localEpStatePtr.isAlive() && !isDeadState(localEpStatePtr)) { // unless of course, it was dead
                         markAlive(ep, localEpStatePtr);
                     }
+                    newVersion++;
+                    if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                        newVersionTokens++;
+                    }
                 }
                 else
                 {
@@ -1013,8 +1039,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
                 FailureDetector.instance.report(ep);
                 handleMajorStateChange(ep, remoteState);
+                newNode++;
+                if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                    newNodeToken++;
+                }
             }
         }
+        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
@@ -1041,7 +1072,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
         }
         long e = System.currentTimeMillis();
-        Klogger.logger.info("apply new states do noti took " + (e - s) + " ms");
     }
 
     // notify that an application state has changed

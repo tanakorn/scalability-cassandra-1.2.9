@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
-import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
@@ -38,6 +37,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
+        long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
         if (logger.isTraceEnabled())
@@ -50,6 +50,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestSyn gDigestMessage = message.payload;
+        int syncHash = gDigestMessage.hashCode();
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {
@@ -82,17 +83,36 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         }
         logger.debug(stub + " receieve syn digests : " + sb.toString());
 
-        doSort(gDigestList);
+        long start;
+        long end;
+
+        start = System.currentTimeMillis();
+        doSort(stub, gDigestList);
+        end = System.currentTimeMillis();
+        long doSort = end - start;
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         // I let this got executed because it's not expensive
+        start = System.currentTimeMillis();
         Gossiper.examineGossiperStatic(stub, stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
+        end = System.currentTimeMillis();
+        long examine = end - start;
         logger.debug(stub + " doesn't know about " + deltaGossipDigestList.toString());
 
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap), emptyMap, 
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
+        int ackHash = gDigestAckMessage.payload.hashCode();
+        long sendTime = System.currentTimeMillis();
+        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+        	if (deltaEpStateMap.keySet().contains(observedNode)) {
+        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+        		logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                logger.info(to + " Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
+        	}
+        }
         int bootNodeNum = 0;
         int normalNodeNum = 0;
         for (InetAddress address : deltaEpStateMap.keySet()) {
@@ -129,6 +149,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         WholeClusterSimulator.ackQueue.add(gDigestAckMessage);
+//        logger.info("SyncHandler for " + from + " doSort took {} ms, examine took {} ms", doSort, examine);
     }
 
     /*
@@ -138,7 +159,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
      * Sort this list. Now loop through the sorted list and retrieve the GossipDigest corresponding
      * to the endpoint from the map that was initially constructed.
     */
-    private void doSort(List<GossipDigest> gDigestList)
+    private void doSort(GossiperStub stub, List<GossipDigest> gDigestList)
     {
         /* Construct a map of endpoint to GossipDigest. */
         Map<InetAddress, GossipDigest> epToDigestMap = new HashMap<InetAddress, GossipDigest>();
@@ -155,8 +176,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         for ( GossipDigest gDigest : gDigestList )
         {
             InetAddress ep = gDigest.getEndpoint();
-            EndpointState epState = Gossiper.instance.getEndpointStateForEndpoint(ep);
-            int version = (epState != null) ? Gossiper.instance.getMaxEndpointStateVersion( epState ) : 0;
+            EndpointState epState = stub.getEndpointStateMap().get(ep);
+            int version = (epState != null) ? Gossiper.getMaxEndpointStateVersion( epState ) : 0;
             int diffVersion = Math.abs(version - gDigest.getMaxVersion() );
             diffDigests.add( new GossipDigest(ep, gDigest.getGeneration(), diffVersion) );
         }
