@@ -1,0 +1,17 @@
+#!/bin/sh
+
+scriptdir=`dirname $0`
+cd $scriptdir
+
+for n in 32 64 128; do
+  cp scdeploy.conf.exp scdeploy.conf.$n
+  echo "num_node=$n" >> scdeploy.conf.$n
+  echo "observed_nodes=127.0.0.3,127.0.0.25" >> scdeploy.conf.$n
+  rm -r /tmp/n$n
+  mkdir /tmp/n$n
+  ./onemachine_dir_setup scdeploy.conf.$n
+  ./simulation scdeploy.conf.$n
+  sleep 150
+  pkill java
+  cp /tmp/cass_scale/scale.log /tmp/n$n
+done
