@@ -1236,6 +1236,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int newRestart = 0;
         int newVersion = 0;
         int newVersionTokens = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -1251,6 +1253,15 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //            EndpointState localEpStatePtr = endpointStateMap.get(ep);
             EndpointState localEpStatePtr = stub.getEndpointStateMap().get(ep);
             EndpointState remoteState = entry.getValue();
+            
+            if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
+                VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
+                if (status.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    bootstrapCount++;
+                } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    normalCount++;
+                }
+            }
             /*
                 If state does not exist just add it. If it does then add it if the remote generation is greater.
                 If there is a generation tie, attempt to break it by heartbeat version.
@@ -1307,7 +1318,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 }
             }
         }
-        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens };
+        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
