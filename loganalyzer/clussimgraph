@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ $# -ne 3 ] ; then
+  echo "usage: scalegraph.sh <expdir> <observer> <observed_node>" 
+  exit 1
+fi
+
+expdir=$1
+observer=$2
+observed_node=$3
+output=$expdir/output
+mkdir -p $output
+for i in 32 64 128; do
+  logdir=$expdir/n$i
+  clussim_maxphi $logdir $observer $observed_node > $output/clussim_maxphi_$i
+  clussim_all_max_phi $logdir > $output/clussim_all_maxphi_$i
+  clussim_num_false_detect $logdir > $output/clussim_num_false_detect_$i
+  clussim_gossip_interval $logdir $observer $observed_node 60 > $output/clussim_gossip_interval_$i
+done

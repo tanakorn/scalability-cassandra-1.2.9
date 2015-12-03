@@ -1,0 +1,4 @@
+#!/bin/sh
+
+grep "convict" $1/scale.log | wc -l 
+

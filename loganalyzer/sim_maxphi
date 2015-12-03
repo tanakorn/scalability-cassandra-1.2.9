@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import sys
+import re
+
+import pyutil
+
+if len(sys.argv) != 2:
+  print 'usage: %s <logdir>' % sys.argv[0]
+  exit(1)
+
+logdir = sys.argv[1]
+
+pyutil.read_simlist(logdir)
+
+maxmap = { }
+phi_reg = re.compile('\\bPHI\\b')
+
+for observer in pyutil.observer_nid2ip:
+  for line in open(logdir + '/observer' + str(observer) + '/node1.log'):
+    if phi_reg.search(line):
+      entries = line.split()
+      ip = entries[10][1:]
+      if not ip in pyutil.observed_node_ip2nid:
+        continue
+      phi = float(entries[12])
+      if not ip in maxmap or maxmap[ip][0] < phi:
+        maxmap[ip] = (phi, observer, pyutil.observer_nid2ip[observer])
+
+for ip in maxmap:
+  print ip, 'is seen as', maxmap[ip][0], 'by', maxmap[ip][2]

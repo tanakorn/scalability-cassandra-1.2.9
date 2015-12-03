@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import sys
+from datetime import *
+
+import pyutil
+
+if len(sys.argv) < 4:
+  print 'usage: gossip_interval_raw <logdir> <observer> <observed_node> [time_period]'
+  print 'example: gossip_interval_raw n 3 4'
+  print 'example: gossip_interval_raw n 3 4 60'
+  exit(1)
+  
+logdir = sys.argv[1]
+observer = int(sys.argv[2])
+observed_node = int(sys.argv[3])
+if len(sys.argv) > 4:
+  time_period = int(sys.argv[4])
+else:
+  time_period = None
+
+machinelist = open(logdir + '/machinelist')
+pyutil.read_machinelist(logdir)
+observer_ip = pyutil.nid2ip[observer]
+observed_node_ip = pyutil.nid2ip[observed_node]
+
+logfile = open(logdir + '/node' + str(observer) + '/scale1.log')
+recline = 'receive info of /' + observed_node_ip
+rectimehist = []
+for logline in logfile:
+  if recline in logline:
+    entries = logline.split()
+    time = (entries[2] + ' ' + entries[3]).split(',')[0]
+    timestamp = datetime.strptime(time, '%Y-%m-%d %X')
+    rectimehist.append(timestamp)
+if not rectimehist:
+  print 'Not see any gossip of', observed_node
+  exit(0)
+if time_period:
+  firsttime = rectimehist[0]
+  time_period_list = []
+  for rectime in rectimehist:
+    if (rectime - firsttime).total_seconds() > time_period:
+      break
+    time_period_list.append(rectime)
+else:
+  time_period_list = rectimehist[:]
+recinthist = []
+prevrec = time_period_list[0]
+for rectime in time_period_list[1:]:
+  recinthist.append((rectime - prevrec).total_seconds())
+  prevrec = rectime
+for diff in recinthist:
+  print diff
+

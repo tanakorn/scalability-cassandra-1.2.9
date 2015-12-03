@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+
+import sys
+
+import pyutil
+
+if len(sys.argv) < 4:
+  print 'usage: %s <logdir> <observer> <observed_node> [time_period]' % sys.argv[0]
+  print 'example: %s n 3 4' % sys.argv[0]
+  print 'example: %s n 3 4 60' % sys.argv[0]
+  exit(1)
+
+logdir = sys.argv[1]
+observer = int(sys.argv[2])
+observed_node = int(sys.argv[3])
+if len(sys.argv) > 4:
+  time_period = int(sys.argv[4]) * 1000
+else:
+  time_period = None
+
+pyutil.read_machinelist(logdir)
+observer_ip = pyutil.nid2ip[observer]
+observed_node_ip = pyutil.nid2ip[observed_node]
+
+absorb = 0
+forward = 1
+
+all_events = {}
+for i in range(1, pyutil.num_node + 1):
+  all_events[i] = [ [], [] ]
+  logfile = open(logdir + '/node' + str(i) + '/scale1.log')
+  for line in logfile:
+    if 'Forwarding' in line:
+      entries = line.split()
+      if entries[4] == 'GossipDigestSynVerbHandler.java':
+        ip = entries[15][1:]        
+        if ip != observed_node_ip:
+          continue
+        timestamp = long(entries[8].split(':')[1])
+        receiver = entries[17][1:]
+        version = int(entries[19])
+        exectime = int(entries[9][1:-3])
+        newNodeToken = 0
+        newVersionToken = 0
+        bootstrapCount = 0
+        normalCount = 0
+        all_events[i][forward].append((timestamp, receiver, version, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount, 'sync'))
+      elif entries[4] == 'GossipDigestAckVerbHandler.java':
+        ip = entries[23][1:]        
+        if ip != observed_node_ip:
+          continue
+        timestamp = long(entries[8].split(':')[1])
+        receiver = entries[25][1:]
+        version = int(entries[27])
+        exectime = int(entries[9][1:-3])
+        newNodeToken = int(entries[15].split('=')[1])
+        newVersionToken = int(entries[18].split('=')[1])
+        bootstrapCount = int(entries[19].split('=')[1])
+        normalCount = int(entries[20].split('=')[1])
+        all_events[i][forward].append((timestamp, receiver, version, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount, normalCount, 'ack'))
+    elif 'Absorbing' in line:
+      entries = line.split()
+      if entries[4] == 'GossipDigestAckVerbHandler.java':
+        ip = entries[23][1:]        
+        if ip != observed_node_ip:
+          continue
+        timestamp = long(entries[8].split(':')[1])
+        sender = entries[25][1:]
+        version = int(entries[27])
+        exectime = int(entries[9][1:-3])
+        newNodeToken = int(entries[15].split('=')[1])
+        newVersionToken = int(entries[18].split('=')[1])
+        bootstrapCount = int(entries[19].split('=')[1])
+        normalCount = int(entries[20].split('=')[1])
+        all_events[i][absorb].append((timestamp, sender, version, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount, 'ack'))
+      elif entries[4] == 'GossipDigestAck2VerbHandler.java':
+        ip = entries[20][1:]        
+        if ip != observed_node_ip:
+          continue
+        timestamp = long(entries[8].split(':')[1])
+        sender = entries[22][1:]
+        version = int(entries[24])
+        exectime = int(entries[9][1:-3])
+        newNodeToken = int(entries[12].split('=')[1])
+        newVersionToken = int(entries[15].split('=')[1])
+        bootstrapCount = int(entries[16].split('=')[1])
+        normalCount = int(entries[17].split('=')[1])
+        all_events[i][absorb].append((timestamp, sender, version, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount, 'ack2'))
+
+timestampI = 0
+senderI = 1
+receiverI = 1
+versionI = 2
+exectimeI = 3
+newNodeTokenI = 4
+newVersionTokenI = 5
+bootstrapCountI = 6
+normalCountI = 7
+handlerI = 8
+
+if time_period:
+  last_gossip_time = all_events[observer][absorb][0][timestampI] + time_period
+all_paths = []
+for absorbing in all_events[observer][absorb]:
+  if time_period:
+    if absorbing[timestampI] > last_gossip_time:
+      break
+  tmp_observer_ip = observer_ip
+  sender_ip = absorbing[senderI]
+  version = absorbing[versionI]
+  path = [ (tmp_observer_ip, absorbing) ]
+  while sender_ip != observed_node_ip:
+    sender_id = pyutil.ip2nid[sender_ip]
+    tmp_absorb = [x for x in all_events[sender_id][absorb] if x[versionI] == version][0]
+    tmp_forward = [x for x in all_events[sender_id][forward] if x[versionI] == version and x[receiverI] == tmp_observer_ip][0]
+    tmp_observer_ip = sender_ip
+    sender_ip = tmp_absorb[senderI]
+    path.append((tmp_observer_ip, tmp_absorb, tmp_forward))
+  all_paths.append(path)
+
+hopReceiverI = 0
+hopAbsorbI = 1
+hopForwardI = 2
+
+all_time_paths = []
+for path in all_paths:
+  version = path[0][hopAbsorbI][versionI]
+  time_path = []
+  for hop in path:
+    if hop[hopAbsorbI][handlerI] == 'ack':
+      exectime = hop[hopAbsorbI][exectimeI]
+      newNodeToken = hop[hopAbsorbI][newNodeTokenI]
+      newVersionToken = hop[hopAbsorbI][newVersionTokenI]
+      bootstrapCount = hop[hopAbsorbI][bootstrapCountI]
+      normalCount = hop[hopAbsorbI][normalCountI]
+      if len(hop) == 3:
+        delay_time = int(hop[hopForwardI][timestampI] - hop[hopAbsorbI][timestampI])
+      else:
+        delay_time = 0
+      time_path.append((delay_time, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount))
+    elif hop[hopAbsorbI][handlerI] == 'ack2':
+      sender_id = pyutil.ip2nid[hop[hopAbsorbI][senderI]]
+      receiver_id = pyutil.ip2nid[hop[hopReceiverI]]
+      tmp_forward = [x for x in all_events[sender_id][forward] if x[versionI] == version and x[receiverI] == hop[hopReceiverI]][0]
+      exectime = sum((tmp_forward[exectimeI], hop[hopAbsorbI][exectimeI]))
+      newNodeToken = sum((tmp_forward[newNodeTokenI], hop[hopAbsorbI][newNodeTokenI]))
+      newVersionToken = sum((tmp_forward[newVersionTokenI], hop[hopAbsorbI][newVersionTokenI]))
+      bootstrapCount = sum((tmp_forward[bootstrapCountI], hop[hopAbsorbI][bootstrapCountI]))
+      normalCount = sum((tmp_forward[normalCountI], hop[hopAbsorbI][normalCountI]))
+      #exectime = (tmp_forward[3], hop[1][3])
+      #normalCount = (tmp_forward[4], hop[1][4])
+      if len(hop) == 3:
+        delay_time = int(hop[hopForwardI][timestampI] - hop[hopAbsorbI][timestampI])
+      else:
+        delay_time = 0
+      time_path.append((delay_time, exectime, newNodeToken, newVersionToken, bootstrapCount, normalCount))
+  all_time_paths.append(time_path)
+
+for path in all_time_paths:
+  create_list = lambda x: [ i[x] for i in path ]
+  print len(path), sum(create_list(0)) / 1000.0, sum(create_list(1)) / 1000.0, sum(create_list(2)), sum(create_list(3)), sum(create_list(4)), sum(create_list(5))
