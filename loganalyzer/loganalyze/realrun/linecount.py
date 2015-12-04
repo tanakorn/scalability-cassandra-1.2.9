@@ -4,7 +4,6 @@ from .. import analyze
 class LineCount(analyze.BaseAnalyzer):
 
   def __init__(self):
-    self.outputName = 'linecount'
     self.count = {}
 
   def analyze(self, logLine, **kwargs):
@@ -14,5 +13,5 @@ class LineCount(analyze.BaseAnalyzer):
     self.count[nid] += 1
 
   def analyzedResult(self):
-    return str(self.count) + '\n'
+    return { 'linecount' : str(self.count)}
 

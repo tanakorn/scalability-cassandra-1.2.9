@@ -2,17 +2,19 @@
 class BaseAnalyzer(object):
 
   def __init__(self):
-    self.outputName = 'base'
+    pass
 
   def analyze(self, logLine, **kwargs):
     pass
 
   def analyzedResult(self):
-    return ''
+    return {}
 
   def writeOutput(self, outputDir, suffix=''):
     suffix = '' if not suffix else '_' + suffix
-    output = open('%s/%s%s' % (outputDir, self.outputName, suffix), 'w')
-    output.write(self.analyzedResult())
-    output.close()
+    result = self.analyzedResult()
+    for fileName in result:
+      output = open('%s/%s%s' % (outputDir, fileName, suffix), 'w')
+      output.write(result[fileName])
+      output.close()
 
