@@ -7,7 +7,7 @@ class LineCount(analyze.BaseAnalyzer):
     self.outputName = 'linecount'
     self.count = 0
 
-  def analyze(self, logLine):
+  def analyze(self, logLine, **kwargs):
     self.count += 1
 
   def analyzedResult(self):

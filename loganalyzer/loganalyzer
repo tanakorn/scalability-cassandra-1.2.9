@@ -7,7 +7,7 @@ import pyutil
 def main():
 
   if len(sys.argv) < 2:
-    sys.stderr.write('usage: %s logDir\n' % os.path.basename(sys.argv[0]))
+    sys.stderr.write('usage: %s logDir [outputDir]\n' % os.path.basename(sys.argv[0]))
     exit(1)
 
   logDir = sys.argv[1]
@@ -20,10 +20,10 @@ def main():
 
   pyutil.read_machinelist(logDir)
   if not 'scale.log' in allFiles:
-    print 'There is `scale.log` file, this is logging from real run'
+    print 'There is not `scale.log` file, this is logging from real run'
     analyzeRealRun(logDir)
   else:
-    print 'There is not `scale.log` file, this is logging from cluster simulation'
+    print 'There is `scale.log` file, this is logging from cluster simulation'
     analyzeClusterSim(logDir)
 
 def analyzeRealRun(logDir):
@@ -31,8 +31,8 @@ def analyzeRealRun(logDir):
   numNodes = pyutil.num_nodes
   for i in range(1, numNodes + 1):
     logFile = open(logDir + '/node' + str(i) + '/scale1.log')
-  for line in logFile:
-    realrun.analyze(line)
+    for line in logFile:
+      realrun.analyze(line, nid=i)
   realrun.writeOutput(logDir, str(numNodes))
 
 def analyzeClusterSim(logDir):

@@ -4,7 +4,7 @@ class BaseAnalyzer(object):
   def __init__(self):
     self.outputName = 'base'
 
-  def analyze(self, logLine):
+  def analyze(self, logLine, **kwargs):
     pass
 
   def analyzedResult(self):
