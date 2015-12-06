@@ -179,9 +179,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
-        if (WholeClusterSimulator.observedNodes.contains(ep)) {
-        	logger.info("See " + ep + " at time " + now);
-        }
+        logger.info("See " + ep + " at time " + now);
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -193,9 +191,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     
     public void report(InetAddress observer, InetAddress ep) {
         long now = System.currentTimeMillis();
-        if (WholeClusterSimulator.observedNodes.contains(ep)) {
-            logger.info(observer + " see " + ep + " at time " + now);
-        }
+        logger.info(observer + " see " + ep + " at time " + now);
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -343,7 +339,7 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi || WholeClusterSimulator.observedNodes.contains(testNode)) {
+        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
             logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(testNode, phi);
         }

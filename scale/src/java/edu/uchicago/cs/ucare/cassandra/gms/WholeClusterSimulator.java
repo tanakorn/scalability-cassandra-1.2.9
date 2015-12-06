@@ -66,20 +66,6 @@ public class WholeClusterSimulator {
 
     });
     
-    public static final Set<InetAddress> observedNodes;
-    static {
-        observedNodes = new HashSet<InetAddress>();
-        String[] tmp = System.getProperty("observed.nodes", "").split(",");
-        for (String node : tmp) {
-            try {
-                observedNodes.add(InetAddress.getByName(node));
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
-                logger.error("Error for when observe {}", node);
-            }
-        }
-    }
-
     static
     {
         initLog4j();
