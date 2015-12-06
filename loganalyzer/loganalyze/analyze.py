@@ -1,4 +1,7 @@
 
+from datetime import *
+from time import mktime
+
 class BaseAnalyzer(object):
 
   def __init__(self):
@@ -17,4 +20,38 @@ class BaseAnalyzer(object):
       output = open('%s/%s%s' % (outputDir, fileName, suffix), 'w')
       output.write(result[fileName])
       output.close()
+
+extractedTimeCache = { }
+def extractTime(logLine):
+  global extractedTimeCache
+  if type(logLine) == str:
+    tokens = logLine.split()
+  elif type(logLine) == list:
+    tokens = logLine
+  timeStr = (tokens[2] + ' ' + tokens[3]).split(',')[0]
+  if timeStr in extractedTimeCache:
+    return extractedTimeCache[timeStr]
+  timeObj = datetime.strptime(timeStr, '%Y-%m-%d %X')
+  extractedTimeCache[timeStr] = timeObj
+  return timeObj
+
+extractedTimestampCache = { }
+def extractTimestamp(logLine):
+  global extractedTimeCache
+  global extractedTimestampCache
+  if type(logLine) == str:
+    tokens = logLine.split()
+  elif type(logLine) == list:
+    tokens = logLine
+  timeStr = (tokens[2] + ' ' + tokens[3]).split(',')[0]
+  if timeStr in extractedTimestampCache:
+    return extractedTimestampCache[timeStr]
+  if timeStr in extractedTimeCache:
+    timeObj = extractedTimeCache[timeStr]
+  else:
+    timeObj = datetime.strptime(timeStr, '%Y-%m-%d %X')  
+    extractedTimeCache[timeStr] = timeObj
+  timestamp =  mktime(timeObj.timetuple())
+  extractedTimestampCache[timeStr] = timestamp
+  return timestamp
 
