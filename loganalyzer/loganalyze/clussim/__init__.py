@@ -2,7 +2,7 @@ import importlib
 
 # filename : classname
 modClassMap = { 
-  'linecount' : 'LineCount',
+  'phi' : 'PhiAnalyzer',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }
