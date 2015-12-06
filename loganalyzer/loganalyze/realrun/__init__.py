@@ -2,7 +2,7 @@ import importlib
 
 # filename : classname
 modClassMap = { 
-  'linecount' : 'LineCount',
+  'phi' : 'PhiAnalyzer',
   'falsedetect' : 'FalseDetectionCounter',
 }
 
