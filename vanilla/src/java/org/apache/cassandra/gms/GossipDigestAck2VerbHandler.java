@@ -20,7 +20,6 @@ package org.apache.cassandra.gms;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,38 +56,36 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         int epStateMapSize = remoteEpStateMap.size();
         int before = Gossiper.instance.endpointStateMap.size();
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
-        for (InetAddress observedNode : FailureDetector.observedNodes) {
-            if (remoteEpStateMap.keySet().contains(observedNode)) {
-                EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
-                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
-                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                boolean newer = false;
-                if (localEpState == null) {
-                    newer = true;
-                } else {
-                    synchronized (localEpState) {
-                        int localGen = localEpState.getHeartBeatState().getGeneration();
-                        if (localGen < remoteGen) {
+        for (InetAddress observedNode : remoteEpStateMap.keySet()) {
+            EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+            EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
+            int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+            int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+            boolean newer = false;
+            if (localEpState == null) {
+                newer = true;
+            } else {
+                synchronized (localEpState) {
+                    int localGen = localEpState.getHeartBeatState().getGeneration();
+                    if (localGen < remoteGen) {
+                        newer = true;
+                    } else if (localGen == remoteGen) {
+                        int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                        if (localVersion < remoteVersion) {
                             newer = true;
-                        } else if (localGen == remoteGen) {
-                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                            if (localVersion < remoteVersion) {
-                                newer = true;
-                            }
                         }
                     }
                 }
-                if (newer) {
-                    double hbAverage = 0;
-                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
-                    if (fd.arrivalSamples.containsKey(observedNode)) {
-                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
-                    }
-                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
-                    newerVersion.put(observedNode, remoteVersion);
+            }
+            if (newer) {
+                double hbAverage = 0;
+                FailureDetector fd = (FailureDetector) FailureDetector.instance;
+                if (fd.arrivalSamples.containsKey(observedNode)) {
+                    hbAverage = fd.arrivalSamples.get(observedNode).mean();
                 }
+                Klogger.logger.info("receive info of " + observedNode + " from " + from + 
+                        " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+                newerVersion.put(observedNode, remoteVersion);
             }
         }
         

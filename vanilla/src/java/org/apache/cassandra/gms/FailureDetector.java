@@ -54,20 +54,6 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     public final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
     
-    public static final Set<InetAddress> observedNodes;
-    static {
-    	observedNodes = new HashSet<InetAddress>();
-    	String[] tmp = System.getProperty("observed.nodes", "").split(",");
-    	for (String node : tmp) {
-    		try {
-				observedNodes.add(InetAddress.getByName(node));
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				logger.error("Error for when observe {}", node);
-			}
-    	}
-    }
-
     public FailureDetector()
     {
         // Register this instance with JMX
@@ -183,9 +169,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
-        if (observedNodes.contains(ep)) {
-        	Klogger.logger.info("See " + ep + " at time " + now);
-        }
+        Klogger.logger.info("See " + ep + " at time " + now);
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -341,9 +325,7 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        if (FailureDetector.observedNodes.contains(address)) {
-            Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
-        }
+        Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
