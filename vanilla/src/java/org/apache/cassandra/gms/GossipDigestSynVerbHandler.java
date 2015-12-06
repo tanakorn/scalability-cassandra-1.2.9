@@ -106,13 +106,11 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
                                                                                                       GossipDigestAck.serializer);
         int ackHash = gDigestAckMessage.payload.hashCode();
         long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : FailureDetector.observedNodes) {
-        	if (deltaEpStateMap.keySet().contains(observedNode)) {
-        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-        		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
-                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
-        	}
+        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
+            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+            Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+            Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
         }
         Klogger.logger.info("GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())

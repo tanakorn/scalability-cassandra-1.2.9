@@ -70,38 +70,36 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         if ( epStateMap.size() > 0 )
         {
-            for (InetAddress observedNode : FailureDetector.observedNodes) {
-                if (epStateMap.keySet().contains(observedNode)) {
-                    EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
-                    EndpointState remoteEpState = epStateMap.get(observedNode);
-                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                    boolean newer = false;
-                    if (localEpState == null) {
-                        newer = true;
-                    } else {
-                        synchronized (localEpState) {
-                            int localGen = localEpState.getHeartBeatState().getGeneration();
-                            if (localGen < remoteGen) {
+            for (InetAddress observedNode : epStateMap.keySet()) {
+                EndpointState localEpState = Gossiper.instance.getEndpointStateForEndpoint(observedNode);
+                EndpointState remoteEpState = epStateMap.get(observedNode);
+                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+                boolean newer = false;
+                if (localEpState == null) {
+                    newer = true;
+                } else {
+                    synchronized (localEpState) {
+                        int localGen = localEpState.getHeartBeatState().getGeneration();
+                        if (localGen < remoteGen) {
+                            newer = true;
+                        } else if (localGen == remoteGen) {
+                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+                            if (localVersion < remoteVersion) {
                                 newer = true;
-                            } else if (localGen == remoteGen) {
-                                int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                                if (localVersion < remoteVersion) {
-                                    newer = true;
-                                }
                             }
                         }
                     }
-                    if (newer) {
-                        double hbAverage = 0;
-                        FailureDetector fd = (FailureDetector) FailureDetector.instance;
-                        if (fd.arrivalSamples.containsKey(observedNode)) {
-                            hbAverage = fd.arrivalSamples.get(observedNode).mean();
-                        }
-                        Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                                " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
-                        newerVersion.put(observedNode, remoteVersion);
+                }
+                if (newer) {
+                    double hbAverage = 0;
+                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
+                    if (fd.arrivalSamples.containsKey(observedNode)) {
+                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
                     }
+                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
+                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+                    newerVersion.put(observedNode, remoteVersion);
                 }
             }
             
@@ -149,16 +147,14 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 //                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
 //                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : FailureDetector.observedNodes) {
-        	if (deltaEpStateMap.keySet().contains(observedNode)) {
-        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-        		Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
-                        " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                        " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                        " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
-        	}
+        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
+            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+            Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
+                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
         }
         for (InetAddress address : newerVersion.keySet()) {
             Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
