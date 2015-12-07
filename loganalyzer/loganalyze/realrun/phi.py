@@ -32,7 +32,7 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
       for observee in self.phiMap[observer]:
         if observer == observee:
           continue
-        thisMaxPhi = max(self.phiMap[observer][observee])
+        thisMaxPhi = 0 if not self.phiMap[observer][observee] else max(self.phiMap[observer][observee])
         maxPhiMap[observer][observee] = thisMaxPhi
         allMaxPhi.append(str(thisMaxPhi))
         #if maxPhiInObservers[observer][1] < thisMaxPhi:
@@ -51,7 +51,7 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
       for observer in self.revertPhiMap[observee]:
         if observer == observee:
           continue
-        thisMaxPhi = max(self.revertPhiMap[observee][observer])
+        thisMaxPhi = 0 if not self.revertPhiMap[observee][observer] else max(self.revertPhiMap[observee][observer])
         revertMaxPhiMap[observee][observer] = thisMaxPhi
         #if maxPhiOfObservees[observee][1] < thisMaxPhi:
           #maxPhiOfObservees[observee] = (observer, thisMaxPhi)
