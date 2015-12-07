@@ -1,0 +1,30 @@
+#!/bin/sh
+
+if [ -z $1 ]; then
+  echo usage: `basename $0` exp_dir
+  exit 1
+fi
+
+expdir=$1
+
+subexps="vanilla clussim"
+allsize="32 64 128"
+for subexp in $subexps; do
+  subexpdir=$expdir/$subexp
+  if ! [ -d $subexpdir ]; then
+    echo There is no $subexp in this directory, skip ...
+    continue
+  fi
+  outputdir=$subexpdir/analyzerout
+  rm -r $outputdir 2> /dev/null
+  mkdir $outputdir
+  for size in $allsize; do
+    logdir=$subexpdir/n$size
+    if ! [ -d $logdir ]; then
+      echo There is no ${size}-node in $subexp, skip ...
+      continue
+    fi
+    loganalyzer $logdir $outputdir
+  done
+done
+
