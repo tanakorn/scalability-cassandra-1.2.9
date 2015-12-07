@@ -105,11 +105,13 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
         int ackHash = gDigestAckMessage.payload.hashCode();
         long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
-            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-            logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-            logger.info(to + " Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
-                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
+        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+        	if (deltaEpStateMap.keySet().contains(observedNode)) {
+        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+        		logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+                logger.info(to + " Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
+        	}
         }
         int bootNodeNum = 0;
         int normalNodeNum = 0;
