@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+import sys
+from datetime import *
+
+import pyutil
+
+if len(sys.argv) < 4:
+  print 'usage: gossip_interval <logdir> <observer> <observed_node> [time_period]'
+  print 'example: gossip_interval n 3 4'
+  print 'example: gossip_interval n 3 4 60'
+  exit(1)
+  
+logdir = sys.argv[1]
+observer = int(sys.argv[2])
+observed_node = int(sys.argv[3])
+if len(sys.argv) > 4:
+  time_period = int(sys.argv[4])
+else:
+  time_period = None
+
+machinelist = open(logdir + '/machinelist')
+pyutil.read_machinelist(logdir)
+observer_ip = pyutil.nid2ip[observer]
+observed_node_ip = pyutil.nid2ip[observed_node]
+
+logfile = open(logdir + '/scale.log')
+recline = 'receive info of /' + observed_node_ip + ' '
+rectimehist = []
+if time_period:
+  first_gossip_time = None
+for logline in logfile:
+  if recline in logline:
+    entries = logline.split()
+    read_observer_ip = entries[7][1:]
+    read_observed_node_ip = entries[9][1:]
+    if time_period:
+      if not first_gossip_time:
+        time = (entries[2] + ' ' + entries[3]).split(',')[0]
+        first_gossip_time = datetime.strptime(time, '%Y-%m-%d %X')
+      time = (entries[2] + ' ' + entries[3]).split(',')[0]
+      timestamp = datetime.strptime(time, '%Y-%m-%d %X')
+      if (timestamp - first_gossip_time).total_seconds() > time_period:
+        break
+    hbavg = float(entries[19]) / 1000
+    if hbavg:
+      rectimehist.append(hbavg)
+if not rectimehist:
+  print 'Not see any gossip of', observed_node
+  exit(0)
+rectimehist.sort()
+datasize = len(rectimehist)
+lqpos = datasize / 4
+medpos = datasize / 2
+uqpos = lqpos * 3
+print 'datasize=%d min=%f lq=%f med=%f uq=%f max=%f' % \
+    (datasize, rectimehist[0], rectimehist[lqpos], rectimehist[medpos], rectimehist[uqpos], rectimehist[-1])
+

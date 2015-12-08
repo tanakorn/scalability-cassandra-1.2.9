@@ -104,7 +104,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                         if (fd.arrivalSamples.containsKey(observedNode)) {
                             hbAverage = fd.arrivalSamples.get(observedNode).mean();
                         }
-                        logger.info("receive info of " + observedNode + " from " + from + 
+                        logger.info(to + " receive info of " + observedNode + " from " + from + 
                                 " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
                         newerVersion.put(observedNode, remoteVersion);
                     }

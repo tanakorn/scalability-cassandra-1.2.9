@@ -16,4 +16,6 @@ for i in 32 64 128; do
   clussim_all_max_phi $logdir > $output/clussim_all_maxphi_$i
   clussim_num_false_detect $logdir > $output/clussim_num_false_detect_$i
   clussim_gossip_interval $logdir $observer $observed_node 60 > $output/clussim_gossip_interval_$i
+  clussim_gossip_mean $logdir $observer $observed_node 60 > $output/clussim_gossip_mean_$i
+  clussim_propagate $logdir $observer $observed_node 60 > $output/clussim_propagate_$i
 done
