@@ -55,3 +55,13 @@ def extractTimestamp(logLine):
   extractedTimestampCache[timeStr] = timestamp
   return timestamp
 
+def calcStat(data):
+  dataSize = len(data)
+  if not dataSize:
+    return 0, 0, 0, 0, 0
+  sortedData = sorted(data)
+  lqPos = dataSize / 4
+  medPos = dataSize / 2
+  uqPos = dataSize * 3 / 4
+  return sortedData[0], sortedData[lqPos], sortedData[medPos], sortedData[uqPos], sortedData[-1]
+

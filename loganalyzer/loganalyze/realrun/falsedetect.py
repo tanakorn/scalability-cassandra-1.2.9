@@ -90,7 +90,13 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
       for observer in accFalse:
         totalAccFalseInSec += len(accFalse[observer])
       avgFalseInSec = totalAccFalseInSec / pyutil.num_nodes
-      avgAccFalseResult += '%d %d\n' % (sec, avgFalseInSec)
+      if avgFalseInSec:
+        allNumAccFalse = [ 0 ] * (pyutil.num_nodes - len(accFalse))
+        allNumAccFalse.extend(map(len, accFalse.values()))
+        minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(allNumAccFalse)
+        avgAccFalseResult += '%d mean=%d min=%d lq=%d med=%d uq=%d max=%d\n' % (sec, avgFalseInSec, minVal, lqVal, medVal, uqVal, maxVal)
+      else:
+        avgAccFalseResult += '%d mean=%d\n' % (sec, avgFalseInSec)
 
       for observee in deadDeclareForNodeInSec[sec]:
         if observee not in accDeadDeclare:
@@ -100,7 +106,13 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
       for observee in accDeadDeclare:
         totalDeadDeclareInSec += len(accDeadDeclare[observee])
       avgDeadDeclare = totalDeadDeclareInSec / pyutil.num_nodes
-      avgAccDeadDeclareResult += '%d %d\n' % (sec, avgDeadDeclare)
+      if avgDeadDeclare:
+        allNumDeadDeclare = [ 0 ] * (pyutil.num_nodes - len(accDeadDeclare))
+        allNumDeadDeclare.extend(map(len, accDeadDeclare.values()))
+        minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(allNumDeadDeclare)
+        avgAccDeadDeclareResult += '%d mean=%d min=%d lq=%d med=%d uq=%d max=%d\n' % (sec, avgDeadDeclare, minVal, lqVal, medVal, uqVal, maxVal)
+      else:
+        avgAccDeadDeclareResult += '%d mean=%d\n' % (sec, avgDeadDeclare)
 
     return { 
       'num_false' : str(numFalse) + '\n', 
