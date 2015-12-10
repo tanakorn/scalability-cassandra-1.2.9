@@ -1,8 +1,11 @@
 #!/bin/sh
 
 scriptdir=`dirname $0`
+. $scriptdir/readconfig
 cd $scriptdir
 
+mkdir -p $cassandra_log_dir
+rm -r $cassandra_log_dir/*
 for n in 32 64 128; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
@@ -14,4 +17,10 @@ for n in 32 64 128; do
   sleep 150
   pkill java
   cp /tmp/cass_scale/scale.log /tmp/n$n
+  i=1
+  while [ $i -le $n ]; do
+    echo $i 127.0.0.$i >> /tmp/n$n/machinelist
+    i=`expr $i + 1`
+  done
+  cp -r /tmp/n$n $cassandra_log_dir
 done
