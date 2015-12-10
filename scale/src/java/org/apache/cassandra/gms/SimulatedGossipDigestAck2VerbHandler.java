@@ -113,6 +113,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.debug(to + " executing past message " + mockExecTime);
         }
         end = System.currentTimeMillis();
+        long sleeptime = message.getSleepTime();
         long applyState = end - start;
         int newNode = result[0];
         int newNodeToken = result[1];

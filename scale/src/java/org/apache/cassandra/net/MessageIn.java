@@ -42,6 +42,7 @@ public class MessageIn<T>
     
     public InetAddress to;
     public long wakeUpTime;
+    public long sleepTime;
     
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
@@ -132,6 +133,14 @@ public class MessageIn<T>
 
     public void setWakeUpTime(long wakeUpTime) {
         this.wakeUpTime = wakeUpTime;
+    }
+
+    public long getSleepTime() {
+        return sleepTime;
+    }
+
+    public void setSleepTime(long sleepTime) {
+        this.sleepTime = sleepTime;
     }
 
     @Override

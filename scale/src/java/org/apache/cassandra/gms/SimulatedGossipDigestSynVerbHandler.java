@@ -143,6 +143,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        System.out.println("should sleep " + sleepTime);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
+        gDigestAckMessage.setSleepTime(sleepTime);
         gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);

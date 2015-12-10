@@ -132,6 +132,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
             end = System.currentTimeMillis();
             applyState = end - start;
+//            applyState = message.getSleepTime();
             newNode = result[0];
             newNodeToken = result[1];
             newRestart = result[2];
@@ -184,6 +185,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        System.out.println("should sleep " + sleepTime);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
+        gDigestAck2Message.setSleepTime(sleepTime);
         gDigestAck2Message.setTo(from);
         long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
