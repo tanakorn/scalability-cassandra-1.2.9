@@ -58,6 +58,6 @@ public class MessageDeliveryTask implements Runnable
         long s = System.currentTimeMillis();
         verbHandler.doVerb(message, id);
         long t = System.currentTimeMillis() - s;
-        Klogger.logger.info("Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
+//        Klogger.logger.info("Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
     }
 }

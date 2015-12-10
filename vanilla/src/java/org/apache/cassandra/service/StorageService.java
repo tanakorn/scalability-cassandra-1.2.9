@@ -1698,18 +1698,15 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private void calculatePendingRanges()
     {
-        Klogger.logger.info("Executing calculatePendingRanges");
         long s = System.currentTimeMillis();
         for (String table : Schema.instance.getNonSystemTables())
             calculatePendingRanges(Table.open(table).getReplicationStrategy(), table);
         long e = System.currentTimeMillis();
-        Klogger.logger.info("calculatePendingRanges took " + (e - s) + " ms");
     }
 
     // public & static for testing purposes
     public static void calculatePendingRanges(AbstractReplicationStrategy strategy, String table)
     {
-        Klogger.logger.info("calculatePendingRanges for table " + table);
         TokenMetadata tm = StorageService.instance.getTokenMetadata();
         Multimap<Range<Token>, InetAddress> pendingRanges = HashMultimap.create();
         BiMultiValMap<Token, InetAddress> bootstrapTokens = tm.getBootstrapTokens();
@@ -1727,7 +1724,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         // Copy of metadata reflecting the situation after all leave operations are finished.
         TokenMetadata allLeftMetadata = tm.cloneAfterAllLeft();
-//        Klogger.logger.info("all left metadata = " + allLeftMetadata);
 
         // get all ranges that will be affected by leaving nodes
         Set<Range<Token>> affectedRanges = new HashSet<Range<Token>>();
@@ -1754,7 +1750,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
             allLeftMetadata.updateNormalTokens(tokens, endpoint);
             for (Range<Token> range : strategy.getAddressRanges(allLeftMetadata).get(endpoint)) {
-//                Klogger.logger.info("nested range = " + range.toString());
                 pendingRanges.put(range, endpoint);
             }
             allLeftMetadata.removeEndpoint(endpoint);

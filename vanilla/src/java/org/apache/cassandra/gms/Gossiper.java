@@ -237,15 +237,15 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     		", non-member nodes = " + nonMemberNode + 
                     		", not-completed nodes = " + notCompletedNode + 
                     		", dead nodes = " + deadNode);
-                    if (deadNode > 0) {
-                        Klogger.logger.info(strBuilder.toString());
-                    }
-                    if (nonMemberNode > 0) {
-                    	Klogger.logger.info(strBuilder2.toString());
-                    }
-                    if (notCompletedNode > 0) {
-                        Klogger.logger.info(strBuilder3.toString());
-                    }
+//                    if (deadNode > 0) {
+//                        Klogger.logger.info(strBuilder.toString());
+//                    }
+//                    if (nonMemberNode > 0) {
+//                    	Klogger.logger.info(strBuilder2.toString());
+//                    }
+//                    if (notCompletedNode > 0) {
+//                        Klogger.logger.info(strBuilder3.toString());
+//                    }
                 }
             }
             catch (Exception e)
@@ -607,8 +607,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-        Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
-        int syncHash = message.payload.hashCode();
+//        Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
         Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);

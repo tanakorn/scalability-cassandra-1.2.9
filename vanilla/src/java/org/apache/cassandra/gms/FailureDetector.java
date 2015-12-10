@@ -169,7 +169,6 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
-        Klogger.logger.info("See " + ep + " at time " + now);
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -188,9 +187,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             return;
         }
         long now = System.currentTimeMillis();
-//        double phi = hbWnd.phi(now);
         double phi = hbWnd.phi(now, ep);
-//        Klogger.logger.info("PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
@@ -325,7 +322,7 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
+        Klogger.logger.info("Arrival interval of " + address + " is " + interArrivalTime);
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else

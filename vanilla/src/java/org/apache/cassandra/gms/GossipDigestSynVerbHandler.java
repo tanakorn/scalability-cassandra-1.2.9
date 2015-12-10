@@ -37,7 +37,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
         long receiveTime = System.currentTimeMillis();
-//        Klogger.logger.info("Processing gds " + )
         InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
@@ -49,7 +48,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         }
 
         GossipDigestSyn gDigestMessage = message.payload;
-        int syncHash = gDigestMessage.hashCode();
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {
@@ -104,15 +102,12 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                                       new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
                                                                                                       GossipDigestAck.serializer);
-        int ackHash = gDigestAckMessage.payload.hashCode();
         long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : deltaEpStateMap.keySet()) {
             int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-            Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
             Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
                     " ; Forwarding " + observedNode + " to " + from + " version " + version);
         }
-        Klogger.logger.info("GDA to " + from + " has size " + gDigestAckMessage.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);

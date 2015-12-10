@@ -51,13 +51,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         }
 
         GossipDigestAck gDigestAckMessage = message.payload;
-        int ackHash = gDigestAckMessage.hashCode();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
-        int epStateMapSize = epStateMap.size();
-        int before = Gossiper.instance.endpointStateMap.size();
-
         long notifyFD = 0;
         long applyState = 0;
         int newNode = 0;
@@ -92,13 +88,13 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                     }
                 }
                 if (newer) {
-                    double hbAverage = 0;
-                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
-                    if (fd.arrivalSamples.containsKey(observedNode)) {
-                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
-                    }
-                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
-                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+//                    double hbAverage = 0;
+//                    FailureDetector fd = (FailureDetector) FailureDetector.instance;
+//                    if (fd.arrivalSamples.containsKey(observedNode)) {
+//                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
+//                    }
+//                    Klogger.logger.info("receive info of " + observedNode + " from " + from + 
+//                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
                     newerVersion.put(observedNode, remoteVersion);
                 }
             }
@@ -120,7 +116,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             normalCount = result[6];
             applyState = end - start;
         }
-        int after = Gossiper.instance.endpointStateMap.size();
 
         Gossiper.instance.checkSeedContact(from);
 
@@ -141,15 +136,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                                          new GossipDigestAck2(deltaEpStateMap),
                                                                                                          GossipDigestAck2.serializer);
-        int ack2Hash = gDigestAck2Message.payload.hashCode();
-        
-//        Klogger.logger.info("Receive ack:" + ackHash + " ; Send ack2:" + ack2Hash + 
-//                " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-//                " newVersion=" + newVersion + " newVersionToken=" + newVersionToken);
         long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : deltaEpStateMap.keySet()) {
             int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-            Klogger.logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
             Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
                     " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
                     " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
@@ -164,7 +153,6 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                     " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
             
         }
-        Klogger.logger.info("GDA2 to " + from + " has size " + gDigestAck2Message.serializedSize(MessagingService.current_version) + " bytes");
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         start = System.currentTimeMillis();
@@ -172,6 +160,5 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         end = System.currentTimeMillis();
         long send = end - start;
         Klogger.logger.info("AckHandler for " + from + " notifyFD took {} ms, applyState took {} ms, examine took {} ms, sendMsg took {} ms", notifyFD, applyState, examine, send);
-        Klogger.logger.info("Processing Ack receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
     }
 }
