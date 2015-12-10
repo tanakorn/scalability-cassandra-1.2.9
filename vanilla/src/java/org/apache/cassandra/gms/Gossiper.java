@@ -40,10 +40,8 @@ import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import edu.uchicago.cs.ucare.util.Klogger;
-import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction

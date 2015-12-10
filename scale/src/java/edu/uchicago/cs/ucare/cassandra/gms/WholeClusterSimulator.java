@@ -137,6 +137,7 @@ public class WholeClusterSimulator {
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[MAX_NODE];
         normalGossipExecRecords = new long[MAX_NODE];
+        System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
         while ((line = buffReader.readLine()) != null) {
@@ -177,7 +178,7 @@ public class WholeClusterSimulator {
         stubGroup.setupTokenState();
         stubGroup.setBootStrappingStatusState();
         // Replace hard-coded number here with ring_deplay
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         stubGroup.setNormalStatusState();
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
@@ -206,7 +207,7 @@ public class WholeClusterSimulator {
                     if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver);
+                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests.size());
                     }
                 } else {
                     logger.debug(stub.getInetAddress() + " does not have live endpoint");
@@ -219,6 +220,7 @@ public class WholeClusterSimulator {
                     if (prob > random.nextDouble()) {
                         if (!syncQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
+                        } else {
                         }
                     }
                 }
@@ -234,7 +236,7 @@ public class WholeClusterSimulator {
                                 if (!syncQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
-                                    logger.debug(stub.getInetAddress() + " sending sync to seed " + seed);
+                                    logger.debug(stub.getInetAddress() + " sending sync to seed " + seed + " " + synMsg.payload.gDigests.size());
                                 }
                             } else {
                                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
@@ -245,7 +247,7 @@ public class WholeClusterSimulator {
                                     if (!syncQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
-                                        logger.debug(stub.getInetAddress() + " sending sync to seed " + seed);
+                                        logger.debug(stub.getInetAddress() + " sending sync to seed " + seed + " " + synMsg.payload.gDigests.size());
                                     }
                                 }
                             }
@@ -255,7 +257,7 @@ public class WholeClusterSimulator {
                 stub.doStatusCheck();
             }
             long finish = System.currentTimeMillis();
-            if (finish - start > 3000) {
+            if (finish - start > 1000) {
                 logger.warn("It took more than 1 s to do gossip task");
             }
         }
