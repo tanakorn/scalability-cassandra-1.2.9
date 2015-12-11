@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
+import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
 
@@ -38,6 +39,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         long receiveTime = System.currentTimeMillis();
     	long start, end; 
         InetAddress from = message.from;
+        InetAddress to = FBUtilities.getBroadcastAddress();
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -92,6 +94,10 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         start = System.currentTimeMillis();
         int[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
         end = System.currentTimeMillis();
+        for (InetAddress receivingAddress : remoteEpStateMap.keySet()) {
+            EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
+            Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+        }
         long applyState = end - start;
         int newNode = result[0];
         int newNodeToken = result[1];
@@ -100,13 +106,29 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         int newVersionToken = result[4];
         int bootstrapCount = result[5];
         int normalCount = result[6];
-        for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
-                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
-        }
+        String syncId = from + "_" + message.payload.syncId;
+        long syncReceivedTime = Gossiper.instance.syncReceivedTime.get(syncId);
+        Gossiper.instance.syncReceivedTime.remove(syncId);
+        long ack2HandlerTime = System.currentTimeMillis() - receiveTime;
+        long allHandlerTime = ack2HandlerTime + syncReceivedTime;
+//        for (InetAddress address : newerVersion.keySet()) {
+//            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
+//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+//                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+//        }
+        Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
+        Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
+        String ackId = from + "_" + message.payload.ackId;
+        int sendingBoot = Gossiper.instance.ackNewVersionBoot.get(ackId);
+        Gossiper.instance.ackNewVersionBoot.remove(ackId);
+        int sendingNormal = Gossiper.instance.ackNewVersionNormal.get(ackId);
+        Gossiper.instance.ackNewVersionNormal.remove(ackId);
+        int allBoot = sendingBoot + bootstrapCount;
+        int allNormal = sendingNormal + normalCount;
+        Klogger.logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+        Klogger.logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
 }

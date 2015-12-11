@@ -72,7 +72,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private static final Logger logger = LoggerFactory.getLogger(Gossiper.class);
     public static final Gossiper instance = new Gossiper();
     
-
     public static final long aVeryLongTime = 259200 * 1000; // 3 days
     private long FatClientTimeout;
     private final Random random = new Random();
@@ -106,6 +105,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private final Map<InetAddress, Long> justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
 
     private final Map<InetAddress, Long> expireTimeEndpointMap = new ConcurrentHashMap<InetAddress, Long>();
+    
+    public final Map<String, Long> syncReceivedTime = new ConcurrentHashMap<String, Long>();
+    public final Map<String, Integer> ackNewVersionNormal = new ConcurrentHashMap<String, Integer>();
+    public final Map<String, Integer> ackNewVersionBoot = new ConcurrentHashMap<String, Integer>();
 
     // have we ever in our lifetime reached a seed?
     private boolean seedContacted = false;
@@ -607,7 +610,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-//        Klogger.logger.info("Sending GDS : size " + message.serializedSize(MessagingService.current_version) + " bytes ; to " + to);
         Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
@@ -1052,6 +1054,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
 
         localState.setHeartBeatState(remoteState.getHeartBeatState());
+        localState.setHopNum(remoteState.getHopNum() + 1);
         if (logger.isTraceEnabled())
             logger.trace("Updating heartbeat state version to " + localState.getHeartBeatState().getHeartBeatVersion() + " from " + oldVersion + " for " + addr + " ...");
 

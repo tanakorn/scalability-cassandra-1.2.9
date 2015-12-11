@@ -38,6 +38,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
     {
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
+        Gossiper.instance.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
         if (!Gossiper.instance.isEnabled())
@@ -72,12 +73,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
-        StringBuilder sb = new StringBuilder();
-        for ( GossipDigest gDigest : gDigestList )
-        {
-            sb.append(gDigest);
-            sb.append(", ");
-        }
         
         long start;
         long end;
@@ -91,23 +86,39 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         start = System.currentTimeMillis();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
-        sb = new StringBuilder();
-        for (GossipDigest d : deltaGossipDigestList) {
-            sb.append(d.getEndpoint());
-            sb.append(',');
-        }
+        
         end = System.currentTimeMillis();
         long examine = end - start;
 
-        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
-                                                                                                      new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                                                                                                      GossipDigestAck.serializer);
-        long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
-            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-            Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
-                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
+        MessageOut<GossipDigestAck> gDigestAckMessage = 
+                new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
+                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId),
+                    GossipDigestAck.serializer);
+//        long sendTime = System.currentTimeMillis();
+//        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
+//            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+//            Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+//                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
+//        }
+        Map<InetAddress, EndpointState> localEpStateMap = Gossiper.instance.endpointStateMap;
+        int sendingBoot = 0;
+        int sendingNormal = 0;
+        for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
+            EndpointState ep = deltaEpStateMap.get(sendingAddress);
+            ep.setHopNum(localEpStateMap.get(sendingAddress).hopNum);
+            VersionedValue val = ep.applicationState.get(ApplicationState.STATUS);
+            if (val != null) {
+//               val.g 
+                if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    sendingBoot++;
+                } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    sendingNormal++;
+                }
+            }
         }
+        String ackId = from + "_" + gDigestAckMessage.payload.msgId;
+        Gossiper.instance.ackNewVersionBoot.put(ackId, sendingBoot);
+        Gossiper.instance.ackNewVersionNormal.put(ackId, sendingNormal);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);

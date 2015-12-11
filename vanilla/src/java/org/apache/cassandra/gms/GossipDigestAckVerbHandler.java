@@ -28,6 +28,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
 
@@ -38,9 +39,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         long receiveTime = System.currentTimeMillis();
+        InetAddress from = message.from;
+        InetAddress to = FBUtilities.getBroadcastAddress();
     	long start;
     	long end;
-        InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
         if (!Gossiper.instance.isEnabled())
@@ -115,6 +117,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             bootstrapCount = result[5];
             normalCount = result[6];
             applyState = end - start;
+            for (InetAddress receivingAddress : epStateMap.keySet()) {
+                EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
+                Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+            }
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -132,33 +138,41 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         }
         end = System.currentTimeMillis();
         long examine = end - start;
+        Map<InetAddress, EndpointState> localEpStateMap = Gossiper.instance.endpointStateMap;
+        for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
+            deltaEpStateMap.get(sendingAddress).setHopNum(localEpStateMap.get(sendingAddress).hopNum);
+        }
 
-        MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
-                                                                                                         new GossipDigestAck2(deltaEpStateMap),
-                                                                                                         GossipDigestAck2.serializer);
-        long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
-            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
-                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
-        }
-        for (InetAddress address : newerVersion.keySet()) {
-            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
-                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
-            
-        }
+        MessageOut<GossipDigestAck2> gDigestAck2Message = 
+                new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
+                     new GossipDigestAck2(deltaEpStateMap, message.payload.syncId, message.payload.msgId),
+                     GossipDigestAck2.serializer);
+//        long sendTime = System.currentTimeMillis();
+//        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
+//            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+//            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
+//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+//                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
+//        }
+//        for (InetAddress address : newerVersion.keySet()) {
+//            Klogger.logger.info("Receive ack:" + receiveTime + " (" + (notifyFD + applyState + examine) + "ms)" + " ; Send ack2:" + sendTime + 
+//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+//                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+//            
+//        }
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         start = System.currentTimeMillis();
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         end = System.currentTimeMillis();
         long send = end - start;
+        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+        Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms");
+        Klogger.logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);
         Klogger.logger.info("AckHandler for " + from + " notifyFD took {} ms, applyState took {} ms, examine took {} ms, sendMsg took {} ms", notifyFD, applyState, examine, send);
     }
 }
