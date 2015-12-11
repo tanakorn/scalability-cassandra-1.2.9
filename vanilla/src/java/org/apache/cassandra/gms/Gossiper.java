@@ -1044,6 +1044,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     newNodeToken++;
                 }
             }
+            endpointStateMap.get(ep).setHopNum(remoteState.getHopNum() + 1);
         }
         return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
     }
@@ -1054,7 +1055,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
 
         localState.setHeartBeatState(remoteState.getHeartBeatState());
-        localState.setHopNum(remoteState.getHopNum() + 1);
         if (logger.isTraceEnabled())
             logger.trace("Updating heartbeat state version to " + localState.getHeartBeatState().getHeartBeatVersion() + " from " + oldVersion + " for " + addr + " ...");
 
