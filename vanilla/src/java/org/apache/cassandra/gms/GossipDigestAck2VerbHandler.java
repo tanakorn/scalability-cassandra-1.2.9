@@ -109,8 +109,9 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = Gossiper.instance.syncReceivedTime.get(syncId);
         Gossiper.instance.syncReceivedTime.remove(syncId);
-        long ack2HandlerTime = System.currentTimeMillis() - receiveTime;
-        long allHandlerTime = ack2HandlerTime + syncReceivedTime;
+        long tmpCurrent = System.currentTimeMillis();
+        long ack2HandlerTime = tmpCurrent - receiveTime;
+        long allHandlerTime = tmpCurrent - syncReceivedTime;
 //        for (InetAddress address : newerVersion.keySet()) {
 //            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
 //                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
