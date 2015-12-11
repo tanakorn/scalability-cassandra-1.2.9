@@ -5,6 +5,7 @@ modClassMap = {
   'phi' : 'PhiAnalyzer',
   'falsedetect' : 'FalseDetectionCounter',
   'exectime' : 'ExecTimeAnalyzer',
+  'hop' : 'HopCounter',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }
