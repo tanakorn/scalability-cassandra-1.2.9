@@ -6,6 +6,7 @@ modClassMap = {
   'falsedetect' : 'FalseDetectionCounter',
   'exectime' : 'ExecTimeAnalyzer',
   'hop' : 'HopCounter',
+  'newversion' : 'NewVersionCounter',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }
