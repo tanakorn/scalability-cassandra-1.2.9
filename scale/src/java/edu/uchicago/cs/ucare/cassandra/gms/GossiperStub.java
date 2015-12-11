@@ -65,6 +65,10 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         }
     };
     private static final Logger logger = LoggerFactory.getLogger(GossiperStub.class);
+    
+    public final Map<String, Long> syncReceivedTime = new ConcurrentHashMap<String, Long>();
+    public final Map<String, Integer> ackNewVersionNormal = new ConcurrentHashMap<String, Integer>();
+    public final Map<String, Integer> ackNewVersionBoot = new ConcurrentHashMap<String, Integer>();
 
     String clusterId;
 	String dataCenter;

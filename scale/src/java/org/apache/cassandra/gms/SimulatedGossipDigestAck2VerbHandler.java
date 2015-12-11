@@ -113,6 +113,10 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.debug(to + " executing past message " + mockExecTime);
         }
         end = System.currentTimeMillis();
+        for (InetAddress receivingAddress : remoteEpStateMap.keySet()) {
+            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
+            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+        }
         long sleeptime = message.getSleepTime();
         long applyState = end - start;
         int newNode = result[0];
@@ -122,13 +126,34 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         int newVersionToken = result[4];
         int bootstrapCount = result[5];
         int normalCount = result[6];
-        for (InetAddress address : newerVersion.keySet()) {
-            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
-                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
-        }
+        String syncId = from + "_" + message.payload.syncId;
+        long syncReceivedTime = stub.syncReceivedTime.get(syncId);
+        stub.syncReceivedTime.remove(syncId);
+        long tmpCurrent = System.currentTimeMillis();
+        long ack2HandlerTime = tmpCurrent - receiveTime;
+        long allHandlerTime = tmpCurrent - syncReceivedTime;
+        logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
+        logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
+//        String ackId = from + "_" + message.payload.ackId;
+//        int sendingBoot = stub.ackNewVersionBoot.get(ackId);
+//        stub.ackNewVersionBoot.remove(ackId);
+//        int sendingNormal = stub.ackNewVersionNormal.get(ackId);
+//        stub.ackNewVersionNormal.remove(ackId);
+//        int allBoot = sendingBoot + bootstrapCount;
+//        int allNormal = sendingNormal + normalCount;
+//        if (allBoot != 0 || allNormal != 0) {
+//            logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+//        }
+//        if (bootstrapCount != 0 || normalCount != 0) {
+//            logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+//        }
+//        for (InetAddress address : newerVersion.keySet()) {
+//            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
+//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
+//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
+//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
+//                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
+//        }
 //        int after = Gossiper.instance.endpointStateMap.size();
 //        logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
 //        logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);

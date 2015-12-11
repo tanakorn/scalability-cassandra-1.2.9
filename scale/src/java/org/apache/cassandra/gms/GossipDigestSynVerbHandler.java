@@ -77,9 +77,10 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
 
-        MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
-                                                                                                      new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                                                                                                      GossipDigestAck.serializer);
+        MessageOut<GossipDigestAck> gDigestAckMessage = 
+                new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
+                    new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId),
+                    GossipDigestAck.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);

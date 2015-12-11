@@ -40,6 +40,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
+        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
+        stub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -63,7 +65,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-        GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -101,9 +102,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         logger.debug(stub + " doesn't know about " + deltaGossipDigestList.toString());
 
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
-                new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap), emptyMap, 
+                new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId), emptyMap, 
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
-        int ackHash = gDigestAckMessage.payload.hashCode();
         long sendTime = System.currentTimeMillis();
         for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
         	if (deltaEpStateMap.keySet().contains(observedNode)) {
@@ -137,6 +137,16 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         }
         if (normalNodeNum == 128) {
             normalNodeNum = 127;
+        }
+        Map<InetAddress, EndpointState> localEpStateMap = stub.getEndpointStateMap();
+        for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
+            EndpointState ep = deltaEpStateMap.get(sendingAddress);
+//            System.out.println(ep.hopNum + " aaa " + localEpStateMap.get(sendingAddress).hopNum);
+            ep.setHopNum(localEpStateMap.get(sendingAddress).hopNum);
+//            System.out.println(ep.hopNum + " bbb " + localEpStateMap.get(sendingAddress).hopNum);
+//            if (sendingAddress.equals(to)) {
+//                System.out.println(to + " is sending to " + from + " to be hop " + (ep.hopNum + 1));
+//            }
         }
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];

@@ -1241,6 +1241,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
+//            if (ep.equals(stub.getInetAddress())) {
+//                logger.error("Applying state to the host node");
+//            }
 //            if ( ep.equals(FBUtilities.getBroadcastAddress()))
 //                continue;
 //            if (justRemovedEndpoints.containsKey(ep))
@@ -1316,6 +1319,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;
                 }
+                stub.getEndpointStateMap().get(ep).setHopNum(remoteState.getHopNum() + 1);
             }
         }
         return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
@@ -1352,6 +1356,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
 
         localState.setHeartBeatState(remoteState.getHeartBeatState());
+        stub.getEndpointStateMap().get(addr).setHopNum(remoteState.getHopNum() + 1);
         if (logger.isTraceEnabled())
             logger.trace("Updating heartbeat state version to " + localState.getHeartBeatState().getHeartBeatVersion() + " from " + oldVersion + " for " + addr + " ...");
 

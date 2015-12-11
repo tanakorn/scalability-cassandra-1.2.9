@@ -45,11 +45,14 @@ public class EndpointState
     private volatile long updateTimestamp;
     private volatile boolean isAlive;
 
+    int hopNum;
+
     public EndpointState(HeartBeatState initialHbState)
     {
         hbState = initialHbState;
         updateTimestamp = System.currentTimeMillis();
         isAlive = true;
+        hopNum = 0;
     }
     
     public EndpointState(HeartBeatState initialHbState, long updateTimestamp, boolean isAlive)
@@ -68,6 +71,14 @@ public class EndpointState
     {
         updateTimestamp();
         hbState = newHbState;
+    }
+
+    public int getHopNum() {
+        return hopNum;
+    }
+
+    public void setHopNum(int hopNum) {
+        this.hopNum = hopNum;
     }
 
     public VersionedValue getApplicationState(ApplicationState key)
@@ -178,6 +189,7 @@ class EndpointStateSerializer implements IVersionedSerializer<EndpointState>
             dos.writeInt(entry.getKey().ordinal());
             VersionedValue.serializer.serialize(value, dos, version);
         }
+        dos.writeInt(epState.hopNum);
     }
 
     public EndpointState deserialize(DataInput dis, int version) throws IOException
@@ -192,6 +204,8 @@ class EndpointStateSerializer implements IVersionedSerializer<EndpointState>
             VersionedValue value = VersionedValue.serializer.deserialize(dis, version);
             epState.addApplicationState(Gossiper.STATES[key], value);
         }
+        int hopNum = dis.readInt();
+        epState.hopNum = hopNum;
         return epState;
     }
 
