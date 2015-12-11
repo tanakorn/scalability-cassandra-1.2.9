@@ -128,8 +128,12 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
-        Klogger.logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
-        Klogger.logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+        if (allBoot != 0 || allNormal != 0) {
+            Klogger.logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+        }
+        if (bootstrapCount != 0 || normalCount != 0) {
+            Klogger.logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+        }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
 }
