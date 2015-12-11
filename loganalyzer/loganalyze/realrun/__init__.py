@@ -4,6 +4,7 @@ import importlib
 modClassMap = { 
   'phi' : 'PhiAnalyzer',
   'falsedetect' : 'FalseDetectionCounter',
+  'exectime' : 'ExecTimeAnalyzer',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }
