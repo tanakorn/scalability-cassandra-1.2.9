@@ -13,8 +13,8 @@ class HopCounter(analyze.BaseAnalyzer):
       self.hops.append(int(tokens[10]))
 
   def analyzedResult(self):
-    minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(self.hops)
-    mean = sum(self.hops) / len(self.hops)
-    result = 'mean=%f min=%f lq=%f med=%f uq=%f max=%f\n' % (mean, minVal, lqVal, medVal, uqVal, maxVal)
-    return { 'hop' : result }
+    #minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(self.hops)
+    #mean = sum(self.hops) / len(self.hops)
+    #result = 'mean=%f min=%f lq=%f med=%f uq=%f max=%f\n' % (mean, minVal, lqVal, medVal, uqVal, maxVal)
+    return { 'hop' : '\n'.join(map(str, self.hops)) + '\n' }
   

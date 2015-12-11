@@ -17,10 +17,11 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
       self.execTime[execType].append(execTime)
 
   def analyzedResult(self):
-    result = ''
+    result = { } 
     for execType in self.execTime:
-      minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(self.execTime[execType])
-      mean = sum(self.execTime[execType]) / len(self.execTime[execType])
-      result += '%s mean=%f min=%f lq=%f med=%f uq=%f max=%f\n' % (execType, mean, minVal, lqVal, medVal, uqVal, maxVal)
-    return { 'exec_time' : result }
+      #minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(self.execTime[execType])
+      #mean = sum(self.execTime[execType]) / len(self.execTime[execType])
+      #result += '%s mean=%f min=%f lq=%f med=%f uq=%f max=%f\n' % (execType, mean, minVal, lqVal, medVal, uqVal, maxVal)
+      result['exec_time_' + execType] = '\n'.join(map(str, self.execTime[execType])) + '\n'
+    return result
   
