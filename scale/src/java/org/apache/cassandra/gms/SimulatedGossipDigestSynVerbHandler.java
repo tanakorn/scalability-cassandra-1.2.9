@@ -104,7 +104,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId), emptyMap, 
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
-        long sendTime = System.currentTimeMillis();
+//        long sendTime = System.currentTimeMillis();
 //        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
 //        	if (deltaEpStateMap.keySet().contains(observedNode)) {
 //        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
@@ -139,10 +139,23 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             normalNodeNum = 127;
         }
         Map<InetAddress, EndpointState> localEpStateMap = stub.getEndpointStateMap();
+        int sendingBoot = 0;
+        int sendingNormal = 0;
         for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
             EndpointState ep = deltaEpStateMap.get(sendingAddress);
             ep.setHopNum(localEpStateMap.get(sendingAddress).hopNum);
+            VersionedValue val = ep.applicationState.get(ApplicationState.STATUS);
+            if (val != null) {
+                if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    sendingBoot++;
+                } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    sendingNormal++;
+                }
+            }
         }
+        String ackId = from + "_" + gDigestAckMessage.payload.msgId;
+        stub.ackNewVersionBoot.put(ackId, sendingBoot);
+        stub.ackNewVersionNormal.put(ackId, sendingNormal);
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
 //        System.out.println("should sleep " + sleepTime);

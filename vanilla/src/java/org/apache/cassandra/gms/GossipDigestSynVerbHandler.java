@@ -108,7 +108,6 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             ep.setHopNum(localEpStateMap.get(sendingAddress).hopNum);
             VersionedValue val = ep.applicationState.get(ApplicationState.STATUS);
             if (val != null) {
-//               val.g 
                 if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
                     sendingBoot++;
                 } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {

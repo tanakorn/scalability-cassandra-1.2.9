@@ -135,19 +135,19 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         }
         logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
         logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
-//        String ackId = from + "_" + message.payload.ackId;
-//        int sendingBoot = stub.ackNewVersionBoot.get(ackId);
-//        stub.ackNewVersionBoot.remove(ackId);
-//        int sendingNormal = stub.ackNewVersionNormal.get(ackId);
-//        stub.ackNewVersionNormal.remove(ackId);
-//        int allBoot = sendingBoot + bootstrapCount;
-//        int allNormal = sendingNormal + normalCount;
-//        if (allBoot != 0 || allNormal != 0) {
-//            logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
-//        }
-//        if (bootstrapCount != 0 || normalCount != 0) {
-//            logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
-//        }
+        String ackId = from + "_" + message.payload.ackId;
+        int sendingBoot = stub.ackNewVersionBoot.get(ackId);
+        stub.ackNewVersionBoot.remove(ackId);
+        int sendingNormal = stub.ackNewVersionNormal.get(ackId);
+        stub.ackNewVersionNormal.remove(ackId);
+        int allBoot = sendingBoot + bootstrapCount;
+        int allNormal = sendingNormal + normalCount;
+        if (allBoot != 0 || allNormal != 0) {
+            logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+        }
+        if (bootstrapCount != 0 || normalCount != 0) {
+            logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+        }
 //        for (InetAddress address : newerVersion.keySet()) {
 //            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
 //                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 

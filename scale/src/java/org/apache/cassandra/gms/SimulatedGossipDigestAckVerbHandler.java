@@ -128,6 +128,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             } else if (mockExecTime < -10) {
                 logger.debug(to + " executing past message " + mockExecTime);
             }
+            long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+            logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms");
             end = System.currentTimeMillis();
             applyState = end - start;
 //            applyState = message.getSleepTime();
@@ -142,6 +144,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
                 logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+            }
+            if (bootstrapCount != 0 || normalCount != 0) {
+                logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);
             }
         }
 
