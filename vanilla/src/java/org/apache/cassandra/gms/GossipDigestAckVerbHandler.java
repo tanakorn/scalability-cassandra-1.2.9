@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,17 +108,18 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             end = System.currentTimeMillis();
             notifyFD = end - start;
         	start = System.currentTimeMillis();
-            int[] result = Gossiper.instance.applyStateLocally(epStateMap);
+            Object[] result = Gossiper.instance.applyStateLocally(epStateMap);
             end = System.currentTimeMillis();
-            newNode = result[0];
-            newNodeToken = result[1];
-            newRestart = result[2];
-            newVersion = result[3];
-            newVersionToken = result[4];
-            bootstrapCount = result[5];
-            normalCount = result[6];
+            newNode = (int) result[0];
+            newNodeToken = (int) result[1];
+            newRestart = (int) result[2];
+            newVersion = (int) result[3];
+            newVersionToken = (int) result[4];
+            bootstrapCount = (int) result[5];
+            normalCount = (int) result[6];
+            Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             applyState = end - start;
-            for (InetAddress receivingAddress : epStateMap.keySet()) {
+            for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
                 Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
             }

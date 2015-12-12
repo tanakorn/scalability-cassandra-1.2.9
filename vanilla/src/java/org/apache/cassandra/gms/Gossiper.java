@@ -957,7 +957,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         return false;
     }
 
-    int[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
+    Object[] applyStateLocally(Map<InetAddress, EndpointState> epStateMap)
     {
         int newNode = 0;
         int newNodeToken = 0;
@@ -966,6 +966,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int newVersionTokens = 0;
         int bootstrapCount = 0;
         int normalCount = 0;
+        Set<InetAddress> updatedNode = new HashSet<InetAddress>();
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -1017,6 +1018,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     {
                         // apply states, but do not notify since there is no major change
                         applyNewStates(ep, localEpStatePtr, remoteState);
+                        updatedNode.add(ep);
                     }
                     else if (logger.isTraceEnabled())
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
@@ -1043,10 +1045,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;
                 }
+                int nextNumHop = remoteState.getHopNum() + 1;
+                endpointStateMap.get(ep).setHopNum(nextNumHop);
+                updatedNode.add(ep);
             }
-            endpointStateMap.get(ep).setHopNum(remoteState.getHopNum() + 1);
         }
-        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
@@ -1055,6 +1059,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
 
         localState.setHeartBeatState(remoteState.getHeartBeatState());
+        int nextNumHop = remoteState.getHopNum() + 1;
+        localState.setHopNum(nextNumHop);
         if (logger.isTraceEnabled())
             logger.trace("Updating heartbeat state version to " + localState.getHeartBeatState().getHeartBeatVersion() + " from " + oldVersion + " for " + addr + " ...");
 

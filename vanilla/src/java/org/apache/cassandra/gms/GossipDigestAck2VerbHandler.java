@@ -20,6 +20,7 @@ package org.apache.cassandra.gms;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,20 +93,21 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
-        int[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
+        Object[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
         end = System.currentTimeMillis();
-        for (InetAddress receivingAddress : remoteEpStateMap.keySet()) {
+        long applyState = end - start;
+        int newNode = (int) result[0];
+        int newNodeToken = (int) result[1];
+        int newRestart = (int) result[2];
+        int newVersion = (int) result[3];
+        int newVersionToken = (int) result[4];
+        int bootstrapCount = (int) result[5];
+        int normalCount = (int) result[6];
+        Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+        for (InetAddress receivingAddress : updatedNodes) {
             EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
             Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
         }
-        long applyState = end - start;
-        int newNode = result[0];
-        int newNodeToken = result[1];
-        int newRestart = result[2];
-        int newVersion = result[3];
-        int newVersionToken = result[4];
-        int bootstrapCount = result[5];
-        int normalCount = result[6];
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = Gossiper.instance.syncReceivedTime.get(syncId);
         Gossiper.instance.syncReceivedTime.remove(syncId);
