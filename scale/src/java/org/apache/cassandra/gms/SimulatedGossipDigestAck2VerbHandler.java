@@ -100,7 +100,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
-        int[] result = Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
+        Object[] result = Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
         long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
         if (mockExecTime >= 0) {
             try {
@@ -113,25 +113,26 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.debug(to + " executing past message " + mockExecTime);
         }
         end = System.currentTimeMillis();
-        for (InetAddress receivingAddress : remoteEpStateMap.keySet()) {
-            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
-            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-        }
         long sleeptime = message.getSleepTime();
         long applyState = end - start;
-        int newNode = result[0];
-        int newNodeToken = result[1];
-        int newRestart = result[2];
-        int newVersion = result[3];
-        int newVersionToken = result[4];
-        int bootstrapCount = result[5];
-        int normalCount = result[6];
+        int newNode = (int) result[0];
+        int newNodeToken = (int) result[1];
+        int newRestart = (int) result[2];
+        int newVersion = (int) result[3];
+        int newVersionToken = (int) result[4];
+        int bootstrapCount = (int) result[5];
+        int normalCount = (int) result[6];
+        Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = stub.syncReceivedTime.get(syncId);
         stub.syncReceivedTime.remove(syncId);
         long tmpCurrent = System.currentTimeMillis();
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
+        for (InetAddress receivingAddress : updatedNodes) {
+            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
+            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+        }
         logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
         logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
 //        String ackId = from + "_" + message.payload.ackId;

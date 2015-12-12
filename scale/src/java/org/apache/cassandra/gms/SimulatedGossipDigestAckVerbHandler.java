@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +116,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             end = System.currentTimeMillis();
             notifyFD = end - start;
         	start = System.currentTimeMillis();
-            int[] result = Gossiper.applyStateLocallyStatic(stub, epStateMap);
+            Object[] result = Gossiper.applyStateLocallyStatic(stub, epStateMap);
             long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
             if (mockExecTime >= 0) {
                 try {
@@ -130,14 +131,15 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             end = System.currentTimeMillis();
             applyState = end - start;
 //            applyState = message.getSleepTime();
-            newNode = result[0];
-            newNodeToken = result[1];
-            newRestart = result[2];
-            newVersion = result[3];
-            newVersionToken = result[4];
-            bootstrapCount = result[5];
-            normalCount = result[6];
-            for (InetAddress receivingAddress : epStateMap.keySet()) {
+            newNode = (int) result[0];
+            newNodeToken = (int) result[1];
+            newRestart = (int) result[2];
+            newVersion = (int) result[3];
+            newVersionToken = (int) result[4];
+            bootstrapCount = (int) result[5];
+            normalCount = (int) result[6];
+            Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+            for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
                 logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
             }

@@ -1229,7 +1229,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         }
     }
     
-    static int[] applyStateLocallyStatic(GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
+    static Object[] applyStateLocallyStatic(GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
     {
         int newNode = 0;
         int newNodeToken = 0;
@@ -1238,6 +1238,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int newVersionTokens = 0;
         int bootstrapCount = 0;
         int normalCount = 0;
+        Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -1293,6 +1294,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     {
                         // apply states, but do not notify since there is no major change
                         applyNewStatesStatic(stub, ep, localEpStatePtr, remoteState);
+                        updatedNodes.add(ep);
                     }
                     else if (logger.isTraceEnabled())
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
@@ -1320,9 +1322,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     newNodeToken++;
                 }
                 stub.getEndpointStateMap().get(ep).setHopNum(remoteState.getHopNum() + 1);
+                updatedNodes.add(ep);
             }
         }
-        return new int[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
