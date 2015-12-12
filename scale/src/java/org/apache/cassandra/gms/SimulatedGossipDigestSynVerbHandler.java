@@ -90,7 +90,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         start = System.currentTimeMillis();
         doSort(stub, gDigestList);
         end = System.currentTimeMillis();
-        long doSort = end - start;
+//        long doSort = end - start;
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
@@ -98,21 +98,21 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         start = System.currentTimeMillis();
         Gossiper.examineGossiperStatic(stub, stub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
         end = System.currentTimeMillis();
-        long examine = end - start;
+//        long examine = end - start;
         logger.debug(stub + " doesn't know about " + deltaGossipDigestList.toString());
 
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId), emptyMap, 
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
         long sendTime = System.currentTimeMillis();
-        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
-        	if (deltaEpStateMap.keySet().contains(observedNode)) {
-        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-        		logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
-                logger.info(to + " Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
-                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
-        	}
-        }
+//        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+//        	if (deltaEpStateMap.keySet().contains(observedNode)) {
+//        		int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
+//        		logger.info("propagate info of " + observedNode + " to " + from + " version " + version);
+//                logger.info(to + " Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
+//                        " ; Forwarding " + observedNode + " to " + from + " version " + version);
+//        	}
+//        }
         int bootNodeNum = 0;
         int normalNodeNum = 0;
         for (InetAddress address : deltaEpStateMap.keySet()) {
@@ -141,12 +141,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         Map<InetAddress, EndpointState> localEpStateMap = stub.getEndpointStateMap();
         for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
             EndpointState ep = deltaEpStateMap.get(sendingAddress);
-//            System.out.println(ep.hopNum + " aaa " + localEpStateMap.get(sendingAddress).hopNum);
             ep.setHopNum(localEpStateMap.get(sendingAddress).hopNum);
-//            System.out.println(ep.hopNum + " bbb " + localEpStateMap.get(sendingAddress).hopNum);
-//            if (sendingAddress.equals(to)) {
-//                System.out.println(to + " is sending to " + from + " to be hop " + (ep.hopNum + 1));
-//            }
         }
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];

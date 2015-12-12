@@ -55,14 +55,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
-        int ackHash = gDigestAckMessage.hashCode();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
         GossiperStub stub = WholeClusterSimulator.stubGroup.getStub(to);
         
-        int epStateMapSize = epStateMap.size();
-
         long notifyFD = 0;
         long applyState = 0;
         int newNode = 0;
