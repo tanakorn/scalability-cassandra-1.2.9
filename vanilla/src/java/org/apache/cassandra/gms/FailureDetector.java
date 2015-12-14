@@ -322,13 +322,14 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        Klogger.logger.info("Arrival interval of " + address + " is " + interArrivalTime);
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         arrivalIntervals2.add(interArrivalTime);
         tLast = value;
+        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " t_silence of " + address + 
+                " is " + interArrivalTime + " mean " + mean());
     }
 
     public double mean()

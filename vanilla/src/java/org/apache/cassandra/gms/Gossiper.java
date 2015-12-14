@@ -1050,7 +1050,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNode.add(ep);
             }
         }
-        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNode };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
