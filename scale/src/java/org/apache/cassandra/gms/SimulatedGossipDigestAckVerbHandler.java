@@ -164,6 +164,19 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 }
                 logger.info(sb.toString());
             }
+            updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
+            if (!updatedNodeInfo.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" t_silence ");
+                for (InetAddress address : updatedNodeInfo.keySet()) {
+                    double[] updatedInfo = updatedNodeInfo.get(address); 
+                    sb.append(updatedInfo[0]);
+                    sb.append(":");
+                    sb.append(updatedInfo[1]);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+            }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);
             }

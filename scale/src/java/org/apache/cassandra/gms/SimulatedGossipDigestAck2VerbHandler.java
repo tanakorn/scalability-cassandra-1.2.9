@@ -146,6 +146,19 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             }
             logger.info(sb.toString());
         }
+        updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
+        if (!updatedNodeInfo.isEmpty()) {
+            StringBuilder sb = new StringBuilder(to.toString());
+            sb.append(" t_silence ");
+            for (InetAddress address : updatedNodeInfo.keySet()) {
+                double[] updatedInfo = updatedNodeInfo.get(address); 
+                sb.append(updatedInfo[0]);
+                sb.append(":");
+                sb.append(updatedInfo[1]);
+                sb.append(",");
+            }
+            logger.info(sb.toString());
+        }
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = stub.syncReceivedTime.get(syncId);
         stub.syncReceivedTime.remove(syncId);
