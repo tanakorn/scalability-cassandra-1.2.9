@@ -169,8 +169,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
 //            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
 //        }
-        logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
-        logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
         String ackId = from + "_" + message.payload.ackId;
         int sendingBoot = stub.ackNewVersionBoot.get(ackId);
         stub.ackNewVersionBoot.remove(ackId);
@@ -180,9 +178,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         int allNormal = sendingNormal + normalCount;
         if (allBoot != 0 || allNormal != 0) {
             logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
         }
         if (bootstrapCount != 0 || normalCount != 0) {
             logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
         }
 //        for (InetAddress address : newerVersion.keySet()) {
 //            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +

@@ -129,7 +129,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.debug(to + " executing past message " + mockExecTime);
             }
             long ackHandlerTime = System.currentTimeMillis() - receiveTime;
-            logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms");
             end = System.currentTimeMillis();
             applyState = end - start;
 //            applyState = message.getSleepTime();
@@ -179,6 +178,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);
+                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms");
             }
         }
 
