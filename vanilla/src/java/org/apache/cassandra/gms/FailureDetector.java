@@ -360,16 +360,16 @@ class ArrivalWindow
         double mean = mean();
         double mean2 = arrivalIntervals2.mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
-        double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
-        if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi || observedNodes.contains(address)) {
+        //double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
+        //double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
+        if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi) {
             Klogger.logger.info("PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(address, phi);
         }
-        if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
-            Klogger.logger.info("PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
-            maxObservedPhi2.put(address, phi2);
-        }
+        //if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
+            //Klogger.logger.info("PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
+            //maxObservedPhi2.put(address, phi2);
+        //}
         return phi;
     }
 
