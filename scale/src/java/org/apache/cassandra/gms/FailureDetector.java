@@ -199,9 +199,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             heartbeatWindow = new ArrivalWindow(SAMPLE_SIZE);
             arrivalSamples.put(ep, heartbeatWindow);
         }
-        double interArrivalTime = heartbeatWindow.add(now, observer, ep);
-        double mean = heartbeatWindow.mean();
-        logger.info(observer + " t_silence of " + address + " is " + interArrivalTime + " mean " + mean);
+        heartbeatWindow.add(now, observer, ep);
     }
 
     public void interpret(InetAddress ep)
@@ -299,7 +297,7 @@ class ArrivalWindow
         maxObservedPhi = new HashMap<InetAddress, Double>();
     }
 
-    synchronized double add(double value, InetAddress observer, InetAddress address)
+    synchronized void add(double value, InetAddress observer, InetAddress address)
     {
         double interArrivalTime;
         if ( tLast > 0L )
@@ -317,7 +315,6 @@ class ArrivalWindow
         tLast = value;
 //        logger.info(observer + " t_silence of " + address + 
 //                " is " + interArrivalTime + " mean " + mean());
-        return interArrivalTime;
     }
     
     synchronized void add(double value)
