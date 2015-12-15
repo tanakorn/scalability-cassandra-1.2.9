@@ -316,8 +316,8 @@ class ArrivalWindow
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         tLast = value;
-        logger.info(observer + " t_silence of " + address + 
-                " is " + interArrivalTime + " mean " + mean());
+//        logger.info(observer + " t_silence of " + address + 
+//                " is " + interArrivalTime + " mean " + mean());
     }
     
     synchronized void add(double value)
@@ -363,7 +363,7 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi || WholeClusterSimulator.observedNodes.contains(testNode)) {
+        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
             logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(testNode, phi);
         }
