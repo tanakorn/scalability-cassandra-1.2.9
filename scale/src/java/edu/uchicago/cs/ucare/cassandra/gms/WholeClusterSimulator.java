@@ -254,7 +254,14 @@ public class WholeClusterSimulator {
                         }
                     }
                 }
-                stub.doStatusCheck();
+                List<Double> maxPhiList = stub.doStatusCheck();
+                if (maxPhiList != null) {
+                    StringBuilder sb = new StringBuilder("all_max_phi = ");
+                    for (Double phi : maxPhiList) {
+                        sb.append(phi + ",");
+                    }
+                    logger.info(sb.toString());
+                }
             }
             long finish = System.currentTimeMillis();
             if (finish - start > 1000) {

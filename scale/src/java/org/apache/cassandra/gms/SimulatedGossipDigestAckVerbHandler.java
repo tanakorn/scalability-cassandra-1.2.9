@@ -141,9 +141,14 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
-            for (InetAddress receivingAddress : updatedNodes) {
-                EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
-                logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+            if (!updatedNodes.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to + " hops ");
+                for (InetAddress receivingAddress : updatedNodes) {
+                    EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
+//                    logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+                    sb.append(ep.hopNum + ",");
+                }
+                logger.info(sb.toString());
             }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);

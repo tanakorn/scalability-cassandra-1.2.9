@@ -56,6 +56,8 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     
     private InetAddress address;
 
+    public final Map<InetAddress, Double> maxObservedPhi;
+
     public FailureDetector()
     {
         // Register this instance with JMX
@@ -68,6 +70,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
 //        {
 //            throw new RuntimeException(e);
 //        }
+        maxObservedPhi = new HashMap<InetAddress, Double>();
     }
 
     public InetAddress getAddress() {
@@ -205,19 +208,18 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         heartbeatWindow.add(now, observer, ep);
     }
 
-    public void interpret(InetAddress ep)
+    public double interpret(InetAddress ep)
     {
         ArrivalWindow hbWnd = arrivalSamples.get(ep);
         if ( hbWnd == null )
         {
-            return;
+            return 0;
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
-//        logger.info("korn PHI for " + ep + " : " + phi + " ; convict threshold : " + getPhiConvictThreshold());
         if (phi > getPhiConvictThreshold())
         {
             logger.trace("notifying listeners that {} is down", ep);
@@ -227,6 +229,11 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
                 listener.convict(ep, phi);
             }
         }
+        if (!maxObservedPhi.containsKey(ep) || maxObservedPhi.get(ep) < phi || WholeClusterSimulator.observedNodes.contains(ep)) {
+            maxObservedPhi.put(ep, phi);
+            return phi;
+        }
+        return 0;
     }
 
     public void forceConviction(InetAddress ep)
@@ -292,12 +299,9 @@ class ArrivalWindow
     // rather mark it down quickly instead of adapting
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
-    public final Map<InetAddress, Double> maxObservedPhi;
-
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
-        maxObservedPhi = new HashMap<InetAddress, Double>();
     }
 
     synchronized void add(double value, InetAddress observer, InetAddress address)
@@ -363,10 +367,6 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi || WholeClusterSimulator.observedNodes.contains(testNode)) {
-            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
-            maxObservedPhi.put(testNode, phi);
-        }
         return (size > 0) ? phi : 0.0;
     }
 
