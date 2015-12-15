@@ -349,23 +349,16 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         this.justRemovedEndpoints = justRemovedEndpoints;
     }
 
-    public List<Double> doStatusCheck() {
+    public void doStatusCheck() {
         long now = System.currentTimeMillis();
 
-        List<Double> maxPhiList = null; 
         Set<InetAddress> eps = endpointStateMap.keySet();
         for ( InetAddress endpoint : eps ) {
             if (endpoint.equals(broadcastAddress)) {
                 continue;
             }
 
-            double phi = failureDetector.interpret(endpoint);
-            if (phi != 0) {
-                if (maxPhiList == null) {
-                    maxPhiList = new LinkedList<Double>();
-                }
-                maxPhiList.add(phi);
-            }
+            failureDetector.interpret(endpoint);
             EndpointState epState = endpointStateMap.get(endpoint);
             if ( epState != null ) {
                 // check for dead state removal
@@ -384,7 +377,6 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 }
             }
         }
-        return maxPhiList;
     }
 
     public static long computeExpireTime() {

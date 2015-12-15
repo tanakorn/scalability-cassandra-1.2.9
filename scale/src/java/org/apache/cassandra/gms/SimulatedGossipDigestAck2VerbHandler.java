@@ -129,14 +129,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long tmpCurrent = System.currentTimeMillis();
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
-        if (!updatedNodes.isEmpty()) {
-        StringBuilder sb = new StringBuilder(to + " hops ");
-            for (InetAddress receivingAddress : updatedNodes) {
-                EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
-    //            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-                sb.append(ep.hopNum + ",");
-            }
-            logger.info(sb.toString());
+        for (InetAddress receivingAddress : updatedNodes) {
+            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
+            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
         }
         logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
         logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");

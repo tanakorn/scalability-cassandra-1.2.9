@@ -50,7 +50,7 @@ public interface IFailureDetector
      *
      * param ep endpoint for which we interpret the inter arrival times.
     */
-    public double interpret(InetAddress ep);
+    public void interpret(InetAddress ep);
 
     /**
      * This method is invoked by the receiver of the heartbeat. In our case it would be
