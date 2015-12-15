@@ -193,9 +193,6 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     
     public void report(InetAddress observer, InetAddress ep) {
         long now = System.currentTimeMillis();
-        if (WholeClusterSimulator.observedNodes.contains(ep)) {
-            logger.info(observer + " see " + ep + " at time " + now);
-        }
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
