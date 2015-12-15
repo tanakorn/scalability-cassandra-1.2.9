@@ -74,45 +74,45 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 
         if ( epStateMap.size() > 0 )
         {
-            for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
-                if (epStateMap.keySet().contains(observedNode)) {
-                    EndpointState localEpState = stub.getEndpointStateMap().get(observedNode);
-                    EndpointState remoteEpState = epStateMap.get(observedNode);
-                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                    boolean newer = false;
-                    if (localEpState == null) {
-                        newer = true;
-                    } else {
-                        synchronized (localEpState) {
-                            int localGen = localEpState.getHeartBeatState().getGeneration();
-                            if (localGen < remoteGen) {
-                                newer = true;
-                            } else if (localGen == remoteGen) {
-                                int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                                if (localVersion < remoteVersion) {
-                                    newer = true;
-                                }
-                            }
-                        }
-                    }
-                    if (newer) {
-                        double hbAverage = 0;
-                        FailureDetector fd = (FailureDetector) stub.failureDetector;
-                        if (fd.arrivalSamples.containsKey(observedNode)) {
-                            hbAverage = fd.arrivalSamples.get(observedNode).mean();
-                        }
-                        logger.info(to + " receive info of " + observedNode + " from " + from + 
-                                " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
-                        newerVersion.put(observedNode, remoteVersion);
-                    }
-                }
-            }
+//            for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+//                if (epStateMap.keySet().contains(observedNode)) {
+//                    EndpointState localEpState = stub.getEndpointStateMap().get(observedNode);
+//                    EndpointState remoteEpState = epStateMap.get(observedNode);
+//                    int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+//                    int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+//                    boolean newer = false;
+//                    if (localEpState == null) {
+//                        newer = true;
+//                    } else {
+//                        synchronized (localEpState) {
+//                            int localGen = localEpState.getHeartBeatState().getGeneration();
+//                            if (localGen < remoteGen) {
+//                                newer = true;
+//                            } else if (localGen == remoteGen) {
+//                                int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+//                                if (localVersion < remoteVersion) {
+//                                    newer = true;
+//                                }
+//                            }
+//                        }
+//                    }
+//                    if (newer) {
+//                        double hbAverage = 0;
+//                        FailureDetector fd = (FailureDetector) stub.failureDetector;
+//                        if (fd.arrivalSamples.containsKey(observedNode)) {
+//                            hbAverage = fd.arrivalSamples.get(observedNode).mean();
+//                        }
+//                        logger.info(to + " receive info of " + observedNode + " from " + from + 
+//                                " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+//                        newerVersion.put(observedNode, remoteVersion);
+//                    }
+//                }
+//            }
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
         	start = System.currentTimeMillis();
-            Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), epStateMap, stub.getFailureDetector());
+        	Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), epStateMap, stub.getFailureDetector());
             end = System.currentTimeMillis();
             notifyFD = end - start;
         	start = System.currentTimeMillis();
@@ -149,6 +149,18 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     sb.append(ep.hopNum);
                     sb.append(",");
 //                    logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+                }
+                logger.info(sb.toString());
+            }
+            if (!updatedNodeInfo.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" t_silence ");
+                for (InetAddress address : updatedNodeInfo.keySet()) {
+                    double[] updatedInfo = updatedNodeInfo.get(address); 
+                    sb.append(updatedInfo[0]);
+                    sb.append(":");
+                    sb.append(updatedInfo[1]);
+                    sb.append(",");
                 }
                 logger.info(sb.toString());
             }

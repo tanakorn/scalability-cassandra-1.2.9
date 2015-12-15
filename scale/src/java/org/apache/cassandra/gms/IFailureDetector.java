@@ -61,7 +61,7 @@ public interface IFailureDetector
     */
     public void report(InetAddress ep);
 
-    public void report(InetAddress observer, InetAddress ep);
+    public double[] report(InetAddress observer, InetAddress ep);
 
     /**
      * remove endpoint from failure detector

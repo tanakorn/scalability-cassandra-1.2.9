@@ -194,7 +194,7 @@ public class BootStrapperTest extends SchemaLoader
 
             public void interpret(InetAddress ep) { throw new UnsupportedOperationException(); }
             public void report(InetAddress ep) { throw new UnsupportedOperationException(); }
-            public void report(InetAddress observer, InetAddress ep) { throw new UnsupportedOperationException(); }
+            public double[] report(InetAddress observer, InetAddress ep) { throw new UnsupportedOperationException(); }
             public void registerFailureDetectionEventListener(IFailureDetectionEventListener listener) { throw new UnsupportedOperationException(); }
             public void unregisterFailureDetectionEventListener(IFailureDetectionEventListener listener) { throw new UnsupportedOperationException(); }
             public void remove(InetAddress ep) { throw new UnsupportedOperationException(); }

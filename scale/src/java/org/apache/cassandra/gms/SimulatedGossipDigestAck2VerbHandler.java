@@ -58,45 +58,45 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         int epStateMapSize = remoteEpStateMap.size();
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
-        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
-            if (remoteEpStateMap.keySet().contains(observedNode)) {
-                EndpointState localEpState = stub.getEndpointStateMap().get(observedNode);
-                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
-                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
-                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
-                boolean newer = false;
-                if (localEpState == null) {
-                    newer = true;
-                } else {
-                    synchronized (localEpState) {
-                        int localGen = localEpState.getHeartBeatState().getGeneration();
-                        if (localGen < remoteGen) {
-                            newer = true;
-                        } else if (localGen == remoteGen) {
-                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
-                            if (localVersion < remoteVersion) {
-                                newer = true;
-                            }
-                        }
-                    }
-                }
-                if (newer) {
-                    double hbAverage = 0;
-                    FailureDetector fd = (FailureDetector) stub.failureDetector;
-                    if (fd.arrivalSamples.containsKey(observedNode)) {
-                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
-                    }
-                    logger.info(to + " receive info of " + observedNode + " from " + from + 
-                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
-                    newerVersion.put(observedNode, remoteVersion);
-                }
-            }
-        }
+//        for (InetAddress observedNode : WholeClusterSimulator.observedNodes) {
+//            if (remoteEpStateMap.keySet().contains(observedNode)) {
+//                EndpointState localEpState = stub.getEndpointStateMap().get(observedNode);
+//                EndpointState remoteEpState = remoteEpStateMap.get(observedNode);
+//                int remoteGen = remoteEpState.getHeartBeatState().getGeneration();
+//                int remoteVersion = Gossiper.getMaxEndpointStateVersion(remoteEpState);
+//                boolean newer = false;
+//                if (localEpState == null) {
+//                    newer = true;
+//                } else {
+//                    synchronized (localEpState) {
+//                        int localGen = localEpState.getHeartBeatState().getGeneration();
+//                        if (localGen < remoteGen) {
+//                            newer = true;
+//                        } else if (localGen == remoteGen) {
+//                            int localVersion = Gossiper.getMaxEndpointStateVersion(localEpState);
+//                            if (localVersion < remoteVersion) {
+//                                newer = true;
+//                            }
+//                        }
+//                    }
+//                }
+//                if (newer) {
+//                    double hbAverage = 0;
+//                    FailureDetector fd = (FailureDetector) stub.failureDetector;
+//                    if (fd.arrivalSamples.containsKey(observedNode)) {
+//                        hbAverage = fd.arrivalSamples.get(observedNode).mean();
+//                    }
+//                    logger.info(to + " receive info of " + observedNode + " from " + from + 
+//                            " generation " + remoteGen + " version " + remoteVersion + " gossip_average " + hbAverage);
+//                    newerVersion.put(observedNode, remoteVersion);
+//                }
+//            }
+//        }
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         start = System.currentTimeMillis();
-        Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), remoteEpStateMap, stub.getFailureDetector());
+        Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(stub, stub.getEndpointStateMap(), remoteEpStateMap, stub.getFailureDetector());
         end = System.currentTimeMillis();
         long notifyFD = end - start;
         start = System.currentTimeMillis();
@@ -123,16 +123,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
-        String syncId = from + "_" + message.payload.syncId;
-        long syncReceivedTime = stub.syncReceivedTime.get(syncId);
-        stub.syncReceivedTime.remove(syncId);
-        long tmpCurrent = System.currentTimeMillis();
-        long ack2HandlerTime = tmpCurrent - receiveTime;
-        long allHandlerTime = tmpCurrent - syncReceivedTime;
-//        for (InetAddress receivingAddress : updatedNodes) {
-//            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
-//            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-//        }
         if (!updatedNodes.isEmpty()) {
             StringBuilder sb = new StringBuilder(to.toString());
             sb.append(" hop ");
@@ -144,6 +134,28 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             }
             logger.info(sb.toString());
         }
+        if (!updatedNodeInfo.isEmpty()) {
+            StringBuilder sb = new StringBuilder(to.toString());
+            sb.append(" t_silence ");
+            for (InetAddress address : updatedNodeInfo.keySet()) {
+                double[] updatedInfo = updatedNodeInfo.get(address); 
+                sb.append(updatedInfo[0]);
+                sb.append(":");
+                sb.append(updatedInfo[1]);
+                sb.append(",");
+            }
+            logger.info(sb.toString());
+        }
+        String syncId = from + "_" + message.payload.syncId;
+        long syncReceivedTime = stub.syncReceivedTime.get(syncId);
+        stub.syncReceivedTime.remove(syncId);
+        long tmpCurrent = System.currentTimeMillis();
+        long ack2HandlerTime = tmpCurrent - receiveTime;
+        long allHandlerTime = tmpCurrent - syncReceivedTime;
+//        for (InetAddress receivingAddress : updatedNodes) {
+//            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
+//            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+//        }
         logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
         logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
         String ackId = from + "_" + message.payload.ackId;

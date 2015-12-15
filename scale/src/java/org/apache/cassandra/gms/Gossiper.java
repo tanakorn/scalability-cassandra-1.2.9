@@ -910,13 +910,18 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         }
     }
     
-    static void notifyFailureDetectorStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
+    static Map<InetAddress, double[]>  notifyFailureDetectorStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
     		Map<InetAddress, EndpointState> remoteEpStateMap, IFailureDetector failureDetector)
     {
+        Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
         for (Entry<InetAddress, EndpointState> entry : remoteEpStateMap.entrySet())
         {
-            notifyFailureDetectorStatic(stub, endpointStateMap, entry.getKey(), entry.getValue(), failureDetector);
+            double[] updatedInfo = notifyFailureDetectorStatic(stub, endpointStateMap, entry.getKey(), entry.getValue(), failureDetector);
+            if (updatedInfo != null) {
+                updatedNodeInfo.put(entry.getKey(), updatedInfo);
+            }
         }
+        return updatedNodeInfo;
     }
 
     void notifyFailureDetector(InetAddress endpoint, EndpointState remoteEndpointState)
@@ -960,7 +965,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     }
     
-    static void notifyFailureDetectorStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
+    static double[] notifyFailureDetectorStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
     		InetAddress endpoint, EndpointState remoteEndpointState, IFailureDetector failureDetector)
     {
         EndpointState localEndpointState = endpointStateMap.get(endpoint);
@@ -984,8 +989,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     logger.debug("Clearing interval times for {} due to generation change", endpoint);
                     fd.clear(endpoint);
                 }
-                fd.report(stub.getInetAddress(), endpoint);
-                return;
+                double[] updatedInfo = fd.report(stub.getInetAddress(), endpoint);
+                return updatedInfo;
             }
 
             if ( remoteGeneration == localGeneration )
@@ -997,10 +1002,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 {
                     localEndpointState.updateTimestamp();
                     // just a version change, report to the fd
-                    fd.report(stub.getInetAddress(), endpoint);
+                    double[] updatedInfo = fd.report(stub.getInetAddress(), endpoint);
+                    return updatedInfo;
                 }
             }
         }
+        return null;
 
     }
 
@@ -1239,6 +1246,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int bootstrapCount = 0;
         int normalCount = 0;
         Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
+        Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -1315,7 +1323,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
 //                FailureDetector.instance.report(ep);
-                stub.getFailureDetector().report(stub.getInetAddress(), ep);
+                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+                updatedNodeInfo.put(ep, updatedInfo);
                 handleMajorStateChangeStatic(stub, ep, remoteState);
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
@@ -1325,7 +1334,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNodes.add(ep);
             }
         }
-        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
