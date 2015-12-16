@@ -14,7 +14,7 @@ for n in 32 64 128; do
   mkdir /tmp/n$n
   ./onemachine_dir_setup scdeploy.conf.$n
   ./simulation scdeploy.conf.$n
-  sleep 150
+  sleep 300
   pkill java
   cp /tmp/cass_scale/scale.log /tmp/n$n
   i=1
