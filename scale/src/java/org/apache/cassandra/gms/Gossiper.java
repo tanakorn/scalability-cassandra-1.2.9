@@ -1433,11 +1433,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             deltaEpStateMap.put(gDigest.getEndpoint(), localEpStatePtr);
     }
     
-    private static void sendAllStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, GossipDigest gDigest, Map<InetAddress, EndpointState> deltaEpStateMap, int maxRemoteVersion)
+    private static void sendAllStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
+            GossipDigest gDigest, Map<InetAddress, EndpointState> deltaEpStateMap, int maxRemoteVersion)
     {
         EndpointState localEpStatePtr = getStateForVersionBiggerThanStatic(endpointStateMap, gDigest.getEndpoint(), maxRemoteVersion) ;
         if ( localEpStatePtr != null )
-            deltaEpStateMap.put(gDigest.getEndpoint(), localEpStatePtr.copy());
+            deltaEpStateMap.put(gDigest.getEndpoint(), localEpStatePtr);
     }
 
     /*
@@ -1504,7 +1505,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
     
     static void examineGossiperStatic(GossiperStub stub, ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
-    		List<GossipDigest> gDigestList, List<GossipDigest> deltaGossipDigestList, 
+            List<GossipDigest> gDigestList, List<GossipDigest> deltaGossipDigestList, 
     		Map<InetAddress, EndpointState> deltaEpStateMap)
     {
         for ( GossipDigest gDigest : gDigestList )
