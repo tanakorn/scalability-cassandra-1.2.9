@@ -173,6 +173,7 @@ public class EndpointState
             VersionedValue vv = applicationState.get(state);
             clone.applicationState.put(state, vv.copy());
         }
+        clone.hopNum = hopNum;
         return clone;
     }
 }
