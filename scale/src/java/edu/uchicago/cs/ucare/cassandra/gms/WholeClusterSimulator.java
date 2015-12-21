@@ -24,7 +24,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.gms.ApplicationState;
+import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
@@ -170,15 +173,18 @@ public class WholeClusterSimulator {
         timer.schedule(new MyGossiperTask(), 0, 1000);
         Thread syncProcessThread = new Thread(new SyncProcessor());
         syncProcessThread.start();
-        Thread[] ackProcessThreadPool = new Thread[12];
+        Thread[] ackProcessThreadPool = new Thread[4];
         for (int i = 0; i < ackProcessThreadPool.length; ++i) {
            ackProcessThreadPool[i] = new Thread(new AckProcessor());
            ackProcessThreadPool[i].start();
         }
         stubGroup.setupTokenState();
         stubGroup.setBootStrappingStatusState();
+        for (InetAddress seed : seeds) {
+            stubGroup.getStub(seed).setNormalStatusState();
+        }
         // Replace hard-coded number here with ring_deplay
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         stubGroup.setNormalStatusState();
         stubGroup.setSeverityState(0.0);
         stubGroup.setLoad(10000);
@@ -194,28 +200,48 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             long start = System.currentTimeMillis();
-            for (GossiperStub stub : stubGroup) {
-                stub.updateHeartBeat();
-                logger.debug(stub.getInetAddress() + " has hb version " + stub.heartBeatState.getHeartBeatVersion());
+            for (GossiperStub performer : stubGroup) {
+                InetAddress performerAddress = performer.getInetAddress();
+                performer.updateHeartBeat();
+                logger.debug(performerAddress + " has hb version " + performer.heartBeatState.getHeartBeatVersion());
                 boolean gossipToSeed = false;
-                Set<InetAddress> liveEndpoints = stub.getLiveEndpoints();
-                Set<InetAddress> seeds = stub.getSeeds();
+                Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
+                Set<InetAddress> seeds = performer.getSeeds();
                 if (!liveEndpoints.isEmpty()) {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
-                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(liveReceiver);
+                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
+//                    StringBuilder sb = new StringBuilder("SyncInitiator: " + performerAddress + "\n");
+//                    sb.append("Sync digest of " + synMsg.payload.getMsgId() + " : " + synMsg.payload.gDigests + "\n");
+//                    for (InetAddress address : performer.endpointStateMap.keySet()) {
+//                        EndpointState epState = performer.endpointStateMap.get(address);
+//                        int gen = epState.getHeartBeatState().getGeneration();
+//                        int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                        VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                    }
+//                    GossiperStub receiver = stubGroup.getStub(liveReceiver);
+//                    sb.append("SyncReceiver: " + liveReceiver + "\n");
+//                    for (InetAddress address : receiver.endpointStateMap.keySet()) {
+//                        EndpointState epState = receiver.endpointStateMap.get(address);
+//                        int gen = epState.getHeartBeatState().getGeneration();
+//                        int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                        VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                    }
+//                    logger.warn(sb.toString());
                     if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-                        logger.debug(stub.getInetAddress() + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests.size());
+                        logger.debug(performerAddress + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests);
                     }
                 } else {
-                    logger.debug(stub.getInetAddress() + " does not have live endpoint");
+                    logger.debug(performerAddress + " does not have live endpoint");
                 }
-                Map<InetAddress, Long> unreachableEndpoints = stub.getUnreachableEndpoints();
+                Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
                     InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
-                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(unreachableReceiver);
+                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
                         if (!syncQueue.add(synMsg)) {
@@ -227,34 +253,72 @@ public class WholeClusterSimulator {
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     int size = seeds.size();
                     if (size > 0) {
-                        if (size == 1 && seeds.contains(stub.getInetAddress())) {
+                        if (size == 1 && seeds.contains(performerAddress)) {
 
                         } else {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
-                                MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
+                                MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+//                                StringBuilder sb = new StringBuilder("SyncInitiator: " + performerAddress + "\n");
+//                                sb.append("Sync digest of " + synMsg.payload.getMsgId() + " : " + synMsg.payload.gDigests + "\n");
+//                                for (InetAddress address : performer.endpointStateMap.keySet()) {
+//                                    EndpointState epState = performer.endpointStateMap.get(address);
+//                                    int gen = epState.getHeartBeatState().getGeneration();
+//                                    int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                                    VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                                    sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                                }
+//                                GossiperStub receiver = stubGroup.getStub(seed);
+//                                sb.append("SyncReceiver: " + seed + "\n");
+//                                for (InetAddress address : receiver.endpointStateMap.keySet()) {
+//                                    EndpointState epState = receiver.endpointStateMap.get(address);
+//                                    int gen = epState.getHeartBeatState().getGeneration();
+//                                    int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                                    VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                                    sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                                }
+//                                logger.warn(sb.toString());
                                 if (!syncQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
-                                    logger.debug(stub.getInetAddress() + " sending sync to seed " + seed + " " + synMsg.payload.gDigests.size());
+                                    logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
                                 }
                             } else {
                                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
                                 double randDbl = random.nextDouble();
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
-                                    MessageIn<GossipDigestSyn> synMsg = stub.genGossipDigestSyncMsgIn(seed);
+                                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+//                                    StringBuilder sb = new StringBuilder("SyncInitiator: " + performerAddress + "\n");
+//                                    sb.append("Sync digest of " + synMsg.payload.getMsgId() + " : " + synMsg.payload.gDigests + "\n");
+//                                    for (InetAddress address : performer.endpointStateMap.keySet()) {
+//                                        EndpointState epState = performer.endpointStateMap.get(address);
+//                                        int gen = epState.getHeartBeatState().getGeneration();
+//                                        int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                                        VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                                    }
+//                                    GossiperStub receiver = stubGroup.getStub(seed);
+//                                    sb.append("SyncReceiver: " + seed + "\n");
+//                                    for (InetAddress address : receiver.endpointStateMap.keySet()) {
+//                                        EndpointState epState = receiver.endpointStateMap.get(address);
+//                                        int gen = epState.getHeartBeatState().getGeneration();
+//                                        int version = epState.getHeartBeatState().getHeartBeatVersion();
+//                                        VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
+//                                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
+//                                    }
+//                                    logger.warn(sb.toString());
                                     if (!syncQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
-                                        logger.debug(stub.getInetAddress() + " sending sync to seed " + seed + " " + synMsg.payload.gDigests.size());
+                                        logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
                                     }
                                 }
                             }
                         }
                     }
                 }
-                stub.doStatusCheck();
+                performer.doStatusCheck();
             }
             long finish = System.currentTimeMillis();
             if (finish - start > 1000) {

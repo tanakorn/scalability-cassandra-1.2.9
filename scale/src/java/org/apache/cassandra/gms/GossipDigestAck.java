@@ -104,6 +104,10 @@ public class GossipDigestAck
 			return false;
 		return true;
 	}
+
+    public int getMsgId() {
+        return msgId;
+    }
 }
 
 class GossipDigestAckSerializer implements IVersionedSerializer<GossipDigestAck>

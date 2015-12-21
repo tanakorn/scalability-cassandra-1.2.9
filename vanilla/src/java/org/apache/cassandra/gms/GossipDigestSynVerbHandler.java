@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
 
@@ -37,6 +38,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
         long receiveTime = System.currentTimeMillis();
+        InetAddress to = FBUtilities.getBroadcastAddress();
         InetAddress from = message.from;
         Gossiper.instance.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
         if (logger.isTraceEnabled())
@@ -74,32 +76,16 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
         
-        long start;
-        long end;
-
-        start = System.currentTimeMillis();
         doSort(gDigestList);
-        end = System.currentTimeMillis();
-        long doSort = end - start;
 
         List<GossipDigest> deltaGossipDigestList = new ArrayList<GossipDigest>();
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
-        start = System.currentTimeMillis();
         Gossiper.instance.examineGossiper(gDigestList, deltaGossipDigestList, deltaEpStateMap);
         
-        end = System.currentTimeMillis();
-        long examine = end - start;
-
         MessageOut<GossipDigestAck> gDigestAckMessage = 
                 new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                     new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId),
                     GossipDigestAck.serializer);
-//        long sendTime = System.currentTimeMillis();
-//        for (InetAddress observedNode : deltaEpStateMap.keySet()) {
-//            int version = Gossiper.getMaxEndpointStateVersion(deltaEpStateMap.get(observedNode));
-//            Klogger.logger.info("Receive sync:" + receiveTime + " (" + (doSort + examine) + "ms)" + " ; Send ack:" + sendTime + 
-//                    " ; Forwarding " + observedNode + " to " + from + " version " + version);
-//        }
         Map<InetAddress, EndpointState> localEpStateMap = Gossiper.instance.endpointStateMap;
         int sendingBoot = 0;
         int sendingNormal = 0;
@@ -110,8 +96,10 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
             if (val != null) {
                 if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
                     sendingBoot++;
+                    Klogger.logger.info("sync " + to + " sending boot of " + sendingAddress + " to " + from + " version " + val.version);
                 } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     sendingNormal++;
+                    Klogger.logger.info("sync " + to + " sending normal of " + sendingAddress + " to " + from + " version " + val.version);
                 }
             }
         }
@@ -121,11 +109,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);
-        start = System.currentTimeMillis();
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
-        end = System.currentTimeMillis();
-        long send = end - start;
-        Klogger.logger.info("SyncHandler for " + from + " doSort took {} ms, examine took {} ms, sendMsg took {} ms", doSort, examine, send);
     }
 
     /*

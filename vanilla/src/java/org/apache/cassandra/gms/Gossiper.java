@@ -134,6 +134,16 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
+                
+                for (InetAddress add : endpointStateMap.keySet()) {
+                    EndpointState ep = endpointStateMap.get(add);
+                    VersionedValue vv = ep.getApplicationState(ApplicationState.STATUS);
+                    if (vv != null) {
+                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " knows " + add + " status as " + vv.value);
+                    } else {
+                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " doesn't know " + add);
+                    }
+                }
 
                 if ( gDigests.size() > 0 )
                 {
@@ -172,47 +182,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
                     doStatusCheck();
-                    StringBuilder strBuilder;
-//                    Map<MessagingService.Verb, Integer> messageCount = MessagingService.instance().getCount();
-//                    MessagingService.instance().resetCount();
-//                    strBuilder = new StringBuilder("MessageCount : ");
-//                    MessagingService.Verb verb;
-//                    verb = MessagingService.Verb.GOSSIP_DIGEST_SYN;
-//                    strBuilder.append(verb);
-//                    strBuilder.append(" : ");
-//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    strBuilder.append(" ; ");
-//                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK;
-//                    strBuilder.append(verb);
-//                    strBuilder.append(" : ");
-//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    strBuilder.append(" ; ");
-//                    verb = MessagingService.Verb.GOSSIP_DIGEST_ACK2;
-//                    strBuilder.append(verb);
-//                    strBuilder.append(" : ");
-//                    strBuilder.append(!messageCount.containsKey(verb) ? 0 : messageCount.get(verb));
-//                    Klogger.logger.info(strBuilder.toString());
-//                    
-//                    int[] messageInfo = MessagingService.instance().getMessageInfo();
-//                    MessagingService.instance().resetMessageInfo();
-//                    strBuilder = new StringBuilder("MessageInfo\n");
-//                    strBuilder.append("node in GDA = ");
-//                    strBuilder.append(messageInfo[0]);
-//                    strBuilder.append(" ; ");
-//                    strBuilder.append("node in GDA2 = ");
-//                    strBuilder.append(messageInfo[1]);
-//                    strBuilder.append(" ; ");
-//                    strBuilder.append("vnode in GDA = ");
-//                    strBuilder.append(messageInfo[2]);
-//                    strBuilder.append(" ; ");
-//                    strBuilder.append("vnode in GDA2 = ");
-//                    strBuilder.append(messageInfo[3]);
-//                    Klogger.logger.info(strBuilder.toString());
                     int seenNode = endpointStateMap.size();
                     int deadNode = 0;
                     int nonMemberNode = 0;
                     int notCompletedNode = 0;
-//                    StringBuilder strBuilder = new StringBuilder("Dead nodes: ");
+                    StringBuilder strBuilder;
                     strBuilder = new StringBuilder("Dead nodes: ");
                     StringBuilder strBuilder2 = new StringBuilder("Non-member nodes: ");
                     StringBuilder strBuilder3 = new StringBuilder("Not-completed nodes: ");
@@ -240,15 +214,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     		", non-member nodes = " + nonMemberNode + 
                     		", not-completed nodes = " + notCompletedNode + 
                     		", dead nodes = " + deadNode);
-//                    if (deadNode > 0) {
-//                        Klogger.logger.info(strBuilder.toString());
-//                    }
-//                    if (nonMemberNode > 0) {
-//                    	Klogger.logger.info(strBuilder2.toString());
-//                    }
-//                    if (notCompletedNode > 0) {
-//                        Klogger.logger.info(strBuilder3.toString());
-//                    }
                 }
             }
             catch (Exception e)

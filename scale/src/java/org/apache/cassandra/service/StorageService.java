@@ -616,11 +616,6 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                                     SystemTable.bootstrapInProgress(),
                                     SystemTable.bootstrapComplete(),
                                     DatabaseDescriptor.getSeeds().contains(FBUtilities.getBroadcastAddress())});
-//        logger.info("korn Bootstrap variables: {} {} {} {}",
-//                      new Object[]{ DatabaseDescriptor.isAutoBootstrap(),
-//                                    SystemTable.bootstrapInProgress(),
-//                                    SystemTable.bootstrapComplete(),
-//                                    DatabaseDescriptor.getSeeds().contains(FBUtilities.getBroadcastAddress())});
         if (DatabaseDescriptor.isAutoBootstrap()
             && !SystemTable.bootstrapComplete()
             && !DatabaseDescriptor.getSeeds().contains(FBUtilities.getBroadcastAddress()))

@@ -119,6 +119,10 @@ public class VersionedValue implements Comparable<VersionedValue>
             return false;
         return true;
     }
+    
+    public VersionedValue copy() {
+        return new VersionedValue(value, version);
+    }
 
     @Override
     public String toString()

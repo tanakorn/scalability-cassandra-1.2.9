@@ -168,7 +168,12 @@ public class EndpointState
     }
     
     public EndpointState copy() {
-        return new EndpointState(hbState.copy(), updateTimestamp, isAlive);
+        EndpointState clone = new EndpointState(hbState.copy(), updateTimestamp, isAlive);
+        for (ApplicationState state : applicationState.keySet()) {
+            VersionedValue vv = applicationState.get(state);
+            clone.applicationState.put(state, vv.copy());
+        }
+        return clone;
     }
 }
 

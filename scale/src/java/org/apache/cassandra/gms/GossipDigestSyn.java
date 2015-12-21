@@ -101,6 +101,11 @@ public class GossipDigestSyn
 			return false;
 		return true;
 	}
+
+    public int getMsgId() {
+        return msgId;
+    }
+	
 }
 
 class GossipDigestSerializationHelper
