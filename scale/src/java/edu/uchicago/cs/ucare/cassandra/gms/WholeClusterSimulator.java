@@ -203,7 +203,7 @@ public class WholeClusterSimulator {
             for (GossiperStub performer : stubGroup) {
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
-                logger.debug(performerAddress + " has hb version " + performer.heartBeatState.getHeartBeatVersion());
+//                logger.debug(performerAddress + " has hb version " + performer.heartBeatState.getHeartBeatVersion());
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
                 Set<InetAddress> seeds = performer.getSeeds();
@@ -233,10 +233,10 @@ public class WholeClusterSimulator {
                     if (!syncQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-                        logger.debug(performerAddress + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests);
+//                        logger.debug(performerAddress + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests);
                     }
                 } else {
-                    logger.debug(performerAddress + " does not have live endpoint");
+//                    logger.debug(performerAddress + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
@@ -281,7 +281,7 @@ public class WholeClusterSimulator {
                                 if (!syncQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
-                                    logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
+//                                    logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
                                 }
                             } else {
                                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
@@ -311,7 +311,7 @@ public class WholeClusterSimulator {
                                     if (!syncQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
-                                        logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
+//                                        logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
                                     }
                                 }
                             }
@@ -335,7 +335,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                     MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
+//                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
                     MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -355,7 +355,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
-                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+//                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
