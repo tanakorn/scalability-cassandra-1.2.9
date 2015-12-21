@@ -74,7 +74,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
             if (mockExecTime >= 0) {
                 try {
-                    Thread.sleep(mockExecTime);
+//                    Thread.sleep(mockExecTime);
+                    Thread.sleep(message.getSleepTime());
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -192,33 +193,33 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
 //        }
 //        sb.append("Ack2 delta of " + gDigestAck2Message.payload.msgId + ":\n");
-//        for (InetAddress address : deltaEpStateMap.keySet()) {
+        for (InetAddress address : deltaEpStateMap.keySet()) {
 //            sb.append(address);
-//            EndpointState ep = deltaEpStateMap.get(address);
-//            for (ApplicationState appState : ep.applicationState.keySet()) {
-//                if (appState == ApplicationState.STATUS) {
-//                    VersionedValue value = ep.applicationState.get(appState);
-//                    String apStateValue = value.value;
-//                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
-//                    assert (pieces.length > 0);
-//                    String moveName = pieces[0];
-//                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
-//                        bootNodeNum++;
+            EndpointState ep = deltaEpStateMap.get(address);
+            for (ApplicationState appState : ep.applicationState.keySet()) {
+                if (appState == ApplicationState.STATUS) {
+                    VersionedValue value = ep.applicationState.get(appState);
+                    String apStateValue = value.value;
+                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
+                    assert (pieces.length > 0);
+                    String moveName = pieces[0];
+                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
+                        bootNodeNum++;
 //                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-//                        normalNodeNum++;
+                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
+                        normalNodeNum++;
 //                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    }
-//                }
-//            }
+                    }
+                }
+            }
 //            sb.append("\n");
-//        }
+        }
 //        logger.warn(sb.toString());
         
         
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
-//        System.out.println("should sleep " + sleepTime);
+        System.out.println("should sleep " + sleepTime);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);

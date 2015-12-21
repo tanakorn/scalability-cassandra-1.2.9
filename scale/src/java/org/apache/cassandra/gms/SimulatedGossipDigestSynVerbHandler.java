@@ -76,13 +76,13 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
-        StringBuilder sb = new StringBuilder();
-        for ( GossipDigest gDigest : gDigestList )
-        {
-            sb.append(gDigest);
-            sb.append(" ");
-        }
-        logger.debug(receiverStub + " receieve syn digests : " + sb.toString());
+//        StringBuilder sb = new StringBuilder();
+//        for ( GossipDigest gDigest : gDigestList )
+//        {
+//            sb.append(gDigest);
+//            sb.append(" ");
+//        }
+//        logger.debug(receiverStub + " receieve syn digests : " + sb.toString());
 
         doSort(receiverStub, gDigestList);
 
@@ -120,29 +120,29 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
 //        }
 //        sb.append("Ack delta of " + gDigestAckMessage.payload.msgId + ":\n");
-//        for (InetAddress address : deltaEpStateMap.keySet()) {
+        for (InetAddress address : deltaEpStateMap.keySet()) {
 //            sb.append(address);
-//            EndpointState ep = deltaEpStateMap.get(address);
-//            for (ApplicationState appState : ep.applicationState.keySet()) {
-//                if (appState == ApplicationState.STATUS) {
-//                    VersionedValue value = ep.applicationState.get(appState);
-//                    String apStateValue = value.value;
-//                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
-//                    assert (pieces.length > 0);
-//                    String moveName = pieces[0];
-//                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
-//                        bootNodeNum++;
-////                        System.out.println("sync " + to + " sending boot of " + address + " to " + from + " version " + value.version);
+            EndpointState ep = deltaEpStateMap.get(address);
+            for (ApplicationState appState : ep.applicationState.keySet()) {
+                if (appState == ApplicationState.STATUS) {
+                    VersionedValue value = ep.applicationState.get(appState);
+                    String apStateValue = value.value;
+                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
+                    assert (pieces.length > 0);
+                    String moveName = pieces[0];
+                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
+                        bootNodeNum++;
+//                        System.out.println("sync " + to + " sending boot of " + address + " to " + from + " version " + value.version);
 //                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-//                        normalNodeNum++;
-////                        System.out.println("sync " + to + " sending normal of " + address + " to " + from + " version " + value.version);
+                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
+                        normalNodeNum++;
+//                        System.out.println("sync " + to + " sending normal of " + address + " to " + from + " version " + value.version);
 //                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    }
-//                }
-//            }
+                    }
+                }
+            }
 //            sb.append("\n");
-//        }
+        }
 //        logger.warn(sb.toString());
         
         
@@ -163,7 +163,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
-//        System.out.println("should sleep " + sleepTime);
+        System.out.println("should sleep " + sleepTime);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
         gDigestAckMessage.setSleepTime(sleepTime);

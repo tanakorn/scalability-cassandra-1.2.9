@@ -99,7 +99,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
         if (mockExecTime >= 0) {
             try {
-                Thread.sleep(mockExecTime);
+//                Thread.sleep(mockExecTime);
+                Thread.sleep(message.getSleepTime());
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
