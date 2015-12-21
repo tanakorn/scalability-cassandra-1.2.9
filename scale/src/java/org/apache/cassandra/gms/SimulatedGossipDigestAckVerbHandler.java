@@ -152,49 +152,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                         emptyMap, MessagingService.Verb.GOSSIP_DIGEST_ACK2, MessagingService.VERSION_12);
         int bootNodeNum = 0;
         int normalNodeNum = 0;
-        
-        
-//        StringBuilder sb = new StringBuilder("Ack executor: " + to + "\n");
-//        sb.append("Sync digest of " + gDigestAckMessage.getMsgId() + " from " + from + " : " + gDigestList + "\n");
-//        sb.append("Ack delta of " + gDigestAckMessage.msgId + ":\n");
-//        for (InetAddress address : gDigestAckMessage.getEndpointStateMap().keySet()) {
-//            sb.append(address);
-//            EndpointState ep = gDigestAckMessage.getEndpointStateMap().get(address);
-//            for (ApplicationState appState : ep.applicationState.keySet()) {
-//                if (appState == ApplicationState.STATUS) {
-//                    VersionedValue value = ep.applicationState.get(appState);
-//                    String apStateValue = value.value;
-//                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
-//                    assert (pieces.length > 0);
-//                    String moveName = pieces[0];
-//                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
-//                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-//                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    }
-//                }
-//            }
-//            sb.append("\n");
-//        }
-//        sb.append("Ack2Sender: " + receiverStub.getInetAddress() + "\n");
-//        for (InetAddress address : receiverStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = receiverStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        sb.append("Ack2Receiver: " + senderStub.getInetAddress() + "\n");
-//        for (InetAddress address : senderStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = senderStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        sb.append("Ack2 delta of " + gDigestAck2Message.payload.msgId + ":\n");
         for (InetAddress address : deltaEpStateMap.keySet()) {
-//            sb.append(address);
             EndpointState ep = deltaEpStateMap.get(address);
             for (ApplicationState appState : ep.applicationState.keySet()) {
                 if (appState == ApplicationState.STATUS) {
@@ -205,18 +163,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     String moveName = pieces[0];
                     if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
                         bootNodeNum++;
-//                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
                     } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
                         normalNodeNum++;
-//                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
                     }
                 }
             }
-//            sb.append("\n");
         }
-//        logger.warn(sb.toString());
-        
-        
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
 //        System.out.println("should sleep " + sleepTime);

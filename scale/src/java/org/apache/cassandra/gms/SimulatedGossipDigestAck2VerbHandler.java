@@ -32,7 +32,6 @@ import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
 {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAck2VerbHandler.class);
-//    private Set<InetAddress> seenAddresses = new HashSet<InetAddress>();
 
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
@@ -118,7 +117,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
                 sb.append(ep.hopNum);
                 sb.append(",");
-//                logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
             }
             logger.info(sb.toString());
         }
@@ -153,10 +151,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long tmpCurrent = System.currentTimeMillis();
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
-//        for (InetAddress receivingAddress : updatedNodes) {
-//            EndpointState ep = stub.getEndpointStateMap().get(receivingAddress);
-//            logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-//        }
         String ackId = from + "_" + message.payload.ackId;
         int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
         receiverStub.ackNewVersionBoot.remove(ackId);
@@ -172,58 +166,5 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
             logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
         }
-//        for (InetAddress address : newerVersion.keySet()) {
-//            logger.info(to + " Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
-//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-//                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
-//        }
-//        int after = Gossiper.instance.endpointStateMap.size();
-//        logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
-//        logger.info("Processing Ack2 receiving = " + epStateMapSize + " ; before = " + before + " ; after = " + after);
-//        if (!seenAddresses.contains(from)) {
-//            logger.info("see " + from + " " + Gossiper.instance.endpointStateMap.keySet());
-//            seenAddresses.add(from);
-//        }
-        
-//        StringBuilder sb = new StringBuilder("Ack2 executor: " + to + "\n");
-//        sb.append("Ack delta of " + gDigestAck2Message.msgId + ":\n");
-//        for (InetAddress address : gDigestAck2Message.getEndpointStateMap().keySet()) {
-//            sb.append(address);
-//            EndpointState ep = gDigestAck2Message.getEndpointStateMap().get(address);
-//            for (ApplicationState appState : ep.applicationState.keySet()) {
-//                if (appState == ApplicationState.STATUS) {
-//                    VersionedValue value = ep.applicationState.get(appState);
-//                    String apStateValue = value.value;
-//                    String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
-//                    assert (pieces.length > 0);
-//                    String moveName = pieces[0];
-//                    if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
-//                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-//                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
-//                    }
-//                }
-//            }
-//            sb.append("\n");
-//        }
-//        sb.append("Ack3Sender: " + receiverStub.getInetAddress() + "\n");
-//        for (InetAddress address : receiverStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = receiverStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        sb.append("Ack3Receiver: " + senderStub.getInetAddress() + "\n");
-//        for (InetAddress address : senderStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = senderStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        logger.warn(sb.toString());
     }
 }

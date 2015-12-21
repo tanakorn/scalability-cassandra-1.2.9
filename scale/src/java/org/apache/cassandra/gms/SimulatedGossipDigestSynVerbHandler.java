@@ -76,13 +76,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             }
             logger.trace("Gossip syn digests are : " + sb.toString());
         }
-//        StringBuilder sb = new StringBuilder();
-//        for ( GossipDigest gDigest : gDigestList )
-//        {
-//            sb.append(gDigest);
-//            sb.append(" ");
-//        }
-//        logger.debug(receiverStub + " receieve syn digests : " + sb.toString());
 
         doSort(receiverStub, gDigestList);
 
@@ -90,38 +83,13 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
         // I let this got executed because it's not expensive
         Gossiper.examineGossiperStatic(receiverStub, receiverStub.getEndpointStateMap(), gDigestList, deltaGossipDigestList, deltaEpStateMap);
-        logger.debug(receiverStub + " doesn't know about " + deltaGossipDigestList.toString());
-//        System.out.println(stub + " doesn't know about " + deltaGossipDigestList.toString());
-//        System.out.println(stub + " send data about " + deltaEpStateMap.keySet().toString() + " to " + from);
 
         MessageIn<GossipDigestAck> gDigestAckMessage = MessageIn.create(to, 
                 new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap, message.payload.msgId), emptyMap, 
                 MessagingService.Verb.GOSSIP_DIGEST_ACK, MessagingService.VERSION_12);
         int bootNodeNum = 0;
         int normalNodeNum = 0;
-        
-        
-//        sb = new StringBuilder("Sync executor: " + to + "\n");
-//        sb.append("Sync digest of " + gDigestMessage.getMsgId() + " from " + from + " : " + gDigestMessage.gDigests + "\n");
-//        sb.append("AckSender: " + receiverStub.getInetAddress() + "\n");
-//        for (InetAddress address : receiverStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = receiverStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        sb.append("AckReceiver: " + senderStub.getInetAddress() + "\n");
-//        for (InetAddress address : senderStub.getEndpointStateMap().keySet()) {
-//            EndpointState epState = senderStub.getEndpointStateMap().get(address);
-//            int gen = epState.getHeartBeatState().getGeneration();
-//            int version = epState.getHeartBeatState().getHeartBeatVersion();
-//            VersionedValue vv = epState.getApplicationState(ApplicationState.STATUS);
-//            sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
-//        }
-//        sb.append("Ack delta of " + gDigestAckMessage.payload.msgId + ":\n");
         for (InetAddress address : deltaEpStateMap.keySet()) {
-//            sb.append(address);
             EndpointState ep = deltaEpStateMap.get(address);
             for (ApplicationState appState : ep.applicationState.keySet()) {
                 if (appState == ApplicationState.STATUS) {
@@ -132,21 +100,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                     String moveName = pieces[0];
                     if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
                         bootNodeNum++;
-//                        System.out.println("sync " + to + " sending boot of " + address + " to " + from + " version " + value.version);
-//                        sb.append(" boot " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
                     } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
                         normalNodeNum++;
-//                        System.out.println("sync " + to + " sending normal of " + address + " to " + from + " version " + value.version);
-//                        sb.append(" normal " + ep.getHeartBeatState() + " " + ep.getHeartBeatState().getHeartBeatVersion());
                     }
                 }
             }
-//            sb.append("\n");
         }
-//        logger.warn(sb.toString());
-        
-        
-        
         if (bootNodeNum == 128) {
             bootNodeNum = 127;
         }
