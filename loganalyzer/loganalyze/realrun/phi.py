@@ -8,6 +8,7 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
     # this is a nested map that maps observer -> observee -> phi list
     self.phiMap = { i : { j : [] for j in pyutil.nid2ip.keys() } for i in pyutil.nid2ip.keys() }
     self.revertPhiMap = { i : { j : [] for j in pyutil.nid2ip.keys() } for i in pyutil.nid2ip.keys() }
+    self.allPhi = []
 
   def analyze(self, logLine, **kwargs):
     observer = kwargs['nid']
@@ -18,6 +19,11 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
       phi = float(tokens[11])
       self.phiMap[observer][observee].append(phi)
       self.revertPhiMap[observee][observer].append(phi)
+    if ' allphi ' in logLine:
+      tokens = logLine.split()
+      if len(tokens) == 11:
+        allPhi = tokens[10][:-1].split(',')
+        self.allPhi += allPhi
 
   def analyzedResult(self):
     # I should do something smart here
@@ -63,5 +69,6 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
         'maxphi' : '\n'.join(allMaxPhi) + '\n',
         'maxphi_in_observers' : maxPhiInObserversResult,
         'maxphi_of_observees' : maxPhiOfObserveesResult,
+        'allphi' : '\n'.join(self.allPhi) + '\n',
     }
 

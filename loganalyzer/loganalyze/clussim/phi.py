@@ -14,4 +14,9 @@ class PhiAnalyzer(phi.PhiAnalyzer):
       phi = float(tokens[13])
       self.phiMap[observer][observee].append(phi)
       self.revertPhiMap[observee][observer].append(phi)
+    if ' allphi ' in logLine:
+      tokens = logLine.split()
+      if len(tokens) == 11:
+        allPhi = tokens[10][:-1].split(',')
+        self.allPhi += allPhi
 
