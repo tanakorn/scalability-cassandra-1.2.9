@@ -353,12 +353,15 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         long now = System.currentTimeMillis();
 
         Set<InetAddress> eps = endpointStateMap.keySet();
+        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
         for ( InetAddress endpoint : eps ) {
             if (endpoint.equals(broadcastAddress)) {
                 continue;
             }
 
-            failureDetector.interpret(endpoint);
+            double phi = failureDetector.interpret(endpoint);
+            sb.append(phi);
+            sb.append(',');
             EndpointState epState = endpointStateMap.get(endpoint);
             if ( epState != null ) {
                 // check for dead state removal
@@ -369,6 +372,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 }
             }
         }
+        logger.info(sb.toString());
 
         if (!justRemovedEndpoints.isEmpty()) {
             for (Entry<InetAddress, Long> entry : justRemovedEndpoints.entrySet()) {

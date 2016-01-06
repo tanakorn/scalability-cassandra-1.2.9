@@ -204,19 +204,18 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         return new double[] { interArrivalTime, mean };
     }
 
-    public void interpret(InetAddress ep)
+    public double interpret(InetAddress ep)
     {
         ArrivalWindow hbWnd = arrivalSamples.get(ep);
         if ( hbWnd == null )
         {
-            return;
+            return 0;
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
-//        logger.info("korn PHI for " + ep + " : " + phi + " ; convict threshold : " + getPhiConvictThreshold());
         if (phi > getPhiConvictThreshold())
         {
             logger.trace("notifying listeners that {} is down", ep);
@@ -226,6 +225,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
                 listener.convict(ep, phi);
             }
         }
+        return phi;
     }
 
     public void forceConviction(InetAddress ep)

@@ -647,12 +647,15 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         long now = System.currentTimeMillis();
 
         Set<InetAddress> eps = endpointStateMap.keySet();
+        StringBuilder sb = new StringBuilder(FBUtilities.getBroadcastAddress() + " allphi : ");
         for ( InetAddress endpoint : eps )
         {
             if ( endpoint.equals(FBUtilities.getBroadcastAddress()) )
                 continue;
 
-            FailureDetector.instance.interpret(endpoint);
+            double phi = FailureDetector.instance.interpret(endpoint);
+            sb.append(phi);
+            sb.append(',');
             EndpointState epState = endpointStateMap.get(endpoint);
             if ( epState != null )
             {
@@ -680,6 +683,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 }
             }
         }
+        Klogger.logger.info(sb.toString());
 
         if (!justRemovedEndpoints.isEmpty())
         {

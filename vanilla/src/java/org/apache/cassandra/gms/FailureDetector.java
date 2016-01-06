@@ -179,12 +179,12 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         heartbeatWindow.add(now, ep);
     }
 
-    public void interpret(InetAddress ep)
+    public double interpret(InetAddress ep)
     {
         ArrivalWindow hbWnd = arrivalSamples.get(ep);
         if ( hbWnd == null )
         {
-            return;
+            return 0;
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now, ep);
@@ -200,6 +200,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
                 listener.convict(ep, phi);
             }
         }
+        return phi;
     }
 
     public void forceConviction(InetAddress ep)
