@@ -65,3 +65,9 @@ def calcStat(data):
   uqPos = dataSize * 3 / 4
   return sortedData[0], sortedData[lqPos], sortedData[medPos], sortedData[uqPos], sortedData[-1]
 
+def calcAverage(data):
+  avg = sum(data) / len(data)
+  sd = map(lambda x: math.pow(x - avg, 2), data)
+  sd = sum(sd) / len(sd)
+  sd = math.pow(sd, 0.5)
+  return avg, sd
