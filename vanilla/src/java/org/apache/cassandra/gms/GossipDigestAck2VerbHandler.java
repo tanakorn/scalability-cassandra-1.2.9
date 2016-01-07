@@ -114,13 +114,6 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         long tmpCurrent = System.currentTimeMillis();
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
-//        for (InetAddress address : newerVersion.keySet()) {
-//            Klogger.logger.info("Receive ack2:" + receiveTime + " (" + (notifyFD + applyState) + "ms)" +
-//                    " ; newNode=" + newNode + " newNodeToken=" + newNodeToken + " newRestart=" + newRestart + 
-//                    " newVersion=" + newVersion + " newVersionToken=" + newVersionToken +
-//                    " bootstrapCount=" + bootstrapCount + " normalCount=" + normalCount +
-//                    " ; Absorbing " + address + " from " + from + " version " + newerVersion.get(address));
-//        }
         String ackId = from + "_" + message.payload.ackId;
         int sendingBoot = Gossiper.instance.ackNewVersionBoot.get(ackId);
         Gossiper.instance.ackNewVersionBoot.remove(ackId);
@@ -129,12 +122,10 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
         if (allBoot != 0 || allNormal != 0) {
-            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
-            Klogger.logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
+            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
-            Klogger.logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
+            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
