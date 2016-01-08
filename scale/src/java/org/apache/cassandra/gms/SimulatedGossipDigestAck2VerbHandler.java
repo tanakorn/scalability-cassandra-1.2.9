@@ -123,12 +123,10 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
         if (allBoot != 0 || allNormal != 0) {
-            logger.info(to + " apply gossip_all boot " + allBoot + " normal " + allNormal);
-            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms");
+            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            logger.info(to + " apply gossip_ack2 boot " + bootstrapCount + " normal " + normalCount);
-            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms");
+            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms apply boot " + bootstrapCount + " normal " + normalCount);
         }
     }
 }

@@ -179,8 +179,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.info(sb.toString());
             }
             if (bootstrapCount != 0 || normalCount != 0) {
-                logger.info(to + " apply gossip_ack boot " + bootstrapCount + " normal " + normalCount);
-                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms");
+                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount);
             }
         }
     }
