@@ -137,7 +137,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         expireTimeEndpointMap = new ConcurrentHashMap<InetAddress, Long>();
         this.seeds = new ConcurrentSkipListSet<InetAddress>(inetcomparator);
-        this.seeds.addAll(seeds);
+        if (seeds != null) {
+            this.seeds.addAll(seeds);
+        }
 	}
 	
 	public void prepareInitialState() {

@@ -203,7 +203,6 @@ public class WholeClusterSimulator {
             for (GossiperStub performer : stubGroup) {
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
-//                logger.debug(performerAddress + " has hb version " + performer.heartBeatState.getHeartBeatVersion());
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
                 Set<InetAddress> seeds = performer.getSeeds();
