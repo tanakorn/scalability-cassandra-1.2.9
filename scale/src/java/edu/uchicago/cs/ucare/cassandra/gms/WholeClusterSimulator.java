@@ -150,7 +150,7 @@ public class WholeClusterSimulator {
         buffReader.close();
         buffReader = new BufferedReader(new FileReader(args[2]));
         for (int i = 0; i < MAX_NODE; ++i) {
-            normalGossipExecRecords[i] = 430 * i - 91;
+            normalGossipExecRecords[i] = 43 * i - 91;
         }
 //        while ((line = buffReader.readLine()) != null) {
 //            String[] tokens = line.split(" ");
