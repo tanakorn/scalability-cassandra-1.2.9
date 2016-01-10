@@ -9,7 +9,6 @@ rm -r $cassandra_log_dir/*
 for n in 32 64 128; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
-  echo "observed_nodes=127.0.0.3,127.0.0.25" >> scdeploy.conf.$n
   rm -r /tmp/n$n
   mkdir /tmp/n$n
   ./onemachine_dir_setup scdeploy.conf.$n

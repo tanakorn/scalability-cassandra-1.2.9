@@ -52,10 +52,12 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
 
     result['exec_time_of_version_indiv'] = ''
     for normalVersion in sorted(self.execTimeOfVersionIndiv.keys()):
-      mean = sum(self.execTimeOfVersionIndiv[normalVersion]) / len(self.execTimeOfVersionIndiv[normalVersion])
-      minVal = min(self.execTimeOfVersionIndiv[normalVersion])
-      maxVal = max(self.execTimeOfVersionIndiv[normalVersion])
-      result['exec_time_of_version_indiv'] += '%d %f %f %f\n' % (normalVersion, mean, minVal, maxVal)
+      execTimes = self.execTimeOfVersionIndiv[normalVersion]
+      mean, sd = analyze.calcAverage(execTimes)
+      minVal = min(execTimes)
+      maxVal = max(execTimes)
+      num = len(execTimes)
+      result['exec_time_of_version_indiv'] += '%d %f %f %f %f %d\n' % (normalVersion, mean, minVal, maxVal, sd, num)
 
     return result
   

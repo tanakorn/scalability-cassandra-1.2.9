@@ -6,7 +6,6 @@ modClassMap = {
   'falsedetect' : 'FalseDetectionCounter',
   'exectime' : 'ExecTimeAnalyzer',
   'hop' : 'HopCounter',
-#  'newversion' : 'NewVersionCounter',
   'tsilence' : 'TSilenceExtractor',
 }
 

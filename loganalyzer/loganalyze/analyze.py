@@ -1,6 +1,7 @@
 
 from datetime import *
 from time import mktime
+import math
 
 class BaseAnalyzer(object):
 
