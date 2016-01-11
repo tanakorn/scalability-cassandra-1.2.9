@@ -179,7 +179,7 @@ public class WholeClusterSimulator {
         timer.schedule(new MyGossiperTask(), 0, 1000);
         Thread syncProcessThread = new Thread(new SyncProcessor());
         syncProcessThread.start();
-        Thread[] ackProcessThreadPool = new Thread[4];
+        Thread[] ackProcessThreadPool = new Thread[numStubs];
         for (int i = 0; i < ackProcessThreadPool.length; ++i) {
            ackProcessThreadPool[i] = new Thread(new AckProcessor());
            ackProcessThreadPool[i].start();
