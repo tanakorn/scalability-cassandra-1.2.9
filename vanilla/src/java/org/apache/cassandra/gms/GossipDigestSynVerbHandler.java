@@ -109,6 +109,7 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         Gossiper.instance.checkSeedContact(from);
+        gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
     }
 
