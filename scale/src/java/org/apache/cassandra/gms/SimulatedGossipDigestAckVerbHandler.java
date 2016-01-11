@@ -73,18 +73,24 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
             result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
-            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
-            if (mockExecTime >= 0) {
-                try {
-//                    Thread.sleep(mockExecTime);
-                    Thread.sleep(message.getSleepTime());
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            } else if (mockExecTime < -10) {
-                logger.debug(to + " executing past message " + mockExecTime);
+            try {
+                Thread.sleep(message.getSleepTime());
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
+//            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+//            if (mockExecTime >= 0) {
+//                try {
+////                    Thread.sleep(mockExecTime);
+//                    Thread.sleep(message.getSleepTime());
+//                } catch (InterruptedException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                }
+//            } else if (mockExecTime < -10) {
+//                logger.debug(to + " executing past message " + mockExecTime);
+//            }
             
         }
 
@@ -134,6 +140,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);
+//        System.out.println(bootNodeNum + " " + normalNodeNum + " " + sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
