@@ -53,6 +53,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         }
 
         GossipDigestAck gDigestAckMessage = message.payload;
+        long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
@@ -115,10 +116,11 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
                      GossipDigestAck2.serializer);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
+        gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount);
+            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
         }
     }
 }

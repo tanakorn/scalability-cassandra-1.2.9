@@ -52,6 +52,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             return;
         }
 
+        long transmissionTime = receiveTime - message.payload.getCreatedTime();
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         for (InetAddress observedNode : remoteEpStateMap.keySet()) {
@@ -125,7 +126,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount);
+            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
