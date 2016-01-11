@@ -10,6 +10,7 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
     self.newVersion = { i : { 'boot' : [], 'normal' : [] } for i in self.gossipType }
     self.execTimeOfVersion = { i : { } for i in self.gossipType }
     self.execTimeOfVersionIndiv = { }
+    self.waitTime = []
 
   def analyze(self, logLine, **kwargs):
     if ' executes ' in logLine:
@@ -30,6 +31,7 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
         if normalVersion not in self.execTimeOfVersionIndiv:
           self.execTimeOfVersionIndiv[normalVersion] = []
         self.execTimeOfVersionIndiv[normalVersion].append(execTime)
+        self.waitTime.append(int(tokens[21]))
 
   def analyzedResult(self):
     result = { } 
@@ -58,6 +60,12 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
       maxVal = max(execTimes)
       num = len(execTimes)
       result['exec_time_of_version_indiv'] += '%d %f %f %f %f %d\n' % (normalVersion, mean, minVal, maxVal, sd, num)
+
+    mean, sd = analyze.calcAverage(self.waitTime)
+    num = len(self.waitTime)
+    minVal = min(self.waitTime)
+    maxVal = max(self.waitTime)
+    result['wait_time'] = '%f, %f, %d, %d, %d\n' % (mean, sd, minVal, maxVal, num);
 
     return result
   
