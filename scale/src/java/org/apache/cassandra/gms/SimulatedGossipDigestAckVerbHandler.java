@@ -54,6 +54,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
+        long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
@@ -136,14 +137,13 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         }
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
                 WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
-//        System.out.println("should sleep " + sleepTime);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);
-//        System.out.println(bootNodeNum + " " + normalNodeNum + " " + sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
+        gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
         WholeClusterSimulator.ackQueue.add(gDigestAck2Message);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (result != null) {
@@ -186,7 +186,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.info(sb.toString());
             }
             if (bootstrapCount != 0 || normalCount != 0) {
-                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount);
+                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
             }
         }
     }
