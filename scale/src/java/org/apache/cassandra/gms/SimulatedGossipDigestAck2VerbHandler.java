@@ -59,18 +59,25 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), remoteEpStateMap, receiverStub.getFailureDetector());
         Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
-        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
-        if (mockExecTime >= 0) {
-            try {
-//                Thread.sleep(mockExecTime);
-                Thread.sleep(message.getSleepTime());
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        } else if (mockExecTime < -10) {
-            logger.debug(to + " executing past message " + mockExecTime);
+//        int tmpNormalCount = (int) result[6];
+        try {
+            Thread.sleep(message.getSleepTime());
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
+//        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+//        if (mockExecTime >= 0) {
+//            try {
+////                Thread.sleep(mockExecTime);
+//                Thread.sleep(message.getSleepTime());
+//            } catch (InterruptedException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//        } else if (mockExecTime < -10) {
+//            logger.debug(to + " executing past message " + mockExecTime);
+//        }
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
