@@ -148,7 +148,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
-        WholeClusterSimulator.ackQueue.add(gDigestAck2Message);
+        WholeClusterSimulator.ackQueues.get(from).add(gDigestAck2Message);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (result != null) {
             bootstrapCount = (int) result[5];

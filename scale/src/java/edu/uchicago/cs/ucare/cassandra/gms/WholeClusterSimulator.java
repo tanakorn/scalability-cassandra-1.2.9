@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,16 +61,19 @@ public class WholeClusterSimulator {
     public static long[] bootGossipExecRecords;
     public static double[] normalGossipExecRecords;
     public static double[] normalGossipExecSdRecords;
+    
+    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
+            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
 
-    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
-            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
-
-        @Override
-        public int compare(MessageIn<?> o1, MessageIn<?> o2) {
-            return (int) (o1.getWakeUpTime() - o2.getWakeUpTime());
-        }
-
-    });
+//    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
+//            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
+//
+//        @Override
+//        public int compare(MessageIn<?> o1, MessageIn<?> o2) {
+//            return (int) (o1.getWakeUpTime() - o2.getWakeUpTime());
+//        }
+//
+//    });
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -154,7 +158,6 @@ public class WholeClusterSimulator {
         buffReader = new BufferedReader(new FileReader(args[2]));
         SimpleRegression regression = new SimpleRegression();
         while ((line = buffReader.readLine()) != null) {
-            System.out.println(line);
             String[] tokens = line.split(" ");
             int numNormalVersion = Integer.parseInt(tokens[0]);
             regression.addData(numNormalVersion, Double.parseDouble(tokens[1]));
@@ -177,6 +180,9 @@ public class WholeClusterSimulator {
         for (int i = 1; i <= numStubs; ++i) {
             addressList.add(InetAddress.getByName("127.0.0." + i));
         }
+        for (InetAddress address : addressList) {
+            ackQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
@@ -188,11 +194,17 @@ public class WholeClusterSimulator {
         timer.schedule(new MyGossiperTask(), 0, 1000);
         Thread syncProcessThread = new Thread(new SyncProcessor());
         syncProcessThread.start();
-        Thread[] ackProcessThreadPool = new Thread[numStubs];
-        for (int i = 0; i < ackProcessThreadPool.length; ++i) {
-           ackProcessThreadPool[i] = new Thread(new AckProcessor());
-           ackProcessThreadPool[i].start();
+//        Thread[] ackProcessThreadPool = new Thread[addressList.size()];
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
+        for (InetAddress address : addressList) {
+            Thread t = new Thread(new AckProcessor(address));
+            ackProcessThreadPool.add(t);
+            t.start();
         }
+//        for (int i = 0; i < ackProcessThreadPool.length; ++i) {
+//           ackProcessThreadPool[i] = new Thread(new AckProcessor());
+//           ackProcessThreadPool[i].start();
+//        }
         stubGroup.setupTokenState();
         stubGroup.setBootStrappingStatusState();
         for (InetAddress seed : seeds) {
@@ -372,9 +384,16 @@ public class WholeClusterSimulator {
     }
     
     public static class AckProcessor implements Runnable {
+        
+        InetAddress address;
+        
+        public AckProcessor(InetAddress address) {
+            this.address = address;
+        }
 
         @Override
         public void run() {
+            LinkedBlockingQueue<MessageIn<?>> ackQueue = ackQueues.get(address);
             while (true) {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
