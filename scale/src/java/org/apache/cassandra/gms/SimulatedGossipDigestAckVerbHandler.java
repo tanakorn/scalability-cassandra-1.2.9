@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -37,6 +38,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 {
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAckVerbHandler.class);
     private static final Map<String, byte[]> emptyMap = Collections.<String, byte[]>emptyMap();
+    
+    private Random rand = new Random();
     
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
@@ -135,8 +138,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
+
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.normalGossipExecRecords[normalNodeNum];
+                WholeClusterSimulator.getExecTimeNormal(normalNodeNum);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);

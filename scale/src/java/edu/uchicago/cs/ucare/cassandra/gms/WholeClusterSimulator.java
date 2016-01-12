@@ -33,6 +33,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.commons.math.stat.regression.SimpleRegression;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,8 @@ public class WholeClusterSimulator {
             new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
     
     public static long[] bootGossipExecRecords;
-    public static long[] normalGossipExecRecords;
+    public static double[] normalGossipExecRecords;
+    public static double[] normalGossipExecSdRecords;
 
     public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
             new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
@@ -139,7 +141,8 @@ public class WholeClusterSimulator {
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[MAX_NODE];
-        normalGossipExecRecords = new long[MAX_NODE];
+        normalGossipExecRecords = new double[MAX_NODE];
+        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
@@ -149,17 +152,23 @@ public class WholeClusterSimulator {
         }
         buffReader.close();
         buffReader = new BufferedReader(new FileReader(args[2]));
+        SimpleRegression regression = new SimpleRegression();
+        while ((line = buffReader.readLine()) != null) {
+            System.out.println(line);
+            String[] tokens = line.split(" ");
+            int numNormalVersion = Integer.parseInt(tokens[0]);
+            regression.addData(numNormalVersion, Double.parseDouble(tokens[1]));
+            normalGossipExecSdRecords[numNormalVersion] = Double.parseDouble(tokens[4]);
+        }
+        buffReader.close();
+        double slope = regression.getSlope();
+        double intercept = regression.getIntercept();
         for (int i = 0; i < MAX_NODE; ++i) {
-            normalGossipExecRecords[i] = 43 * i - 91;
+            normalGossipExecRecords[i] = slope * i + intercept;
             if (normalGossipExecRecords[i] < 0) {
                 normalGossipExecRecords[i] = 0;
             }
         }
-//        while ((line = buffReader.readLine()) != null) {
-//            String[] tokens = line.split(" ");
-//            normalGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
-//        }
-        buffReader.close();
 //        Gossiper.registerStatic(StorageService.instance);
 //        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
@@ -199,6 +208,15 @@ public class WholeClusterSimulator {
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
         MessageIn<T> msgIn = MessageIn.create(msgOut.from, msgOut.payload, msgOut.parameters, msgOut.verb, MessagingService.VERSION_12);
         return msgIn;
+    }
+    
+    static Random rand = new Random();
+    public static long getExecTimeNormal(int numNormal) {
+        double execTime = normalGossipExecRecords[numNormal];
+        double sdExecTime = normalGossipExecSdRecords[numNormal];
+        double gaussian = rand.nextGaussian();
+        double adjustedExecTime = execTime + sdExecTime * gaussian;
+        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
     }
     
     public static class MyGossiperTask extends TimerTask {
