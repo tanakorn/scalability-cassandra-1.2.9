@@ -62,8 +62,8 @@ public class WholeClusterSimulator {
     public static double[] normalGossipExecRecords;
     public static double[] normalGossipExecSdRecords;
     
-    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
-            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
+//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
+//            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
 
 //    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
 //            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
@@ -74,6 +74,7 @@ public class WholeClusterSimulator {
 //        }
 //
 //    });
+    public static LinkedBlockingQueue<MessageIn<?>> ackQueue = new LinkedBlockingQueue<MessageIn<?>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -180,9 +181,9 @@ public class WholeClusterSimulator {
         for (int i = 1; i <= numStubs; ++i) {
             addressList.add(InetAddress.getByName("127.0.0." + i));
         }
-        for (InetAddress address : addressList) {
-            ackQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-        }
+//        for (InetAddress address : addressList) {
+//            ackQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+//        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
@@ -225,10 +226,11 @@ public class WholeClusterSimulator {
     static Random rand = new Random();
     public static long getExecTimeNormal(int numNormal) {
         double execTime = normalGossipExecRecords[numNormal];
-        double sdExecTime = normalGossipExecSdRecords[numNormal];
-        double gaussian = rand.nextGaussian();
-        double adjustedExecTime = execTime + sdExecTime * gaussian;
-        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
+        return execTime < 0 ? 0 : (long) (execTime * 1000);
+//        double sdExecTime = normalGossipExecSdRecords[numNormal];
+//        double gaussian = rand.nextGaussian();
+//        double adjustedExecTime = execTime + sdExecTime * gaussian;
+//        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
     }
     
     public static class MyGossiperTask extends TimerTask {
@@ -393,7 +395,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            LinkedBlockingQueue<MessageIn<?>> ackQueue = ackQueues.get(address);
+//            LinkedBlockingQueue<MessageIn<?>> ackQueue = ackQueues.get(address);
             while (true) {
                 try {
                 MessageIn<?> ackMessage = ackQueue.take();
