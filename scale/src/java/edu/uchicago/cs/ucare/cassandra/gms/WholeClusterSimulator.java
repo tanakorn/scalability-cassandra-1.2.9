@@ -258,7 +258,6 @@ public class WholeClusterSimulator {
     public static long getExecTimeNormal(int numNormal) {
         double execTime = normalGossipExecRecords[numNormal];
         long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
-        System.out.println(numNormal + " " + execTimeMilli);
         return execTimeMilli;
 //        double sdExecTime = normalGossipExecSdRecords[numNormal];
 //        double gaussian = rand.nextGaussian();
