@@ -60,7 +60,7 @@ public class WholeClusterSimulator {
     
     public static long[] bootGossipExecRecords;
     public static double[] normalGossipExecRecords;
-    public static double[] normalGossipExecSdRecords;
+//    public static double[] normalGossipExecSdRecords;
     
 //    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
 //            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
@@ -139,15 +139,15 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 3) {
+        if (args.length < 5) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <real_exec> <mode>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[MAX_NODE];
         normalGossipExecRecords = new double[MAX_NODE];
-        normalGossipExecSdRecords = new double[MAX_NODE];
+//        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
@@ -156,22 +156,53 @@ public class WholeClusterSimulator {
             bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
-        buffReader = new BufferedReader(new FileReader(args[2]));
-        SimpleRegression regression = new SimpleRegression();
-        while ((line = buffReader.readLine()) != null) {
-            String[] tokens = line.split(" ");
-            int numNormalVersion = Integer.parseInt(tokens[0]);
-            regression.addData(numNormalVersion, Double.parseDouble(tokens[1]));
-            normalGossipExecSdRecords[numNormalVersion] = Double.parseDouble(tokens[4]);
-        }
-        buffReader.close();
-        double slope = regression.getSlope();
-        double intercept = regression.getIntercept();
-        for (int i = 0; i < MAX_NODE; ++i) {
-            normalGossipExecRecords[i] = slope * i + intercept;
-            if (normalGossipExecRecords[i] < 0) {
-                normalGossipExecRecords[i] = 0;
+        String mode = args[4];
+        if (mode.equals("offline")) {
+            buffReader = new BufferedReader(new FileReader(args[2]));
+            while ((line = buffReader.readLine()) != null) {
+                String[] tokens = line.split(" ");
+                int numNormalVersion = Integer.parseInt(tokens[0]);
+                double execTime = Double.parseDouble(tokens[1]) / 1000;
+                normalGossipExecRecords[numNormalVersion] = execTime;
             }
+            buffReader.close();
+        } else if (mode.equals("real-med")) {
+            buffReader = new BufferedReader(new FileReader(args[3]));
+            SimpleRegression regression = new SimpleRegression();
+            while ((line = buffReader.readLine()) != null) {
+                String[] tokens = line.split(" ");
+                int numNormalVersion = Integer.parseInt(tokens[0]);
+                regression.addData(numNormalVersion, Double.parseDouble(tokens[6]));
+            }
+            buffReader.close();
+            double slope = regression.getSlope();
+            double intercept = regression.getIntercept();
+            for (int i = 0; i < MAX_NODE; ++i) {
+                normalGossipExecRecords[i] = slope * i + intercept;
+                if (normalGossipExecRecords[i] < 0) {
+                    normalGossipExecRecords[i] = 0;
+                }
+            }
+        } else if (mode.equals("real-mean")) {
+            buffReader = new BufferedReader(new FileReader(args[3]));
+            SimpleRegression regression = new SimpleRegression();
+            while ((line = buffReader.readLine()) != null) {
+                String[] tokens = line.split(" ");
+                int numNormalVersion = Integer.parseInt(tokens[0]);
+                regression.addData(numNormalVersion, Double.parseDouble(tokens[2]));
+            }
+            buffReader.close();
+            double slope = regression.getSlope();
+            double intercept = regression.getIntercept();
+            for (int i = 0; i < MAX_NODE; ++i) {
+                normalGossipExecRecords[i] = slope * i + intercept;
+                if (normalGossipExecRecords[i] < 0) {
+                    normalGossipExecRecords[i] = 0;
+                }
+            }
+        } else {
+            System.err.println("Wrong mode");
+            System.exit(1);
         }
 //        Gossiper.registerStatic(StorageService.instance);
 //        Gossiper.registerStatic(LoadBroadcaster.instance);
@@ -226,7 +257,9 @@ public class WholeClusterSimulator {
     static Random rand = new Random();
     public static long getExecTimeNormal(int numNormal) {
         double execTime = normalGossipExecRecords[numNormal];
-        return execTime < 0 ? 0 : (long) (execTime * 1000);
+        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
+        System.out.println(numNormal + " " + execTimeMilli);
+        return execTimeMilli;
 //        double sdExecTime = normalGossipExecSdRecords[numNormal];
 //        double gaussian = rand.nextGaussian();
 //        double adjustedExecTime = execTime + sdExecTime * gaussian;
