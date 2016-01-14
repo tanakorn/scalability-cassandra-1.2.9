@@ -55,8 +55,8 @@ public class WholeClusterSimulator {
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
-    public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
-            new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
+//    public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
+//            new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
     
     public static long[] bootGossipExecRecords;
     public static double[] normalGossipExecRecords;
@@ -224,8 +224,8 @@ public class WholeClusterSimulator {
 //        stubGroup.listen();
         // I should start MyGossiperTask here
         timer.schedule(new MyGossiperTask(), 0, 1000);
-        Thread syncProcessThread = new Thread(new SyncProcessor());
-        syncProcessThread.start();
+//        Thread syncProcessThread = new Thread(new syncprocessor());
+//        syncprocessthread.start();
 //        Thread[] ackProcessThreadPool = new Thread[addressList.size()];
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
@@ -299,7 +299,7 @@ public class WholeClusterSimulator {
 //                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
 //                    }
 //                    logger.warn(sb.toString());
-                    if (!syncQueue.add(synMsg)) {
+                    if (!ackQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
 //                        logger.debug(performerAddress + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests);
@@ -313,7 +313,7 @@ public class WholeClusterSimulator {
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
-                        if (!syncQueue.add(synMsg)) {
+                        if (!ackQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
                         }
@@ -347,7 +347,7 @@ public class WholeClusterSimulator {
 //                                    sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
 //                                }
 //                                logger.warn(sb.toString());
-                                if (!syncQueue.add(synMsg)) {
+                                if (!ackQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
 //                                    logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
@@ -377,7 +377,7 @@ public class WholeClusterSimulator {
 //                                        sb.append(address + " gen=" + gen + " version=" + version + " status=" + (vv == null ? "no" : vv.value) + "\n");
 //                                    }
 //                                    logger.warn(sb.toString());
-                                    if (!syncQueue.add(synMsg)) {
+                                    if (!ackQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
 //                                        logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
@@ -397,25 +397,25 @@ public class WholeClusterSimulator {
         
     }
     
-    public static class SyncProcessor implements Runnable {
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-//                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
-                    MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (syncQueue.size() > 1000) {
-                    logger.warn("Sync queue size is greater than 1000");
-                }
-            }
-        }
-        
-    }
+//    public static class SyncProcessor implements Runnable {
+//
+//        @Override
+//        public void run() {
+//            while (true) {
+//                try {
+//                    MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
+////                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
+//                    MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                if (syncQueue.size() > 1000) {
+//                    logger.warn("Sync queue size is greater than 1000");
+//                }
+//            }
+//        }
+//        
+//    }
     
     public static class AckProcessor implements Runnable {
         
