@@ -51,23 +51,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     public static final IFailureDetector instance = new FailureDetector();
     private static final Logger logger = LoggerFactory.getLogger(FailureDetector.class);
 
-    private final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
+    public final Map<InetAddress, ArrivalWindow> arrivalSamples = new Hashtable<InetAddress, ArrivalWindow>();
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
     
-    public static final Set<InetAddress> observedNodes;
-    static {
-    	observedNodes = new HashSet<InetAddress>();
-    	String[] tmp = System.getProperty("observed.nodes", "").split(",");
-    	for (String node : tmp) {
-    		try {
-				observedNodes.add(InetAddress.getByName(node));
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				logger.error("Error for when observe {}", node);
-			}
-    	}
-    }
-
     public FailureDetector()
     {
         // Register this instance with JMX
@@ -183,9 +169,6 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         long now = System.currentTimeMillis();
-        if (observedNodes.contains(ep)) {
-        	Klogger.logger.info("See " + ep + " at time " + now);
-        }
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -196,17 +179,15 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         heartbeatWindow.add(now, ep);
     }
 
-    public void interpret(InetAddress ep)
+    public double interpret(InetAddress ep)
     {
         ArrivalWindow hbWnd = arrivalSamples.get(ep);
         if ( hbWnd == null )
         {
-            return;
+            return 0;
         }
         long now = System.currentTimeMillis();
-//        double phi = hbWnd.phi(now);
         double phi = hbWnd.phi(now, ep);
-//        Klogger.logger.info("PHI for " + ep + " : " + phi);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);
 
@@ -219,6 +200,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
                 listener.convict(ep, phi);
             }
         }
+        return phi;
     }
 
     public void forceConviction(InetAddress ep)
@@ -341,16 +323,17 @@ class ArrivalWindow
         {
             interArrivalTime = Gossiper.intervalInMillis / 2;
         }
-        Klogger.logger.info("arrival for " + address + " : " + interArrivalTime + " ms ");
         if (interArrivalTime <= MAX_INTERVAL_IN_MS)
             arrivalIntervals.add(interArrivalTime);
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         arrivalIntervals2.add(interArrivalTime);
         tLast = value;
+        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " t_silence of " + address + 
+                " is " + interArrivalTime + " mean " + mean());
     }
 
-    double mean()
+    public double mean()
     {
         return arrivalIntervals.mean();
     }
@@ -378,16 +361,16 @@ class ArrivalWindow
         double mean = mean();
         double mean2 = arrivalIntervals2.mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
-        double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
-        if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi || observedNodes.contains(address)) {
+        //double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
+        //double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
+        if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi) {
             Klogger.logger.info("PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(address, phi);
         }
-        if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
-            Klogger.logger.info("PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
-            maxObservedPhi2.put(address, phi2);
-        }
+        //if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {
+            //Klogger.logger.info("PHI2 for " + address + " : " + phi2 + " " + t + " " + mean2 + " " + sd2 + " " + size2);
+            //maxObservedPhi2.put(address, phi2);
+        //}
         return phi;
     }
 

@@ -31,6 +31,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
@@ -55,7 +56,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
-        GossiperStub stub = RandomGossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
 
         if ( epStateMap.size() > 0 )
         {
@@ -95,12 +96,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        }
-        if (RandomGossipProcessingMetric.stubGroup.contains(from)) {
-            MessageIn<GossipDigestAck2> msgIn = RandomGossipProcessingMetric.convertOutToIn(gDigestAck2Message);
+        if (GossipProcessingMetric.stubGroup.contains(from)) {
+            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
             msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-                    Integer.toString(RandomGossipProcessingMetric.idGen.incrementAndGet()));
+                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
         } else {

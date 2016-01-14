@@ -67,6 +67,31 @@ class HeartBeatState
     {
         return String.format("HeartBeat: generation = %d, version = %d", generation, version);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + generation;
+        result = prime * result + version;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        HeartBeatState other = (HeartBeatState) obj;
+        if (generation != other.generation)
+            return false;
+        if (version != other.version)
+            return false;
+        return true;
+    }
 }
 
 class HeartBeatStateSerializer implements IVersionedSerializer<HeartBeatState>

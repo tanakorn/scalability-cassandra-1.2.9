@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
@@ -51,8 +52,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        Gossiper.notifyFailureDetectorStatic(RandomGossipProcessingMetric.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
-        Gossiper.applyStateLocallyStatic(RandomGossipProcessingMetric.stubGroup.getStub(to), remoteEpStateMap);
+        Gossiper.notifyFailureDetectorStatic(GossipProcessingMetric.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
+        Gossiper.applyStateLocallyStatic(GossipProcessingMetric.stubGroup.getStub(to), remoteEpStateMap);
         
     }
 }

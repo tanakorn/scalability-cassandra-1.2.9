@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -38,13 +39,28 @@ public class GossipDigestAck
 {
     public static final IVersionedSerializer<GossipDigestAck> serializer = new GossipDigestAckSerializer();
 
+    private static final AtomicInteger idGenerator = new AtomicInteger(0);
+
     final List<GossipDigest> gDigestList;
     final Map<InetAddress, EndpointState> epStateMap;
+    final int msgId;
+    final int syncId;
+    long createdTime;
 
-    GossipDigestAck(List<GossipDigest> gDigestList, Map<InetAddress, EndpointState> epStateMap)
+    GossipDigestAck(List<GossipDigest> gDigestList, Map<InetAddress, EndpointState> epStateMap, int syncId)
     {
         this.gDigestList = gDigestList;
         this.epStateMap = epStateMap;
+        this.msgId = idGenerator.getAndIncrement();
+        this.syncId = syncId;
+    }
+
+    GossipDigestAck(List<GossipDigest> gDigestList, Map<InetAddress, EndpointState> epStateMap, int msgId, int syncId)
+    {
+        this.gDigestList = gDigestList;
+        this.epStateMap = epStateMap;
+        this.msgId = msgId;
+        this.syncId = syncId;
     }
 
     public List<GossipDigest> getGossipDigestList()
@@ -55,6 +71,47 @@ public class GossipDigestAck
     public Map<InetAddress, EndpointState> getEndpointStateMap()
     {
         return epStateMap;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((epStateMap == null) ? 0 : epStateMap.hashCode());
+        result = prime * result
+                + ((gDigestList == null) ? 0 : gDigestList.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GossipDigestAck other = (GossipDigestAck) obj;
+        if (epStateMap == null) {
+            if (other.epStateMap != null)
+                return false;
+        } else if (!epStateMap.equals(other.epStateMap))
+            return false;
+        if (gDigestList == null) {
+            if (other.gDigestList != null)
+                return false;
+        } else if (!gDigestList.equals(other.gDigestList))
+            return false;
+        return true;
+    }
+
+    public long getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(long createdTime) {
+        this.createdTime = createdTime;
     }
 }
 
@@ -72,6 +129,9 @@ class GossipDigestAckSerializer implements IVersionedSerializer<GossipDigestAck>
             CompactEndpointSerializationHelper.serialize(ep, dos);
             EndpointState.serializer.serialize(entry.getValue(), dos, version);
         }
+        dos.writeInt(gDigestAckMessage.msgId);
+        dos.writeInt(gDigestAckMessage.syncId);
+        dos.writeLong(gDigestAckMessage.createdTime);
     }
 
     public GossipDigestAck deserialize(DataInput dis, int version) throws IOException
@@ -88,7 +148,12 @@ class GossipDigestAckSerializer implements IVersionedSerializer<GossipDigestAck>
             EndpointState epState = EndpointState.serializer.deserialize(dis, version);
             epStateMap.put(ep, epState);
         }
-        return new GossipDigestAck(gDigestList, epStateMap);
+        int msgId = dis.readInt();
+        int syncId = dis.readInt();
+        long createdTime = dis.readLong();
+        GossipDigestAck digest = new GossipDigestAck(gDigestList, epStateMap, msgId, syncId);
+        digest.setCreatedTime(createdTime);
+        return digest;
     }
 
     public long serializedSize(GossipDigestAck ack, int version)

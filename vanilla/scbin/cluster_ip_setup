@@ -16,6 +16,6 @@ for ip in $all_ip; do
     cd $scriptdir
     sudo ./each_machine_ip_setup
   else
-    ssh $ip "cd $scriptdir; sudo ./each_machine_ip_setup"
+    ssh -o "StrictHostKeyChecking no" $ip "cd $scriptdir; sudo ./each_machine_ip_setup"
   fi
 done

@@ -752,7 +752,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     
     public static EndpointState getEndpointStateForEndpointStatic(GossiperStub stub, InetAddress ep)
     {
-        logger.info("sc_debug: korn 2 " + ep + " " + stub.getInetAddress() + " " + stub.getEndpointStateMap().containsKey(ep));
+//        logger.info("sc_debug: korn 2 " + ep + " " + stub.getInetAddress() + " " + stub.getEndpointStateMap().containsKey(ep));
         return stub.getEndpointStateMap().get(ep);
 //        return endpointStateMap.get(ep);
     }
@@ -773,7 +773,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     
     public static boolean usesHostIdStatic(GossiperStub stub, InetAddress endpoint)
     {
-        logger.info("sc_debug: korn 1 " + (getEndpointStateForEndpointStatic(stub, endpoint) == null ? "null" : "not null"));
+//        logger.info("sc_debug: korn 1 " + (getEndpointStateForEndpointStatic(stub, endpoint) == null ? "null" : "not null"));
         if (MessagingService.instance().knowsVersion(endpoint) && MessagingService.instance().getVersion(endpoint) >= MessagingService.VERSION_12)
             return true;
         else  if (getEndpointStateForEndpointStatic(stub, endpoint).getApplicationState(ApplicationState.NET_VERSION) != null && Integer.parseInt(getEndpointStateForEndpointStatic(stub, endpoint).getApplicationState(ApplicationState.NET_VERSION).value) >= MessagingService.VERSION_12) 

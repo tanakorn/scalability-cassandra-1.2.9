@@ -29,6 +29,7 @@ import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
@@ -62,7 +63,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.warn("Partitioner mismatch from " + from + " " + gDigestMessage.partioner  + "!=" + DatabaseDescriptor.getPartitionerName());
             return;
         }
-        GossiperStub stub = RandomGossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
         List<GossipDigest> gDigestList = gDigestMessage.getGossipDigests();
         if (logger.isTraceEnabled())
         {
@@ -117,12 +118,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        if (RandomGossipProcessingMetric.stubGroup.contains(from)) {
-        	MessageIn<GossipDigestAck> msgIn = RandomGossipProcessingMetric.convertOutToIn(gDigestAckMessage);
+        if (GossipProcessingMetric.stubGroup.contains(from)) {
+        	MessageIn<GossipDigestAck> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAckMessage);
         	msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK).doVerb(msgIn, 
-            		Integer.toString(RandomGossipProcessingMetric.idGen.incrementAndGet()));
+            		Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK + "\" from " + msgIn.from + " took " + t + " ms");
         } else {

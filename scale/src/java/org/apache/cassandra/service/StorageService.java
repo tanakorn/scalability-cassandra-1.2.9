@@ -1423,6 +1423,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     
     private static void handleStateBootstrapStatic(GossiperStub stub, InetAddress endpoint, String[] pieces)
     {
+        long s = System.currentTimeMillis();
         assert pieces.length >= 2;
 
         // Parse versioned values according to end-point version:
@@ -1457,6 +1458,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
 
         if (Gossiper.usesHostIdStatic(stub, endpoint))
             tokenMetadata.updateHostId(Gossiper.getHostIdStatic(stub, endpoint), endpoint);
+        long t = System.currentTimeMillis() - s;
+        logger.info("Handle bootstrap for " + endpoint + " took " + t + " ms");
     }
 
     /**
@@ -1594,6 +1597,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     
     private static void handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
+        long s = System.currentTimeMillis();
         assert pieces.length >= 2;
 
         // Parse versioned values according to end-point version:
@@ -1604,6 +1608,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Collection<Token> tokens;
 
         tokens = getTokensForStatic(stub, endpoint, pieces[1]);
+
+//        logger.info("Token size = " + tokens.size());
 
         if (logger.isDebugEnabled())
             logger.debug("Node " + endpoint + " state normal, token " + tokens);
@@ -1731,6 +1737,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
 
         calculatePendingRangesStatic(stub);
+        long t = System.currentTimeMillis() - s;
+        logger.info("Handle normal for " + endpoint + " took " + t + " ms");
     }
 
     /**

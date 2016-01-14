@@ -18,14 +18,17 @@
 package org.apache.cassandra.gms;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
+
+import edu.uchicago.cs.ucare.util.Klogger;
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This abstraction represents both the HeartBeatState and the ApplicationState in an EndpointState
@@ -45,12 +48,15 @@ public class EndpointState
     /* fields below do not get serialized */
     private volatile long updateTimestamp;
     private volatile boolean isAlive;
+    
+    int hopNum;
 
     EndpointState(HeartBeatState initialHbState)
     {
         hbState = initialHbState;
         updateTimestamp = System.currentTimeMillis();
         isAlive = true;
+        hopNum = 0;
     }
 
     HeartBeatState getHeartBeatState()
@@ -62,6 +68,14 @@ public class EndpointState
     {
         updateTimestamp();
         hbState = newHbState;
+    }
+
+    public int getHopNum() {
+        return hopNum;
+    }
+
+    public void setHopNum(int hopNum) {
+        this.hopNum = hopNum;
     }
 
     public VersionedValue getApplicationState(ApplicationState key)
@@ -80,6 +94,18 @@ public class EndpointState
 
     void addApplicationState(ApplicationState key, VersionedValue value)
     {
+//        StackTracePrinter.print(Klogger.logger);
+//        InetAddress thisAddress = null;
+//        for (InetAddress address : Gossiper.instance.endpointStateMap.keySet()) {
+//            if (this == Gossiper.instance.endpointStateMap.get(address)) {
+//                thisAddress = address;
+//            }
+//        }
+//        if (key == ApplicationState.TOKENS) {
+//            Klogger.logger.info(thisAddress + " add app state " + key);
+//        } else {
+//            Klogger.logger.info(thisAddress + " add app state " + key + " " + value);
+//        }
         applicationState.put(key, value);
     }
 
@@ -113,6 +139,44 @@ public class EndpointState
     {
         return "EndpointState: HeartBeatState = " + hbState + ", AppStateMap = " + applicationState;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime
+                * result
+                + ((applicationState == null) ? 0 : applicationState.hashCode());
+        result = prime * result + ((hbState == null) ? 0 : hbState.hashCode());
+        result = prime * result + (isAlive ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        EndpointState other = (EndpointState) obj;
+        if (applicationState == null) {
+            if (other.applicationState != null)
+                return false;
+        } else if (!applicationState.equals(other.applicationState))
+            return false;
+        if (hbState == null) {
+            if (other.hbState != null)
+                return false;
+        } else if (!hbState.equals(other.hbState))
+            return false;
+        if (isAlive != other.isAlive)
+            return false;
+        if (updateTimestamp != other.updateTimestamp)
+            return false;
+        return true;
+    }
 }
 
 class EndpointStateSerializer implements IVersionedSerializer<EndpointState>
@@ -132,6 +196,7 @@ class EndpointStateSerializer implements IVersionedSerializer<EndpointState>
             dos.writeInt(entry.getKey().ordinal());
             VersionedValue.serializer.serialize(value, dos, version);
         }
+        dos.writeInt(epState.hopNum);
     }
 
     public EndpointState deserialize(DataInput dis, int version) throws IOException
@@ -146,6 +211,8 @@ class EndpointStateSerializer implements IVersionedSerializer<EndpointState>
             VersionedValue value = VersionedValue.serializer.deserialize(dis, version);
             epState.addApplicationState(Gossiper.STATES[key], value);
         }
+        int hopNum = dis.readInt();
+        epState.setHopNum(hopNum);
         return epState;
     }
 
