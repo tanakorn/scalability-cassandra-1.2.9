@@ -40,6 +40,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
+        logger.info(to + " doVerb syn");
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
@@ -131,8 +132,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
-//        WholeClusterSimulator.ackQueues.get(from).add(gDigestAckMessage);
-        WholeClusterSimulator.ackQueue.add(gDigestAckMessage);
+//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
     /*

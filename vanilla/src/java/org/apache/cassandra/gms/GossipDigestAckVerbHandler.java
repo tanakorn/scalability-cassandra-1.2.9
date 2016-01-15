@@ -40,10 +40,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-        Klogger.logger.info("thread ack " + Thread.currentThread().getId());
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
+        Klogger.logger.info(to + " doVerb ack");
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
         if (!Gossiper.instance.isEnabled())

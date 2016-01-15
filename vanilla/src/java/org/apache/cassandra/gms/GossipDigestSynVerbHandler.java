@@ -37,9 +37,9 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
-        Klogger.logger.info("thread sync " + Thread.currentThread().getId());
         long receiveTime = System.currentTimeMillis();
         InetAddress to = FBUtilities.getBroadcastAddress();
+        Klogger.logger.info(to +  " doVerb syn");
         InetAddress from = message.from;
         Gossiper.instance.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
         if (logger.isTraceEnabled())

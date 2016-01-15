@@ -37,11 +37,11 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
-        Klogger.logger.info("thread ack2 " + Thread.currentThread().getId());
         long receiveTime = System.currentTimeMillis();
     	long start, end; 
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
+        Klogger.logger.info(to + " doVerb ack2");
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);

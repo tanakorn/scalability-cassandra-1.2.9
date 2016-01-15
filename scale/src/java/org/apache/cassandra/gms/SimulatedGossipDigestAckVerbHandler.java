@@ -47,6 +47,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
+        logger.info(to + " doVerb ack");
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -148,8 +149,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
-//        WholeClusterSimulator.ackQueues.get(from).add(gDigestAck2Message);
-        WholeClusterSimulator.ackQueue.add(gDigestAck2Message);
+//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
+        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (result != null) {
             bootstrapCount = (int) result[5];

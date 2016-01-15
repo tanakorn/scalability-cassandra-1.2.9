@@ -39,6 +39,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long receiveTime = System.currentTimeMillis();
     	InetAddress from = message.from;
         InetAddress to = message.to;
+        logger.info(to + " doVerb ack2");
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         if (logger.isTraceEnabled())
