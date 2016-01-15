@@ -56,10 +56,11 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
     for normalVersion in sorted(self.execTimeOfVersionIndiv.keys()):
       execTimes = self.execTimeOfVersionIndiv[normalVersion]
       mean, sd = analyze.calcAverage(execTimes)
-      minVal = min(execTimes)
-      maxVal = max(execTimes)
+      #minVal = min(execTimes)
+      #maxVal = max(execTimes)
+      minV, lqV, medV, uqV, maxV = analyze.calcStat(execTimes)
       num = len(execTimes)
-      result['exec_time_of_version_indiv'] += '%d %f %f %f %f %d\n' % (normalVersion, mean, minVal, maxVal, sd, num)
+      result['exec_time_of_version_indiv'] += '%d %d %f %f %f %f %f %f %f\n' % (normalVersion, num, mean, sd, minV, lqV, medV, uqV, maxV);
 
     mean, sd = analyze.calcAverage(self.waitTime)
     num = len(self.waitTime)
