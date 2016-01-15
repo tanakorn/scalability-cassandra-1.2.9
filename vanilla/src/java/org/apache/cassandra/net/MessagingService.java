@@ -46,6 +46,7 @@ import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
+import org.apache.cassandra.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.concurrent.TracingAwareExecutorService;
@@ -717,7 +718,7 @@ public final class MessagingService implements MessagingServiceMBean
     public void receive(MessageIn message, String id, long timestamp)
     {
         TraceState state = Tracing.instance().initializeFromMessage(message);
-        Klogger.logger.debug("Message received from {}", message.from);
+        Klogger.logger.info("Message received " + message + " " + Thread.currentThread().getName());
         if (state != null)
             state.trace("Message received from {}", message.from);
 
@@ -771,6 +772,10 @@ public final class MessagingService implements MessagingServiceMBean
         }
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
+        if (message.getMessageType() == Stage.GOSSIP) {
+            Klogger.logger.info("Received " + message + " " + ((JMXEnabledThreadPoolExecutor) stage).getQueue().size());
+        }
+        
         assert stage != null : "No stage for message type " + message.verb;
 
         if (message.verb == Verb.REQUEST_RESPONSE && PBSPredictor.instance().isLoggingEnabled())

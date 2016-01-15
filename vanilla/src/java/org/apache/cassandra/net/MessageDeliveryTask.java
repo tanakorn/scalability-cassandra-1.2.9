@@ -40,6 +40,7 @@ public class MessageDeliveryTask implements Runnable
 
     public void run()
     {
+        Klogger.logger.info("start executing " + message.hashCode());
         MessagingService.Verb verb = message.verb;
         if (MessagingService.DROPPABLE_VERBS.contains(verb)
             && System.currentTimeMillis() > constructionTime + message.getTimeout())
@@ -59,5 +60,6 @@ public class MessageDeliveryTask implements Runnable
         verbHandler.doVerb(message, id);
         long t = System.currentTimeMillis() - s;
 //        Klogger.logger.info("Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
+        Klogger.logger.info("end executing " + message.hashCode());
     }
 }
