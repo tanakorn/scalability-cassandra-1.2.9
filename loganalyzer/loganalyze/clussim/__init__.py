@@ -7,6 +7,7 @@ modClassMap = {
   'exectime' : 'ExecTimeAnalyzer',
   'hop' : 'HopCounter',
   'tsilence' : 'TSilenceExtractor',
+  'message' : 'MessageCounter',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }

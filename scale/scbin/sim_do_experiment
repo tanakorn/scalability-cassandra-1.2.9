@@ -6,7 +6,7 @@ cd $scriptdir
 
 #mkdir -p $cassandra_log_dir
 #rm -r $cassandra_log_dir/*
-for mode in offline; do
+for mode in offline real-mean; do
   logdir=${cassandra_log_dir}-$mode
   mkdir -p $logdir
   rm -r $logdir/*
