@@ -1344,15 +1344,16 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private void handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
+        long[] time = new long[4];
         long s = System.currentTimeMillis();
+
         assert pieces.length >= 2;
         
-//        Klogger.logger().info("isClientMode = " + isClientMode);
-
         // Parse versioned values according to end-point version:
         //   versions  < 1.2 .....: STATUS,TOKEN
         //   versions >= 1.2 .....: uses HOST_ID/TOKENS app states
 
+        time[0] = System.currentTimeMillis();
         Collection<Token> tokens;
 
         tokens = getTokensFor(endpoint, pieces[1]);
@@ -1374,13 +1375,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
         Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
+        time[0] = System.currentTimeMillis() - time[0];
         
         long block1 = 0;
         long block2 = 0;
         int count1 = 0;
         int count2 = 0;
 
-        long forTime = System.currentTimeMillis();
+        time[1] = System.currentTimeMillis();
         for (final Token token : tokens)
         {
             // we don't want to update if this node is responsible for the token and it has a later startup time than endpoint.
@@ -1469,9 +1471,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
             }
         }
-        forTime = System.currentTimeMillis() - forTime;
+        time[1] = System.currentTimeMillis() - time[1];
 
-        long otherTime1 = System.currentTimeMillis();
+        time[2] = System.currentTimeMillis();
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove) {
             removeEndpoint(ep);
@@ -1490,9 +1492,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         if (!localTokensToRemove.isEmpty()) {
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
         }
-        otherTime1 = System.currentTimeMillis() - otherTime1;
+        time[2] = System.currentTimeMillis() - time[2];
 
-        long otherTime2 = System.currentTimeMillis();
+        time[3] = System.currentTimeMillis();
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
             tokenMetadata.removeFromMoving(endpoint);
@@ -1506,13 +1508,22 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         calculatePendingRanges();
         long t = System.currentTimeMillis() - s;
-        otherTime2 = System.currentTimeMillis() - otherTime2;
+        time[3] = System.currentTimeMillis() - time[3];
         Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
         Klogger.logger.info("Micro profiling count1=" + count1 + " block1=" + block1 + 
                 " avg1=" + (count1 == 0 ? 0 : (block1 / count1)) + 
                 " count2=" + count2 + " block2=" + block2 + 
-                " avg2=" + (count2 == 0 ? 0 : (block2 / count2)) + 
-                " ; forTime=" + forTime + " otherTime1=" + otherTime1 + " otherTime2=" + otherTime2);
+                " avg2=" + (count2 == 0 ? 0 : (block2 / count2)));
+//                " ; forTime=" + forTime + " otherTime1=" + otherTime1 + " otherTime2=" + otherTime2);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < time.length; ++i) {
+            sb.append("time");
+            sb.append(i);
+            sb.append("=");
+            sb.append(time[i]);
+            sb.append(" ");
+        }
+        Klogger.logger.info("Micro profiling time " + sb.toString());
     }
 
     /**
