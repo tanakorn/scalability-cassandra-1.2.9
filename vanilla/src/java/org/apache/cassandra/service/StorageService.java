@@ -1480,10 +1480,10 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         
         // The main expensive operation
         if (!tokensToUpdateInSystemTable.isEmpty()) {
-//            Klogger.logger.info("exp enter");
+            Klogger.logger.info("exp enter");
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
         } else {
-//            Klogger.logger.info("exp not enter");
+            Klogger.logger.info("exp not enter");
         }
         
         
@@ -1508,11 +1508,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         long t = System.currentTimeMillis() - s;
         otherTime2 = System.currentTimeMillis() - otherTime2;
         Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
-//        Klogger.logger.info("Micro profiling count1=" + count1 + " block1=" + block1 + 
-//                " avg1=" + (count1 == 0 ? 0 : (block1 / count1)) + 
-//                " count2=" + count2 + " block2=" + block2 + 
-//                " avg2=" + (count2 == 0 ? 0 : (block2 / count2)) + 
-//                " ; forTime=" + forTime + " otherTime1=" + otherTime1 + " otherTime2=" + otherTime2);
+        Klogger.logger.info("Micro profiling count1=" + count1 + " block1=" + block1 + 
+                " avg1=" + (count1 == 0 ? 0 : (block1 / count1)) + 
+                " count2=" + count2 + " block2=" + block2 + 
+                " avg2=" + (count2 == 0 ? 0 : (block2 / count2)) + 
+                " ; forTime=" + forTime + " otherTime1=" + otherTime1 + " otherTime2=" + otherTime2);
     }
 
     /**
