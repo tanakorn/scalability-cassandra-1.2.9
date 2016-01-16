@@ -1597,7 +1597,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     
     private static void handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
-        long s = System.currentTimeMillis();
+        long[] time = new long[5];
+
+        time[0] = System.currentTimeMillis();
         assert pieces.length >= 2;
 
         // Parse versioned values according to end-point version:
@@ -1605,6 +1607,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         //   versions >= 1.2 .....: uses HOST_ID/TOKENS app states
         
         final TokenMetadata tokenMetadata = stub.getTokenMetadata();
+        time[1] = System.currentTimeMillis();
         Collection<Token> tokens;
 
         tokens = getTokensForStatic(stub, endpoint, pieces[1]);
@@ -1629,25 +1632,40 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
 //        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
         Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
+        time[1] = System.currentTimeMillis() - time[1];
+        
+        long block1 = 0;
+        long block2 = 0;
+        int count1 = 0;
+        int count2 = 0;
 
+        time[2] = System.currentTimeMillis();
         for (final Token token : tokens)
         {
             // we don't want to update if this node is responsible for the token and it has a later startup time than endpoint.
             InetAddress currentOwner = tokenMetadata.getEndpoint(token);
             if (currentOwner == null)
             {
+                count1++;
+                long tmp1 = System.currentTimeMillis();
                 logger.debug("New node " + endpoint + " at token " + token);
                 tokensToUpdateInMetadata.add(token);
 //                if (!isClientMode)
 //                    tokensToUpdateInSystemTable.add(token);
                 // Added by Korn for scale check isClientMode always be false
                 tokensToUpdateInSystemTable.add(token);
+                tmp1 = System.currentTimeMillis() - tmp1;
+                block1 += tmp1;
             }
             else if (endpoint.equals(currentOwner))
             {
+                count2++;
+                long tmp1 = System.currentTimeMillis();
                 // set state back to normal, since the node may have tried to leave, but failed and is now back up
                 // no need to persist, token/ip did not change
                 tokensToUpdateInMetadata.add(token);
+                tmp1 = System.currentTimeMillis() - tmp1;
+                block2 += tmp1;
             }
             else if (tokenMetadata.isRelocating(token) && tokenMetadata.getRelocatingRanges().get(token).equals(endpoint))
             {
@@ -1712,7 +1730,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
             }
         }
+        time[2] = System.currentTimeMillis() - time[2];
 
+        time[3] = System.currentTimeMillis();
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
@@ -1721,7 +1741,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
         if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
+        time[3] = System.currentTimeMillis() - time[3];
 
+        time[4] = System.currentTimeMillis();
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
             tokenMetadata.removeFromMoving(endpoint);
@@ -1738,8 +1760,19 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
 
         calculatePendingRangesStatic(stub);
-        long t = System.currentTimeMillis() - s;
-        logger.info("Handle normal for " + endpoint + " took " + t + " ms");
+        time[4] = System.currentTimeMillis() - time[4];
+        time[0] = System.currentTimeMillis() - time[0];
+        long avg1 = count1 == 0 ? 0 : block1 / count1;
+        long avg2 = count2 == 0 ? 0 : block2 / count2;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < time.length; ++i) {
+            sb.append("time");
+            sb.append(i);
+            sb.append("=");
+            sb.append(time[i]);
+            sb.append(" ");
+        }
+        logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} " + sb.toString(), count1, block1, avg1, count2, block2, avg2);
     }
 
     /**
