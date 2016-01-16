@@ -1374,26 +1374,42 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
         Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
+        
+        long block1 = 0;
+        long block2 = 0;
+        int count1 = 0;
+        int count2 = 0;
 
+        long forTime = System.currentTimeMillis();
         for (final Token token : tokens)
         {
             // we don't want to update if this node is responsible for the token and it has a later startup time than endpoint.
             InetAddress currentOwner = tokenMetadata.getEndpoint(token);
             if (currentOwner == null)
             {
+                count1++;
+                long tmp1 = System.currentTimeMillis();
                 logger.debug("New node " + endpoint + " at token " + token);
                 tokensToUpdateInMetadata.add(token);
+                // isClientMode is always false in default config
                 if (!isClientMode)
                     tokensToUpdateInSystemTable.add(token);
+                tmp1 = System.currentTimeMillis() - tmp1;
+                block1 += tmp1;
             }
             else if (endpoint.equals(currentOwner))
             {
+                count2++;
+                long tmp1 = System.currentTimeMillis();
                 // set state back to normal, since the node may have tried to leave, but failed and is now back up
                 // no need to persist, token/ip did not change
                 tokensToUpdateInMetadata.add(token);
+                tmp1 = System.currentTimeMillis() - tmp1;
+                block1 += tmp1;
             }
             else if (tokenMetadata.isRelocating(token) && tokenMetadata.getRelocatingRanges().get(token).equals(endpoint))
             {
+                // Bootstrap code doesn't enter here
                 // Token was relocating, this is the bookkeeping that makes it official.
                 tokensToUpdateInMetadata.add(token);
                 if (!isClientMode)
@@ -1416,11 +1432,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             }
             else if (tokenMetadata.isRelocating(token))
             {
+                // Bootstrap code doesn't enter here
                 logger.info("Token {} is relocating to {}, ignoring update from {}",
                         new Object[]{token, tokenMetadata.getRelocatingRanges().get(token), endpoint});
             }
             else if (Gossiper.instance.compareEndpointStartup(endpoint, currentOwner) > 0)
             {
+                // Bootstrap code doesn't enter here
                 tokensToUpdateInMetadata.add(token);
                 if (!isClientMode)
                     tokensToUpdateInSystemTable.add(token);
@@ -1441,6 +1459,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             }
             else
             {
+                // Bootstrap code doesn't enter here
                 logger.info(String.format("Nodes %s and %s have the same token %s.  Ignoring %s",
                                            endpoint,
                                            currentOwner,
@@ -1450,15 +1469,30 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
             }
         }
+        forTime = System.currentTimeMillis() - forTime;
 
+        long otherTime1 = System.currentTimeMillis();
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
-        for (InetAddress ep : endpointsToRemove)
+        for (InetAddress ep : endpointsToRemove) {
             removeEndpoint(ep);
-        if (!tokensToUpdateInSystemTable.isEmpty())
+        }
+        
+        
+        // The main expensive operation
+        if (!tokensToUpdateInSystemTable.isEmpty()) {
+//            Klogger.logger.info("exp enter");
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-        if (!localTokensToRemove.isEmpty())
+        } else {
+//            Klogger.logger.info("exp not enter");
+        }
+        
+        
+        if (!localTokensToRemove.isEmpty()) {
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
+        }
+        otherTime1 = System.currentTimeMillis() - otherTime1;
 
+        long otherTime2 = System.currentTimeMillis();
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
             tokenMetadata.removeFromMoving(endpoint);
@@ -1472,7 +1506,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         calculatePendingRanges();
         long t = System.currentTimeMillis() - s;
+        otherTime2 = System.currentTimeMillis() - otherTime2;
         Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
+//        Klogger.logger.info("Micro profiling count1=" + count1 + " block1=" + block1 + 
+//                " avg1=" + (count1 == 0 ? 0 : (block1 / count1)) + 
+//                " count2=" + count2 + " block2=" + block2 + 
+//                " avg2=" + (count2 == 0 ? 0 : (block2 / count2)) + 
+//                " ; forTime=" + forTime + " otherTime1=" + otherTime1 + " otherTime2=" + otherTime2);
     }
 
     /**

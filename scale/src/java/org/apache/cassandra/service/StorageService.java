@@ -1716,8 +1716,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
-        if (!tokensToUpdateInSystemTable.isEmpty())
+        if (!tokensToUpdateInSystemTable.isEmpty()) {
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
+        }
         if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
 

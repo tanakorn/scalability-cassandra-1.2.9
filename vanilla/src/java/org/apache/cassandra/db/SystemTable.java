@@ -27,9 +27,11 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+
+import edu.uchicago.cs.ucare.util.Klogger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.config.Schema;
@@ -53,6 +55,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.Pair;
 
 import static org.apache.cassandra.cql3.QueryProcessor.processInternal;
+import static org.apache.cassandra.cql3.QueryProcessor.processInternalForUpdateTokens;;
 
 public class SystemTable
 {
@@ -305,6 +308,7 @@ public class SystemTable
     /**
      * Record tokens being used by another node
      */
+    // This is an expensive method called from StorageService.handleStateNormal
     public static synchronized void updateTokens(InetAddress ep, Collection<Token> tokens)
     {
         if (ep.equals(FBUtilities.getBroadcastAddress()))
@@ -314,8 +318,13 @@ public class SystemTable
         }
 
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
-        processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        long t1 = System.currentTimeMillis();
+        processInternalForUpdateTokens(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        t1 = System.currentTimeMillis() - t1;
+        long t2 = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
+        t2 = System.currentTimeMillis() - t2;
+        Klogger.logger.info("update_tokens " + t1 + " " + t2);
     }
 
     public static synchronized void updatePeerInfo(InetAddress ep, String columnName, String value)
