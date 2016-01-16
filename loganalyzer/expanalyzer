@@ -7,7 +7,7 @@ fi
 
 expdir=$1
 
-subexps="vanilla clussim"
+subexps="clussim"
 #subexps="clussim-off clussim-real-mean clussim-real-med"
 allsize="32 64 128"
 for subexp in $subexps; do
