@@ -1597,7 +1597,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     
     private static void handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
-        long[] time = new long[5];
+        long[] time = new long[7];
 
         time[0] = System.currentTimeMillis();
         assert pieces.length >= 2;
@@ -1611,6 +1611,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Collection<Token> tokens;
 
         tokens = getTokensForStatic(stub, endpoint, pieces[1]);
+        time[1] = System.currentTimeMillis() - time[1];
 
 //        logger.info("Token size = " + tokens.size());
 
@@ -1623,23 +1624,26 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         // Order Matters, TM.updateHostID() should be called before TM.updateNormalToken(), (see CASSANDRA-4300).
 //        if (Gossiper.instance.usesHostId(endpoint))
 //            tokenMetadata.updateHostId(Gossiper.instance.getHostId(endpoint), endpoint);
+        time[2] = System.currentTimeMillis();
         if (Gossiper.instance.usesHostIdStatic(stub, endpoint))
             tokenMetadata.updateHostId(Gossiper.getHostIdStatic(stub, endpoint), endpoint);
+        time[2] = System.currentTimeMillis() - time[2];
 
         Set<Token> tokensToUpdateInMetadata = new HashSet<Token>();
         Set<Token> tokensToUpdateInSystemTable = new HashSet<Token>();
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
 //        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
+        time[3] = System.currentTimeMillis();
         Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
-        time[1] = System.currentTimeMillis() - time[1];
+        time[3] = System.currentTimeMillis() - time[3];
         
         long block1 = 0;
         long block2 = 0;
         int count1 = 0;
         int count2 = 0;
 
-        time[2] = System.currentTimeMillis();
+        time[4] = System.currentTimeMillis();
         for (final Token token : tokens)
         {
             // we don't want to update if this node is responsible for the token and it has a later startup time than endpoint.
@@ -1730,9 +1734,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     logger.debug("Relocating ranges: {}", tokenMetadata.printRelocatingRanges());
             }
         }
-        time[2] = System.currentTimeMillis() - time[2];
+        time[4] = System.currentTimeMillis() - time[4];
 
-        time[3] = System.currentTimeMillis();
+        time[5] = System.currentTimeMillis();
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
@@ -1741,9 +1745,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
         if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
-        time[3] = System.currentTimeMillis() - time[3];
+        time[5] = System.currentTimeMillis() - time[5];
 
-        time[4] = System.currentTimeMillis();
+        time[6] = System.currentTimeMillis();
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
             tokenMetadata.removeFromMoving(endpoint);
@@ -1760,7 +1764,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
 
         calculatePendingRangesStatic(stub);
-        time[4] = System.currentTimeMillis() - time[4];
+        time[6] = System.currentTimeMillis() - time[6];
         time[0] = System.currentTimeMillis() - time[0];
         long avg1 = count1 == 0 ? 0 : block1 / count1;
         long avg2 = count2 == 0 ? 0 : block2 / count2;
