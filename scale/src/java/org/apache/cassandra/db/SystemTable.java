@@ -313,9 +313,14 @@ public class SystemTable
             return;
         }
 
+        long t1 = System.currentTimeMillis();
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
+        t1 = System.currentTimeMillis() - t1;
         processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        long t2 = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
+        t2 = System.currentTimeMillis() - t2;
+        logger.info("update_tokens " + t1 + " " + t2);
     }
 
     public static synchronized void updatePeerInfo(InetAddress ep, String columnName, String value)
