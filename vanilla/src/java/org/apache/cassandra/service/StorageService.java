@@ -1378,7 +1378,10 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
         time[3] = System.currentTimeMillis();
-        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
+        // This method make the diff between real and sim
+        TokenMetadata tokenMetadata = getTokenMetadata();
+        Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
+        int size = epToTokenCopy.size();
         time[3] = System.currentTimeMillis() - time[3];
         
         long block1 = 0;
@@ -1523,7 +1526,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             sb.append(time[i]);
             sb.append(" ");
         }
-        Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} " + sb.toString(), count1, block1, avg1, count2, block2, avg2);
+        Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} " 
+                + sb.toString(), count1, block1, avg1, count2, block2, avg2, size);
     }
 
     /**
