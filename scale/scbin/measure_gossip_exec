@@ -9,5 +9,17 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
-java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric $1
+start=1
+end=128
+i=1
+z=1
+while [ $i -le $end ]; do
+  j=`expr $i + 25`
+  if [ $j -gt $end ]; then
+    j=$end
+  fi
+  java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric $1 $i $j > ${1}.dat.${z}
+  i=`expr $i + 20`
+  z=`expr $z + 1`
+done
 
