@@ -91,6 +91,7 @@ public class TokenMetadata
 
     /* Use this lock for manipulating the token map */
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
+    private int readLockCount = 0;
     private volatile ArrayList<Token> sortedTokens;
 
     private final Topology topology;
@@ -972,6 +973,8 @@ public class TokenMetadata
     /** @return an endpoint to token multimap representation of tokenToEndpointMap (a copy) */
     public Multimap<InetAddress, Token> getEndpointToTokenMapForReading()
     {
+        readLockCount++;
+        Klogger.logger.info("lock read_lock_count " + readLockCount);
         lock.readLock().lock();
         try
         {
@@ -982,6 +985,8 @@ public class TokenMetadata
         }
         finally
         {
+            readLockCount--;
+            Klogger.logger.info("unlock read_lock_count " + readLockCount);
             lock.readLock().unlock();
         }
     }
