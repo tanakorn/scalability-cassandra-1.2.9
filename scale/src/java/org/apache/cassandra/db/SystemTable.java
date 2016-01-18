@@ -53,6 +53,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.Pair;
 
 import static org.apache.cassandra.cql3.QueryProcessor.processInternal;
+import static org.apache.cassandra.cql3.QueryProcessor.processInternalForUpdateTokens;
 
 public class SystemTable
 {
@@ -316,7 +317,7 @@ public class SystemTable
         long t1 = System.currentTimeMillis();
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         t1 = System.currentTimeMillis() - t1;
-        processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        processInternalForUpdateTokens(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
         long t2 = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
         t2 = System.currentTimeMillis() - t2;
