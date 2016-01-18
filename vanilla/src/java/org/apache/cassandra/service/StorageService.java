@@ -1342,7 +1342,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * @param endpoint node
      * @param pieces STATE_NORMAL,token
      */
-    private void handleStateNormal(final InetAddress endpoint, String[] pieces)
+    private int handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
         long[] time = new long[7];
 
@@ -1528,6 +1528,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size);
+        return size;
     }
 
     /**

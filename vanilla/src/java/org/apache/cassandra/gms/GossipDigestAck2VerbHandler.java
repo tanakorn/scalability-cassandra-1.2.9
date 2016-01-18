@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
@@ -37,6 +38,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
 
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
+        int numBefore = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size();
         long receiveTime = System.currentTimeMillis();
     	long start, end; 
         InetAddress from = message.from;
@@ -122,11 +124,14 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
+        int numAfter = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size();
         if (allBoot != 0 || allNormal != 0) {
             Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
+            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " 
+                    + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime
+                    + " ; before " + numBefore + " after " + numAfter);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
