@@ -775,8 +775,8 @@ public class AntiEntropyService
             forceShutdown();
         }
 
-        public void onJoin(InetAddress endpoint, EndpointState epState) {}
-        public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value) {}
+        public int onJoin(InetAddress endpoint, EndpointState epState) { return 0; }
+        public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value) { return 0; }
         public void onAlive(InetAddress endpoint, EndpointState state) {}
         public void onDead(InetAddress endpoint, EndpointState state) {}
 

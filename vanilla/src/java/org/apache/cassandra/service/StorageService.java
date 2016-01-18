@@ -1215,8 +1215,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * Note: Any time a node state changes from STATUS_NORMAL, it will not be visible to new nodes. So it follows that
      * you should never bootstrap a new node during a removetoken, decommission or move.
      */
-    public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
+        int update = 0;
         switch (state)
         {
             case STATUS:
@@ -1229,7 +1230,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
                     handleStateBootstrap(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_NORMAL))
-                    handleStateNormal(endpoint, pieces);
+                    update = handleStateNormal(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
                     handleStateRemoving(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_LEAVING))
@@ -1260,6 +1261,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
                 break;
         }
+        return update;
     }
 
     private String quote(String value)
@@ -1528,7 +1530,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} update={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size, update);
-        return size;
+        return update;
     }
 
     /**
@@ -2024,12 +2026,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         return changedRanges;
     }
 
-    public void onJoin(InetAddress endpoint, EndpointState epState)
+    public int onJoin(InetAddress endpoint, EndpointState epState)
     {
+        int update = 0;
         for (Map.Entry<ApplicationState, VersionedValue> entry : epState.getApplicationStateMap().entrySet())
         {
-            onChange(endpoint, entry.getKey(), entry.getValue());
+            update += onChange(endpoint, entry.getKey(), entry.getValue());
         }
+        return update;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

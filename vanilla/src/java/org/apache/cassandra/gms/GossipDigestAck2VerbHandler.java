@@ -99,14 +99,10 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Object[] result = Gossiper.instance.applyStateLocally(remoteEpStateMap);
         end = System.currentTimeMillis();
         long applyState = end - start;
-        int newNode = (int) result[0];
-        int newNodeToken = (int) result[1];
-        int newRestart = (int) result[2];
-        int newVersion = (int) result[3];
-        int newVersionToken = (int) result[4];
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+        int realNormalUpdate = (int) result[8];
         for (InetAddress receivingAddress : updatedNodes) {
             EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
             Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -130,8 +126,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
         if (bootstrapCount != 0 || normalCount != 0) {
             Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " 
-                    + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime
-                    + " ; before " + numBefore + " after " + numAfter);
+                    + bootstrapCount + " normal " + normalCount + " realNormalUpdate " + realNormalUpdate 
+                    + " ; transmission " + transmissionTime + " ; before " + numBefore + " after " + numAfter);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
