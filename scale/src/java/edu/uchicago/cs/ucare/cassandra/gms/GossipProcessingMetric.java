@@ -80,13 +80,12 @@ public class GossipProcessingMetric {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 3) {
+        if (args.length < 2) {
             System.err.println("Please specify node status (boot/normal), start - end index range");
             System.exit(1);
         }
         String testStatus = args[0];
-        int start = Integer.parseInt(args[1]);
-        int end = Integer.parseInt(args[2]);
+        int test = Integer.parseInt(args[1]);
         if (testStatus.equals("boot")) {
             
         } else if (testStatus.equals("normal")) {
@@ -99,9 +98,14 @@ public class GossipProcessingMetric {
         Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         InetAddress firstNode = InetAddress.getByName("127.0.0.1");
-        for (int i = start; i <= end; ++i) {
-            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
+//        for (int i = start; i <= end; ++i) {
+//            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
+//        }
+        String s = (test - 1) + " ";
+        for (int i = 0; i < 8; ++i) {
+            s += test(InetAddress.getByName("127.0.0." + test), firstNode, testStatus) + " ";
         }
+        System.out.println(s);
         System.exit(0);
     }
     
@@ -110,10 +114,10 @@ public class GossipProcessingMetric {
         return msgIn;
     }
     
-    public static void test(InetAddress gossiperAddress, InetAddress gossipeeAddress, String testStatus) throws UnknownHostException {
+    public static long test(InetAddress gossiperAddress, InetAddress gossipeeAddress, String testStatus) throws UnknownHostException {
         if (gossiperAddress == null || gossipeeAddress == null) {
             logger.error("Wrong arguments");
-            return;
+            return -1;
         }
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
@@ -157,11 +161,12 @@ public class GossipProcessingMetric {
         int gossipeeSize = gossipee.getEndpointStateMap().size();
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
-        long s = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-        long e = System.currentTimeMillis();
-        System.out.println((gossiperSize - gossipeeSize) + " " + (e - s));
-        logger.info((gossiperSize - gossipeeSize) + " " + (e - s));
+        time = System.currentTimeMillis() - time;
+//        System.out.println((gossiperSize - gossipeeSize) + " " + time);
+        return time;
+//        logger.info((gossiperSize - gossipeeSize) + " " + (e - s));
 //        try {
 //            Process p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/commitlog");
 //            p.waitFor();
