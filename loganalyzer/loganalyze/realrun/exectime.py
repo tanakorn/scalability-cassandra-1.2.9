@@ -10,6 +10,9 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
     self.newVersion = { i : { 'boot' : [], 'normal' : [] } for i in self.gossipType }
     self.execTimeOfVersion = { i : { } for i in self.gossipType }
     self.execTimeOfVersionIndiv = { }
+    self.execTimeOfRealUpdateIndiv = { }
+    self.execTimeOfRealUpdateAndTokensIndiv = { }
+    self.execTimeOfVersionAndRealUpdateAndTokensIndiv = { }
     self.waitTime = []
 
   def analyze(self, logLine, **kwargs):
@@ -31,14 +34,28 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
         if normalVersion not in self.execTimeOfVersionIndiv:
           self.execTimeOfVersionIndiv[normalVersion] = []
         self.execTimeOfVersionIndiv[normalVersion].append(execTime)
-        self.waitTime.append(int(tokens[21]))
+        realNormalUpdate = int(tokens[20])
+        if realNormalUpdate not in self.execTimeOfRealUpdateIndiv:
+          self.execTimeOfRealUpdateIndiv[realNormalUpdate] = []
+        self.execTimeOfRealUpdateIndiv[realNormalUpdate].append(execTime)
+        currentTokens = int(tokens[26])
+        if realNormalUpdate not in self.execTimeOfRealUpdateAndTokensIndiv:
+          self.execTimeOfRealUpdateAndTokensIndiv[realNormalUpdate] = {}
+        if currentTokens not in self.execTimeOfRealUpdateAndTokensIndiv[realNormalUpdate]:
+          self.execTimeOfRealUpdateAndTokensIndiv[realNormalUpdate][currentTokens] = []
+        self.execTimeOfRealUpdateAndTokensIndiv[realNormalUpdate][currentTokens].append(execTime)
+        if normalVersion not in self.execTimeOfVersionAndRealUpdateAndTokensIndiv:
+          self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion] = {}
+        if realNormalUpdate not in self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion]:
+          self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realNormalUpdate] = {}
+        if currentTokens not in self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realNormalUpdate]:
+          self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realNormalUpdate][currentTokens] = []
+        self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realNormalUpdate][currentTokens].append(execTime)
+        self.waitTime.append(int(tokens[23]))
 
   def analyzedResult(self):
     result = { } 
     for execType in self.execTime:
-      #minVal, lqVal, medVal, uqVal, maxVal = analyze.calcStat(self.execTime[execType])
-      #mean = sum(self.execTime[execType]) / len(self.execTime[execType])
-      #result += '%s mean=%f min=%f lq=%f med=%f uq=%f max=%f\n' % (execType, mean, minVal, lqVal, medVal, uqVal, maxVal)
       result['exec_time_' + execType] = '\n'.join(map(str, self.execTime[execType])) + '\n'
     for execType in self.gossipType:
       result['new_boot_' + execType] = '\n'.join(self.newVersion[execType]['boot']) + '\n'
@@ -56,11 +73,36 @@ class ExecTimeAnalyzer(analyze.BaseAnalyzer):
     for normalVersion in sorted(self.execTimeOfVersionIndiv.keys()):
       execTimes = self.execTimeOfVersionIndiv[normalVersion]
       mean, sd = analyze.calcAverage(execTimes)
-      #minVal = min(execTimes)
-      #maxVal = max(execTimes)
       minV, lqV, medV, uqV, maxV = analyze.calcStat(execTimes)
       num = len(execTimes)
       result['exec_time_of_version_indiv'] += '%d %d %f %f %f %f %f %f %f\n' % (normalVersion, num, mean, sd, minV, lqV, medV, uqV, maxV);
+
+    result['exec_time_of_realupdate_indiv'] = ''
+    for normalVersion in sorted(self.execTimeOfRealUpdateIndiv.keys()):
+      execTimes = self.execTimeOfRealUpdateIndiv[normalVersion]
+      mean, sd = analyze.calcAverage(execTimes)
+      minV, lqV, medV, uqV, maxV = analyze.calcStat(execTimes)
+      num = len(execTimes)
+      result['exec_time_of_realupdate_indiv'] += '%d %d %f %f %f %f %f %f %f\n' % (normalVersion, num, mean, sd, minV, lqV, medV, uqV, maxV);
+
+    result['exec_time_of_realupdate_tokens_indiv'] = ''
+    for realUpdate in sorted(self.execTimeOfRealUpdateAndTokensIndiv.keys()):
+      for numTokens in sorted(self.execTimeOfRealUpdateAndTokensIndiv[realUpdate].keys()):
+        execTimes = self.execTimeOfRealUpdateAndTokensIndiv[realUpdate][numTokens]
+        mean, sd = analyze.calcAverage(execTimes)
+        minV, lqV, medV, uqV, maxV = analyze.calcStat(execTimes)
+        num = len(execTimes)
+        result['exec_time_of_realupdate_tokens_indiv'] += '%d %d %d %f %f %f %f %f %f %f\n' % (realUpdate, numTokens, num, mean, sd, minV, lqV, medV, uqV, maxV);
+
+    result['exec_time_of_version_realupdate_tokens_indiv'] = ''
+    for normalVersion in sorted(self.execTimeOfVersionAndRealUpdateAndTokensIndiv.keys()):
+      for realUpdate in sorted(self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion].keys()):
+        for numTokens in sorted(self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realUpdate].keys()):
+          execTimes = self.execTimeOfVersionAndRealUpdateAndTokensIndiv[normalVersion][realUpdate][numTokens]
+          mean, sd = analyze.calcAverage(execTimes)
+          minV, lqV, medV, uqV, maxV = analyze.calcStat(execTimes)
+          num = len(execTimes)
+          result['exec_time_of_version_realupdate_tokens_indiv'] += '%d %d %d %d %f %f %f %f %f %f %f\n' % (normalVersion, realUpdate, numTokens, num, mean, sd, minV, lqV, medV, uqV, maxV);
 
     mean, sd = analyze.calcAverage(self.waitTime)
     num = len(self.waitTime)
