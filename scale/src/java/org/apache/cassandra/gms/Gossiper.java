@@ -1296,7 +1296,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 update += handleMajorStateChangeStatic(stub, ep, remoteState);
             }
         }
-        System.out.println(update);
         return update;
     }
 
