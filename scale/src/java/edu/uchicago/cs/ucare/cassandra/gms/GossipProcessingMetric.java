@@ -98,14 +98,15 @@ public class GossipProcessingMetric {
         Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         InetAddress firstNode = InetAddress.getByName("127.0.0.1");
-//        for (int i = start; i <= end; ++i) {
-//            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
-//        }
-        String s = (test - 1) + " ";
-        for (int i = 0; i < 8; ++i) {
-            s += test(InetAddress.getByName("127.0.0." + test), firstNode, testStatus) + " ";
+//        String s = (test - 1) + " ";
+        for (int i = 1; i <= 30; ++i) {
+            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
         }
-        System.out.println(s);
+//        String s = (test - 1) + " ";
+//        for (int i = 0; i < 8; ++i) {
+//            s += test(InetAddress.getByName("127.0.0." + test), firstNode, testStatus) + " ";
+//        }
+//        System.out.println(s);
         System.exit(0);
     }
     
@@ -164,40 +165,8 @@ public class GossipProcessingMetric {
         long time = System.currentTimeMillis();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
         time = System.currentTimeMillis() - time;
-//        System.out.println((gossiperSize - gossipeeSize) + " " + time);
+        System.out.println((gossiperSize - gossipeeSize) + " " + time);
         return time;
-//        logger.info((gossiperSize - gossipeeSize) + " " + (e - s));
-//        try {
-//            Process p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/commitlog");
-//            p.waitFor();
-//            byte[] b = new byte[1024];
-//            int r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//            p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/data");
-//            p.waitFor();
-//            b = new byte[1024];
-//            r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//            p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/saved_caches");
-//            p.waitFor();
-//            b = new byte[1024];
-//            r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//        } catch (IOException e1) {
-//            // TODO Auto-generated catch block
-//            System.out.println(e1.toString());
-//            e1.printStackTrace();
-//        } catch (InterruptedException e1) {
-//            // TODO Auto-generated catch block
-//            System.out.println(e1.toString());
-//            e1.printStackTrace();
-//        }
     }
     
 }

@@ -879,7 +879,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      * @param ep endpoint
      * @param epState EndpointState for the endpoint
      */
-    private int handleMajorStateChange(InetAddress ep, EndpointState epState)
+    private long[] handleMajorStateChange(InetAddress ep, EndpointState epState)
     {
         if (!isDeadState(epState))
         {
@@ -906,14 +906,16 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             logger.debug("Not marking " + ep + " alive due to dead state");
             markDead(ep, epState);
         }
-        int update = 0;
+        long[] result = { 0, 0, 0 };
         for (IEndpointStateChangeSubscriber subscriber : subscribers) {
-            int tmp = subscriber.onJoin(ep, epState);
+            long[] tmp = subscriber.onJoin(ep, epState);
             if (subscriber instanceof StorageService) {
-                update += tmp;
+                for (int i = 0; i < result.length; ++i) {
+                    result[i] += tmp[i];
+                }
             }
         }
-        return update;
+        return result;
     }
 
     private Boolean isDeadState(EndpointState epState)
@@ -942,6 +944,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int bootstrapCount = 0;
         int normalCount = 0;
         
+        long copyTime = 0;
+        long updateTime = 0;
         int normalUpdate = 0;
         
         Set<InetAddress> updatedNode = new HashSet<InetAddress>();
@@ -984,7 +988,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    normalUpdate += handleMajorStateChange(ep, remoteState);
+                    long[] result = handleMajorStateChange(ep, remoteState);
+                    copyTime += result[0];
+                    updateTime += result[1];
+                    normalUpdate += result[2];
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
@@ -995,7 +1002,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if ( remoteMaxVersion > localMaxVersion )
                     {
                         // apply states, but do not notify since there is no major change
-                        normalUpdate += applyNewStates(ep, localEpStatePtr, remoteState);
+                        long[] result = applyNewStates(ep, localEpStatePtr, remoteState);
+                        copyTime += result[0];
+                        updateTime += result[1];
+                        normalUpdate += result[2];
                         updatedNode.add(ep);
                     }
                     else if (logger.isTraceEnabled())
@@ -1018,7 +1028,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
                 FailureDetector.instance.report(ep);
-                normalUpdate += handleMajorStateChange(ep, remoteState);
+                long[] result = handleMajorStateChange(ep, remoteState);
+                copyTime += result[0];
+                updateTime += result[1];
+                normalUpdate += result[2];
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;
@@ -1028,10 +1041,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNode.add(ep);
             }
         }
-        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNode, normalUpdate };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNode, copyTime, updateTime, normalUpdate };
     }
 
-    private int applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
+    private long[] applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
     {
         // don't assert here, since if the node restarts the version will go back to zero
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
@@ -1051,28 +1064,33 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             assert remoteState.getHeartBeatState().getGeneration() == localState.getHeartBeatState().getGeneration();
             localState.addApplicationState(remoteKey, remoteValue);
         }
-        int update = 0;
+        long[] result = { 0, 0, 0 };
         long s = System.currentTimeMillis();
         for (Entry<ApplicationState, VersionedValue> remoteEntry : remoteState.getApplicationStateMap().entrySet())
         {
-            update += doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
+            long[] tmp = doNotifications(addr, remoteEntry.getKey(), remoteEntry.getValue());
+            for (int i = 0; i < result.length; ++i) {
+                result[i] += tmp[i];
+            }
         }
         long e = System.currentTimeMillis();
-        return update;
+        return result;
     }
 
     // notify that an application state has changed
-    private int doNotifications(InetAddress addr, ApplicationState state, VersionedValue value)
+    private long[] doNotifications(InetAddress addr, ApplicationState state, VersionedValue value)
     {
-        int update = 0;
+        long[] result = { 0, 0, 0 };
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
         {
-            int tmp = subscriber.onChange(addr, state, value);
+            long[] tmp = subscriber.onChange(addr, state, value);
             if (subscriber instanceof StorageService) {
-                update += tmp;
+                for (int i = 0; i < result.length; ++i) {
+                    result[i] += tmp[i];
+                }
             }
         }
-        return update;
+        return result;
     }
 
     /* Request all the state for the endpoint in the gDigest */
@@ -1233,13 +1251,13 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             logger.trace("Adding saved endpoint " + ep + " " + epState.getHeartBeatState().getGeneration());
     }
 
-    public int addLocalApplicationState(ApplicationState state, VersionedValue value)
+    public long[] addLocalApplicationState(ApplicationState state, VersionedValue value)
     {
         EndpointState epState = endpointStateMap.get(FBUtilities.getBroadcastAddress());
         assert epState != null;
         epState.addApplicationState(state, value);
-        int update = doNotifications(FBUtilities.getBroadcastAddress(), state, value);
-        return update;
+        long[] result = doNotifications(FBUtilities.getBroadcastAddress(), state, value);
+        return result;
     }
 
     public void stop()

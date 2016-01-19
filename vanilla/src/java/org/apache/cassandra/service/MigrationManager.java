@@ -76,16 +76,16 @@ public class MigrationManager implements IEndpointStateChangeSubscriber
         listeners.remove(listener);
     }
 
-    public int onJoin(InetAddress endpoint, EndpointState epState)
-    { return 0; }
+    public long[] onJoin(InetAddress endpoint, EndpointState epState)
+    { return new long[] { 0, 0, 0 }; }
 
-    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.SCHEMA || endpoint.equals(FBUtilities.getBroadcastAddress()))
-            return 0;
+            return new long[] { 0, 0, 0 };
 
         maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
-        return 0;
+        return new long[] { 0, 0, 0 };
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

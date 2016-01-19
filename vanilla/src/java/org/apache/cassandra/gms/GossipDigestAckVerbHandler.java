@@ -61,6 +61,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         
         int bootstrapCount = 0;
         int normalCount = 0;
+        long copyTime = 0;
+        long updateTime = 0;
         int realNormalUpdate = 0;
         if ( epStateMap.size() > 0 )
         {
@@ -70,7 +72,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
-            realNormalUpdate = (int) result[8];
+            copyTime = (long) result[8];
+            updateTime = (long) result[9];
+            realNormalUpdate = (int) result[10];
             for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
                 Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -127,7 +131,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         if (bootstrapCount != 0 || normalCount != 0) {
             Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " 
                     + bootstrapCount + " normal " + normalCount + " realNormalUpdate " + realNormalUpdate 
-                    + " ; transmission " + transmissionTime + " ; before " + numBefore + " after " + numAfter);
+                    + " ; transmission " + transmissionTime + " ; before " + numBefore + " after " + numAfter 
+                    + " ; copytime " + copyTime + " updatetime " + updateTime);
         }
     }
 }

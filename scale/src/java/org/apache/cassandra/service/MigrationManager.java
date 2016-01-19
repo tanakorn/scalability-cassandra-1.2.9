@@ -79,8 +79,8 @@ public class MigrationManager implements IEndpointStateChangeSubscriber, IScaleE
     public void onJoin(InetAddress endpoint, EndpointState epState)
     {}
 
-    public void onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
-    {}
+    public int onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    { return 0; }
 
     public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
@@ -90,12 +90,13 @@ public class MigrationManager implements IEndpointStateChangeSubscriber, IScaleE
         maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
     }
 
-    public void onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public int onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.SCHEMA || endpoint.equals(FBUtilities.getBroadcastAddress()))
-            return;
+            return 0;
 
         maybeScheduleSchemaPull(UUID.fromString(value.value), endpoint);
+        return 0;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

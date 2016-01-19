@@ -83,8 +83,8 @@ public abstract class AbstractStreamSession implements IEndpointStateChangeSubsc
 
     protected abstract void closeInternal(boolean success);
 
-    public int onJoin(InetAddress endpoint, EndpointState epState) { return 0; }
-    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value) { return 0; }
+    public long[] onJoin(InetAddress endpoint, EndpointState epState) { return new long[] { 0, 0, 0 }; }
+    public long[] onChange(InetAddress endpoint, ApplicationState state, VersionedValue value) { return new long[] { 0, 0, 0 }; }
     public void onAlive(InetAddress endpoint, EndpointState state) {}
     public void onDead(InetAddress endpoint, EndpointState state) {}
 
