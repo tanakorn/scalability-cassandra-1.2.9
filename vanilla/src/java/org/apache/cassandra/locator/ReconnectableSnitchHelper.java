@@ -70,18 +70,18 @@ public class ReconnectableSnitchHelper implements IEndpointStateChangeSubscriber
         }
     }
 
-    public int onJoin(InetAddress endpoint, EndpointState epState)
+    public long[] onJoin(InetAddress endpoint, EndpointState epState)
     {
         if (preferLocal && epState.getApplicationState(ApplicationState.INTERNAL_IP) != null)
             reconnect(endpoint, epState.getApplicationState(ApplicationState.INTERNAL_IP));
-        return 0;
+        return new long[] { 0, 0, 0 };
     }
 
-    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (preferLocal && state == ApplicationState.INTERNAL_IP)
             reconnect(endpoint, value);
-        return 0;
+        return new long[] { 0, 0, 0 };
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

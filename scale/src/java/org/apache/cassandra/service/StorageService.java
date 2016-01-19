@@ -1275,8 +1275,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     }
 
     @Override
-    public void onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public int onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
+        int update = 0;
         switch (state)
         {
             case STATUS:
@@ -1291,7 +1292,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     handleStateBootstrapStatic(stub, endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_NORMAL))
 //                    handleStateNormal(endpoint, pieces);
-                    handleStateNormalStatic(stub, endpoint, pieces);
+                    update = handleStateNormalStatic(stub, endpoint, pieces);
                 else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
                     handleStateRemoving(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_LEAVING))
@@ -1322,6 +1323,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                 SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
                 break;
         }
+        return update;
     }
     
     private String quote(String value)
@@ -1595,7 +1597,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         calculatePendingRanges();
     }
     
-    private static void handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
+    private static int handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
         long[] time = new long[7];
 
@@ -1741,9 +1743,16 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
+        
+        
+        int update = 0;
         if (!tokensToUpdateInSystemTable.isEmpty()) {
+            update = 1;
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
         }
+        
+        
+        
         if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
         time[5] = System.currentTimeMillis() - time[5];
@@ -1779,6 +1788,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
         logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size);
+        return update;
     }
 
     /**
@@ -2386,12 +2396,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     }
 
     @Override
-    public void onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    public int onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
     {
+        int update = 0;
         for (Map.Entry<ApplicationState, VersionedValue> entry : epState.getApplicationStateMap().entrySet())
         {
-            onChange(stub, endpoint, entry.getKey(), entry.getValue());
+            update += onChange(stub, endpoint, entry.getKey(), entry.getValue());
         }
+        return update;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

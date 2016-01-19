@@ -43,22 +43,22 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber
         Gossiper.instance.register(this);
     }
 
-    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.LOAD)
-            return 0;
+            return new long[] { 0, 0, 0 };
         loadInfo.put(endpoint, Double.valueOf(value.value));
-        return 0;
+        return new long[] { 0, 0, 0 };
     }
 
-    public int onJoin(InetAddress endpoint, EndpointState epState)
+    public long[] onJoin(InetAddress endpoint, EndpointState epState)
     {
         VersionedValue localValue = epState.getApplicationState(ApplicationState.LOAD);
         if (localValue != null)
         {
             onChange(endpoint, ApplicationState.LOAD, localValue);
         }
-        return 0;
+        return new long[] { 0, 0, 0 };
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state) {}

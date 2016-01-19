@@ -1215,9 +1215,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * Note: Any time a node state changes from STATUS_NORMAL, it will not be visible to new nodes. So it follows that
      * you should never bootstrap a new node during a removetoken, decommission or move.
      */
-    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
-        int update = 0;
+        long[] result = { 0, 0, 0 };
         switch (state)
         {
             case STATUS:
@@ -1230,7 +1230,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
                     handleStateBootstrap(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_NORMAL))
-                    update = handleStateNormal(endpoint, pieces);
+                    result = handleStateNormal(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
                     handleStateRemoving(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_LEAVING))
@@ -1261,7 +1261,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
                 break;
         }
-        return update;
+        return result;
     }
 
     private String quote(String value)
@@ -1344,7 +1344,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * @param endpoint node
      * @param pieces STATE_NORMAL,token
      */
-    private int handleStateNormal(final InetAddress endpoint, String[] pieces)
+    private long[] handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
         long[] time = new long[7];
 
@@ -1530,7 +1530,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} update={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size, update);
-        return update;
+        return new long[] { time[3], time[5], update };
     }
 
     /**
@@ -2026,14 +2026,17 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         return changedRanges;
     }
 
-    public int onJoin(InetAddress endpoint, EndpointState epState)
+    public long[] onJoin(InetAddress endpoint, EndpointState epState)
     {
-        int update = 0;
+        long[] result = { 0, 0, 0 };
         for (Map.Entry<ApplicationState, VersionedValue> entry : epState.getApplicationStateMap().entrySet())
         {
-            update += onChange(endpoint, entry.getKey(), entry.getValue());
+            long[] tmp = onChange(endpoint, entry.getKey(), entry.getValue());
+            for (int i = 0; i < result.length; ++i) {
+                result[i] += tmp[i];
+            }
         }
-        return update;
+        return result;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)
