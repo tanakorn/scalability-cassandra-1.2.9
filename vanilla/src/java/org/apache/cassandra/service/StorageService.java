@@ -1346,7 +1346,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     private long[] handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
-        long[] time = new long[7];
+        long[] time = new long[10];
 
         time[0] = System.currentTimeMillis();
         assert pieces.length >= 2;
@@ -1487,23 +1487,27 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         for (InetAddress ep : endpointsToRemove) {
             removeEndpoint(ep);
         }
+        time[5] = System.currentTimeMillis() - time[5];
         
         
         int update = 0;
+        time[6] = System.currentTimeMillis();
         // The main expensive operation
         if (!tokensToUpdateInSystemTable.isEmpty()) {
             update = 1;
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
         } else {
         }
+        time[6] = System.currentTimeMillis() - time[6];
         
         
+        time[7] = System.currentTimeMillis();
         if (!localTokensToRemove.isEmpty()) {
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
         }
-        time[5] = System.currentTimeMillis() - time[5];
+        time[7] = System.currentTimeMillis() - time[7];
 
-        time[6] = System.currentTimeMillis();
+        time[8] = System.currentTimeMillis();
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
             tokenMetadata.removeFromMoving(endpoint);
@@ -1514,9 +1518,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                     subscriber.onMove(endpoint);
             }
         }
+        time[8] = System.currentTimeMillis() - time[8];
 
+        time[9] = System.currentTimeMillis();
         calculatePendingRanges();
-        time[6] = System.currentTimeMillis() - time[6];
+        time[9] = System.currentTimeMillis() - time[9];
         time[0] = System.currentTimeMillis() - time[0];
         long avg1 = count1 == 0 ? 0 : block1 / count1;
         long avg2 = count2 == 0 ? 0 : block2 / count2;
