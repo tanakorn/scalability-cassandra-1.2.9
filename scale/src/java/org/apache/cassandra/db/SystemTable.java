@@ -308,9 +308,12 @@ public class SystemTable
      */
     public static synchronized void updateTokens(InetAddress ep, Collection<Token> tokens)
     {
+        long t0 = System.currentTimeMillis();
         if (ep.equals(FBUtilities.getBroadcastAddress()))
         {
             removeEndpoint(ep);
+            t0 = System.currentTimeMillis() - t0;
+            logger.info("update_tokens remove_endpoint " + t0);
             return;
         }
 
@@ -321,7 +324,8 @@ public class SystemTable
         long t2 = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
         t2 = System.currentTimeMillis() - t2;
-        logger.info("update_tokens " + t1 + " " + t2);
+        t0 = System.currentTimeMillis() - t0;
+        logger.info("update_tokens " + t0 + " " + t1 + " " + t2);
     }
 
     public static synchronized void updatePeerInfo(InetAddress ep, String columnName, String value)
