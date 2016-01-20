@@ -1786,8 +1786,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
             sb.append(time[i]);
             sb.append(" ");
         }
-        logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} " 
-                + sb.toString(), count1, block1, avg1, count2, block2, avg2, size);
+        logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} update={} " 
+                + sb.toString(), count1, block1, avg1, count2, block2, avg2, size, update);
         return update;
     }
 

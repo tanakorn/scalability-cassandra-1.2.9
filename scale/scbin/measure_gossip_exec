@@ -9,11 +9,16 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
+mode=normal
+if [ ! -z $1 ] ; then
+  mode=$1
+fi
+
 end=128
 i=1
 rm -r /tmp/cassandra/*
 while [ $i -lt $end ]; do
-  java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric $1 $i 
+  java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric $mode $i 12
   i=`expr $i + 1`
 done
 

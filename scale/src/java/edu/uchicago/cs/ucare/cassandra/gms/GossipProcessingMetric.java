@@ -80,12 +80,13 @@ public class GossipProcessingMetric {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 2) {
-            System.err.println("Please specify node status (boot/normal), start - end index range");
+        if (args.length < 3) {
+            System.err.println("Please specify node status (boot/normal), num diff and repeat run");
             System.exit(1);
         }
         String testStatus = args[0];
         int test = Integer.parseInt(args[1]);
+        int repeatRun = Integer.parseInt(args[2]);
         if (testStatus.equals("boot")) {
             
         } else if (testStatus.equals("normal")) {
@@ -102,7 +103,7 @@ public class GossipProcessingMetric {
 //            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
 //        }
         String s = (test - 1) + " ";
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < repeatRun; ++i) {
             s += test(InetAddress.getByName("127.0.0." + test), firstNode, testStatus) + " ";
         }
         System.out.println(s);
