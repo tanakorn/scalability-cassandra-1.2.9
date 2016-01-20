@@ -34,6 +34,10 @@ import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.transport.messages.ResultMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.util.Klogger;
 
 /**
  * Abstract class for statements that apply on a given column family.
@@ -115,6 +119,18 @@ public abstract class ModificationStatement extends CFStatement implements CQLSt
     {
         for (IMutation mutation : getMutations(Collections.<ByteBuffer>emptyList(), true, null, queryState.getTimestamp()))
             mutation.apply();
+        return null;
+    }
+
+    public ResultMessage executeInternalTokens(QueryState queryState) throws RequestValidationException, RequestExecutionException
+    {
+//        int i = 0;
+        for (IMutation mutation : getMutations(Collections.<ByteBuffer>emptyList(), true, null, queryState.getTimestamp())) {
+//            i++;
+//            Klogger.logger.info("korn mutation " + ((RowMutation) mutation).modifications.size());
+            mutation.apply();
+        }
+//        Klogger.logger.info("num mutation " + i);
         return null;
     }
 

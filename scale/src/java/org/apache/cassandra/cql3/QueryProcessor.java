@@ -162,8 +162,9 @@ public class QueryProcessor
             QueryState qState = new QueryState(state);
             state.setKeyspace(Table.SYSTEM_KS);
             CQLStatement statement = getStatement(query, state).statement;
-            statement.validate(state);
-            ResultMessage result = statement.executeInternal(qState);
+            ModificationStatement modStatement = (ModificationStatement) statement;
+            modStatement.validate(state);
+            ResultMessage result = modStatement.executeInternalTokens(qState);
             if (result instanceof ResultMessage.Rows)
                 return new UntypedResultSet(((ResultMessage.Rows)result).result);
             else

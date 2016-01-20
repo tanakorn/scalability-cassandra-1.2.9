@@ -316,8 +316,8 @@ public class SystemTable
 
         long t1 = System.currentTimeMillis();
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
-        t1 = System.currentTimeMillis() - t1;
         processInternalForUpdateTokens(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        t1 = System.currentTimeMillis() - t1;
         long t2 = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
         t2 = System.currentTimeMillis() - t2;

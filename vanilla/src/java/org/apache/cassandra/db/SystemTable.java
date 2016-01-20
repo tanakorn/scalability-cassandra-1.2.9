@@ -317,8 +317,8 @@ public class SystemTable
             return;
         }
 
-        String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         long t1 = System.currentTimeMillis();
+        String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         processInternalForUpdateTokens(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
         t1 = System.currentTimeMillis() - t1;
         long t2 = System.currentTimeMillis();
