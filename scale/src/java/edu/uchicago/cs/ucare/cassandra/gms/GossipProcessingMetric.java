@@ -167,38 +167,6 @@ public class GossipProcessingMetric {
         time = System.currentTimeMillis() - time;
 //        System.out.println((gossiperSize - gossipeeSize) + " " + time);
         return time;
-//        logger.info((gossiperSize - gossipeeSize) + " " + (e - s));
-//        try {
-//            Process p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/commitlog");
-//            p.waitFor();
-//            byte[] b = new byte[1024];
-//            int r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//            p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/data");
-//            p.waitFor();
-//            b = new byte[1024];
-//            r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//            p = Runtime.getRuntime().exec("rm -r /tmp/cassandra/saved_caches");
-//            p.waitFor();
-//            b = new byte[1024];
-//            r = p.getErrorStream().read(b);
-//            if (r >= 0) {
-//                System.out.println(p + " " + new String(b, 0, r));
-//            }
-//        } catch (IOException e1) {
-//            // TODO Auto-generated catch block
-//            System.out.println(e1.toString());
-//            e1.printStackTrace();
-//        } catch (InterruptedException e1) {
-//            // TODO Auto-generated catch block
-//            System.out.println(e1.toString());
-//            e1.printStackTrace();
-//        }
     }
     
 }

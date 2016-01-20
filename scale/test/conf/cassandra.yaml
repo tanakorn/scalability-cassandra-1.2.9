@@ -7,7 +7,7 @@ in_memory_compaction_limit_in_mb: 1
 commitlog_sync: batch
 commitlog_sync_batch_window_in_ms: 1.0
 partitioner: org.apache.cassandra.dht.Murmur3Partitioner
-listen_address: 127.0.0.5
+listen_address: 127.0.0.129
 storage_port: 7000
 rpc_port: 9170
 column_index_size_in_kb: 4
