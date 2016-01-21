@@ -45,7 +45,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
         int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
-//        System.out.println(currentVersion);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())

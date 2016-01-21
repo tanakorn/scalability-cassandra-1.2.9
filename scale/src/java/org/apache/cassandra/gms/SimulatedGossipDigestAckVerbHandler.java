@@ -66,7 +66,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         
         int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
-//        System.out.println(currentVersion);
         
         int bootstrapCount = 0;
         int normalCount = 0;
@@ -138,7 +137,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                         bootNodeNum++;
                     } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
                         if (!senderStub.getTokenMetadata().endpointWithTokens.contains(address)) {
-                            System.out.println("here");
                             normalNodeNum++;
                         }
                     }

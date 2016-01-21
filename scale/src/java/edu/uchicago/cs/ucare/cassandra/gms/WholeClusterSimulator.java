@@ -273,11 +273,18 @@ public class WholeClusterSimulator {
     
     static Random rand = new Random();
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
+        if (currentVersion > 121) {
+            currentVersion = 121;
+        }
+        if (numNormal > numStubs - currentVersion) {
+            numNormal = numStubs - currentVersion;
+            numNormal = (numNormal / 4) * 4 + 1;
+        }
         if (numNormal > 49) {
             numNormal = 49;
         }
-//        System.out.println(currentVersion + " " + numNormal);
-        return normalGossipExecRecords.get(currentVersion).get(numNormal);
+        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
+        return result;
 //        double execTime = normalGossipExecRecords[numNormal];
 //        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
 //        return execTimeMilli;
