@@ -38,9 +38,9 @@ public interface IScaleEndpointStateChangeSubscriber
      * @param endpoint endpoint for which the state change occurred.
      * @param epState state that actually changed for the above endpoint.
      */
-    public int onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState);
+    public long[] onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState);
 
-    public int onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value);
+    public long[] onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value);
 
     public void onAlive(GossiperStub stub, InetAddress endpoint, EndpointState state);
 

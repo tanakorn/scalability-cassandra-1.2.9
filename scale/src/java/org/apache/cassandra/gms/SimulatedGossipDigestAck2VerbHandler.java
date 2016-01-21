@@ -19,6 +19,7 @@ package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
+import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
@@ -36,6 +38,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     {
     	InetAddress from = message.from;
         InetAddress to = message.to;
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        int numBefore = stub.getTokenMetadata().tokenToEndpointMap.size();
+        long receiveTime = System.currentTimeMillis();
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -52,8 +57,24 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
-        Gossiper.notifyFailureDetectorStatic(GossipProcessingMetric.stubGroup.getStub(to).getEndpointStateMap(), remoteEpStateMap);
-        Gossiper.applyStateLocallyStatic(GossipProcessingMetric.stubGroup.getStub(to), remoteEpStateMap);
+        Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), remoteEpStateMap);
+        Object[] result = Gossiper.applyStateLocallyStatic(stub, remoteEpStateMap);
+        long tmpCurrent = System.currentTimeMillis();
+        long ack2HandlerTime = tmpCurrent - receiveTime;
+        int bootstrapCount = (int) result[5];
+        int normalCount = (int) result[6];
+        Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+        long copyTime = (long) result[8];
+        long updateTime = (long) result[9];
+        int realNormalUpdate = (int) result[10];
+        int numAfter = stub.getTokenMetadata().tokenToEndpointMap.size();
         
+        if (bootstrapCount != 0 || normalCount != 0) {
+            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " 
+                    + bootstrapCount + " normal " + normalCount + " realNormalUpdate " + realNormalUpdate 
+                    + " ; transmission n/a ; before " + numBefore + " after " + numAfter
+                    + " ; copytime " + copyTime + " updatetime " + updateTime);
+        }
+
     }
 }

@@ -52,12 +52,12 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEn
         loadInfo.put(endpoint, Double.valueOf(value.value));
     }
     
-    public int onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
         if (state != ApplicationState.LOAD)
-            return 0;
+            return new long[3];
         loadInfo.put(endpoint, Double.valueOf(value.value));
-        return 0;
+        return new long[3];
     }
 
     public void onJoin(InetAddress endpoint, EndpointState epState)
@@ -69,14 +69,14 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEn
         }
     }
 
-    public int onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    public long[] onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
     {
         VersionedValue localValue = epState.getApplicationState(ApplicationState.LOAD);
         if (localValue != null)
         {
             onChange(endpoint, ApplicationState.LOAD, localValue);
         }
-        return 0;
+        return new long[3];
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state) {}

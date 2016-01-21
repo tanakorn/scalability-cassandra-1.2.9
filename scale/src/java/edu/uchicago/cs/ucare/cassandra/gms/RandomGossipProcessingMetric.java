@@ -100,7 +100,6 @@ public class RandomGossipProcessingMetric {
         DatabaseDescriptor.loadYaml();
         InetAddress firstNode = InetAddress.getByName("127.0.0.1");
         for (int i = 1; i < numStubs; ++i) {
-//            test(InetAddress.getByName("127.0.0." + i), firstNode, testStatus);
             randomTest(i, testStatus);
         }
         System.exit(0);

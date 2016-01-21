@@ -1275,9 +1275,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     }
 
     @Override
-    public int onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public long[] onChange(GossiperStub stub, InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
-        int update = 0;
+        long[] update = new long[3];
         switch (state)
         {
             case STATUS:
@@ -1597,7 +1597,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         calculatePendingRanges();
     }
     
-    private static int handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
+    private static long[] handleStateNormalStatic(GossiperStub stub, final InetAddress endpoint, String[] pieces)
     {
         long[] time = new long[11];
 
@@ -1794,7 +1794,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
         logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} update={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size, update);
-        return update;
+        return new long[] { time[3], time[7], update };
     }
 
     /**
@@ -2402,14 +2402,17 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     }
 
     @Override
-    public int onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
+    public long[] onJoin(GossiperStub stub, InetAddress endpoint, EndpointState epState)
     {
-        int update = 0;
+        long[] result = new long[3];
         for (Map.Entry<ApplicationState, VersionedValue> entry : epState.getApplicationStateMap().entrySet())
         {
-            update += onChange(stub, endpoint, entry.getKey(), entry.getValue());
+            long[] tmp = onChange(stub, endpoint, entry.getKey(), entry.getValue());
+            for (int i = 0; i < tmp.length; ++i) {
+                result[i] += tmp[i];
+            }
         }
-        return update;
+        return result;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)

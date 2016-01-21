@@ -1538,7 +1538,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         Klogger.logger.info("Micro profiling count1={} block1={} avg1={} count2={} block2={} avg2={} size={} update={} " 
                 + sb.toString(), count1, block1, avg1, count2, block2, avg2, size, update);
-        return new long[] { time[3], time[5], update };
+        return new long[] { time[3], time[7], update };
     }
 
     /**

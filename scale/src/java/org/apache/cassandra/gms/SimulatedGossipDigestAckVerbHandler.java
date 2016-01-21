@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
+import org.apache.cassandra.service.StorageService;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
@@ -41,8 +43,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-        InetAddress from = message.from;
         InetAddress to = message.to;
+        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        int numBefore = stub.getTokenMetadata().tokenToEndpointMap.size();
+        long receiveTime = System.currentTimeMillis();
+        InetAddress from = message.from;
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -56,16 +61,25 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
-        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
 
+        int bootstrapCount = 0;
+        int normalCount = 0;
+        long copyTime = 0;
+        long updateTime = 0;
+        int realNormalUpdate = 0;
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
 //            Gossiper.instance.notifyFailureDetector(epStateMap);
 //            Gossiper.instance.applyStateLocally(epStateMap);
             Gossiper.notifyFailureDetectorStatic(stub.getEndpointStateMap(), epStateMap);
-            Gossiper.applyStateLocallyStatic(stub, epStateMap);
-
+            Object[] result = Gossiper.applyStateLocallyStatic(stub, epStateMap);
+            bootstrapCount = (int) result[5];
+            normalCount = (int) result[6];
+            Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+            copyTime = (long) result[8];
+            updateTime = (long) result[9];
+            realNormalUpdate = (int) result[10];
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -108,5 +122,13 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         }
 //        MessagingService.instance().sendOneWay(gDigestAck2Message, from);
+        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+        int numAfter = stub.getTokenMetadata().tokenToEndpointMap.size();
+        if (bootstrapCount != 0 || normalCount != 0) {
+            logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " 
+                    + bootstrapCount + " normal " + normalCount + " realNormalUpdate " + realNormalUpdate 
+                    + " ; transmission n/a ; before " + numBefore + " after " + numAfter 
+                    + " ; copytime " + copyTime + " updatetime " + updateTime);
+        }
     }
 }

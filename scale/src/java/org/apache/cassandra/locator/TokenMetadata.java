@@ -46,7 +46,7 @@ public class TokenMetadata
     private static final Logger logger = LoggerFactory.getLogger(TokenMetadata.class);
 
     /* Maintains token to endpoint map of every node in the cluster. */
-    private final BiMultiValMap<Token, InetAddress> tokenToEndpointMap;
+    public final BiMultiValMap<Token, InetAddress> tokenToEndpointMap;
 
     /* Maintains endpoint to host ID map of every node in the cluster */
     private final BiMap<InetAddress, UUID> endpointToHostIdMap;
