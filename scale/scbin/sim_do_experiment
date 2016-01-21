@@ -6,25 +6,47 @@ cd $scriptdir
 
 #mkdir -p $cassandra_log_dir
 #rm -r $cassandra_log_dir/*
-for mode in offline real-mean; do
-  logdir=${cassandra_log_dir}-$mode
-  mkdir -p $logdir
-  rm -r $logdir/*
-  for n in 32 64 128; do
-    cp scdeploy.conf.exp scdeploy.conf.$n
-    echo "num_node=$n" >> scdeploy.conf.$n
-    rm -r /tmp/n${n}-$mode
-    mkdir /tmp/n${n}-$mode
-    ./onemachine_dir_setup scdeploy.conf.$n
-    ./simulation scdeploy.conf.$n $mode
-    sleep 300
-    pkill java
-    cp /tmp/cass_scale/scale.log /tmp/n${n}-$mode
-    i=1
-    while [ $i -le $n ]; do
-      echo $i 127.0.0.$i >> /tmp/n${n}-$mode/machinelist
-      i=`expr $i + 1`
-    done
-    cp -r /tmp/n${n}-$mode $logdir/n${n}
+#for mode in offline real-mean; do
+#  logdir=${cassandra_log_dir}-$mode
+#  mkdir -p $logdir
+#  rm -r $logdir/*
+#  for n in 32 64 128; do
+#    cp scdeploy.conf.exp scdeploy.conf.$n
+#    echo "num_node=$n" >> scdeploy.conf.$n
+#    rm -r /tmp/n${n}-$mode
+#    mkdir /tmp/n${n}-$mode
+#    ./onemachine_dir_setup scdeploy.conf.$n
+#    ./simulation scdeploy.conf.$n $mode
+#    sleep 300
+#    pkill java
+#    cp /tmp/cass_scale/scale.log /tmp/n${n}-$mode
+#    i=1
+#    while [ $i -le $n ]; do
+#      echo $i 127.0.0.$i >> /tmp/n${n}-$mode/machinelist
+#      i=`expr $i + 1`
+#    done
+#    cp -r /tmp/n${n}-$mode $logdir/n${n}
+#  done
+#done
+
+logdir=${cassandra_log_dir}
+mkdir -p $logdir
+rm -r $logdir/*
+#for n in 32 64 128; do
+for n in 128; do
+  cp scdeploy.conf.exp scdeploy.conf.$n
+  echo "num_node=$n" >> scdeploy.conf.$n
+  rm -r /tmp/n${n}
+  mkdir /tmp/n${n}
+  ./onemachine_dir_setup scdeploy.conf.$n
+  ./simulation scdeploy.conf.$n
+  sleep 300
+  pkill java
+  cp /tmp/cass_scale/scale.log /tmp/n${n}
+  i=1
+  while [ $i -le $n ]; do
+    echo $i 127.0.0.$i >> /tmp/n${n}/machinelist
+    i=`expr $i + 1`
   done
+  cp -r /tmp/n${n} $logdir/n${n}
 done

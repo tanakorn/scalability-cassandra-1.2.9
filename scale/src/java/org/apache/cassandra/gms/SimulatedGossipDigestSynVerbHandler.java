@@ -44,6 +44,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
+        int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+//        System.out.println(currentVersion);
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -102,7 +104,9 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                     if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
                         bootNodeNum++;
                     } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-                        normalNodeNum++;
+                        if (!senderStub.getTokenMetadata().endpointWithTokens.contains(address)) {
+                            normalNodeNum++;
+                        }
                     }
                 }
             }
@@ -121,8 +125,10 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         String ackId = from + "_" + gDigestAckMessage.payload.msgId;
         receiverStub.ackNewVersionBoot.put(ackId, bootNodeNum);
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
+        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(normalNodeNum);
+                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
         gDigestAckMessage.setSleepTime(sleepTime);

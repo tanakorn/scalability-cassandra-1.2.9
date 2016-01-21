@@ -81,7 +81,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	ConcurrentMap<InetAddress, EndpointState> endpointStateMap;
 	VersionedValueFactory versionedValueFactory;
 	TokenMetadata tokenMetadata;
-	@SuppressWarnings("rawtypes") Collection<Token> tokens;
+	@SuppressWarnings("rawtypes") public Collection<Token> tokens;
 	@SuppressWarnings("rawtypes") IPartitioner partitioner;
 	String partitionerName;
 	public FailureDetector failureDetector;

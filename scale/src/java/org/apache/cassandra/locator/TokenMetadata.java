@@ -34,7 +34,6 @@ import org.apache.cassandra.utils.SortedBiMultiValMap;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
@@ -46,7 +45,8 @@ public class TokenMetadata
     private static final Logger logger = LoggerFactory.getLogger(TokenMetadata.class);
 
     /* Maintains token to endpoint map of every node in the cluster. */
-    private final BiMultiValMap<Token, InetAddress> tokenToEndpointMap;
+    public final BiMultiValMap<Token, InetAddress> tokenToEndpointMap;
+    public final Set<InetAddress> endpointWithTokens;
 
     /* Maintains endpoint to host ID map of every node in the cluster */
     private final BiMap<InetAddress, UUID> endpointToHostIdMap;
@@ -113,6 +113,7 @@ public class TokenMetadata
     private TokenMetadata(BiMultiValMap<Token, InetAddress> tokenToEndpointMap, BiMap<InetAddress, UUID> endpointsMap, Topology topology)
     {
         this.tokenToEndpointMap = tokenToEndpointMap;
+        endpointWithTokens = new HashSet<InetAddress>();
         this.topology = topology;
         endpointToHostIdMap = endpointsMap;
         sortedTokens = sortTokens();
@@ -191,6 +192,7 @@ public class TokenMetadata
                 for (Token token : tokens)
                 {
                     InetAddress prev = tokenToEndpointMap.put(token, endpoint);
+                    endpointWithTokens.add(endpoint);
                     if (!endpoint.equals(prev))
                     {
                         if (prev != null)

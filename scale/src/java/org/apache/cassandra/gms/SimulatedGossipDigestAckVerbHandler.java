@@ -65,6 +65,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         
+        int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+//        System.out.println(currentVersion);
+        
         int bootstrapCount = 0;
         int normalCount = 0;
 
@@ -134,14 +137,20 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING)) {
                         bootNodeNum++;
                     } else if (moveName.equals(VersionedValue.STATUS_NORMAL)) {
-                        normalNodeNum++;
+                        if (!senderStub.getTokenMetadata().endpointWithTokens.contains(address)) {
+                            System.out.println("here");
+                            normalNodeNum++;
+                        }
                     }
                 }
             }
         }
+        
+        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
 
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(normalNodeNum);
+                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);

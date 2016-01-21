@@ -60,6 +60,7 @@ public class GossiperStubGroup implements InetAddressStubGroup<GossiperStub> {
         for (InetAddress address : stubs.keySet()) {
             GossiperStub stub = stubs.get(address);
             stub.setupTokenState();
+            stub.tokenMetadata.updateNormalTokens(stub.tokens, stub.broadcastAddress);
         }
     }
 

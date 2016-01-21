@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 //import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
@@ -1272,6 +1273,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     bootstrapCount++;
                 } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     normalCount++;
+                    GossiperStub calculatedStub = WholeClusterSimulator.stubGroup.getStub(ep);
+                    stub.getTokenMetadata().updateNormalTokens(calculatedStub.tokens, ep);
                 }
             }
             /*
