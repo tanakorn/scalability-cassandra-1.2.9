@@ -31,9 +31,8 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
-import org.apache.cassandra.service.StorageService;
 
-import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
+//import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
@@ -44,7 +43,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
         InetAddress to = message.to;
-        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = RandomGossipProcessingMetric.stubGroup.getStub(to);
         int numBefore = stub.getTokenMetadata().tokenToEndpointMap.size();
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
@@ -110,12 +109,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        } else {
 //            MessagingService.instance().sendOneWay(gDigestAck2Message, from);
 //        }
-        if (GossipProcessingMetric.stubGroup.contains(from)) {
-            MessageIn<GossipDigestAck2> msgIn = GossipProcessingMetric.convertOutToIn(gDigestAck2Message);
+        if (RandomGossipProcessingMetric.stubGroup.contains(from)) {
+            MessageIn<GossipDigestAck2> msgIn = RandomGossipProcessingMetric.convertOutToIn(gDigestAck2Message);
             msgIn.setTo(from);
             long s = System.currentTimeMillis();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
-                    Integer.toString(GossipProcessingMetric.idGen.incrementAndGet()));
+                    Integer.toString(RandomGossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;
             logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_ACK2 + "\" from " + msgIn.from + " took " + t + " ms");
         } else {

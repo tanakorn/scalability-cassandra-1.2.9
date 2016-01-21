@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
-import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
+//import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric;
 
@@ -38,7 +38,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     {
     	InetAddress from = message.from;
         InetAddress to = message.to;
-        GossiperStub stub = GossipProcessingMetric.stubGroup.getStub(to);
+        GossiperStub stub = RandomGossipProcessingMetric.stubGroup.getStub(to);
         int numBefore = stub.getTokenMetadata().tokenToEndpointMap.size();
         long receiveTime = System.currentTimeMillis();
         if (logger.isTraceEnabled())

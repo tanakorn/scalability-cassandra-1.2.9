@@ -102,6 +102,7 @@ public class GossiperStub implements InetAddressStub {
 			initTokens();
 		}
         state.addApplicationState(ApplicationState.TOKENS, versionedValueFactory.tokens(tokens));
+        tokenMetadata.updateNormalTokens(tokens, broadcastAddress);
 	}
 	
 	public void setBootStrappingStatusState() {

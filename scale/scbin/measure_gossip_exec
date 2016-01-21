@@ -14,11 +14,23 @@ if [ ! -z $1 ] ; then
   mode=$1
 fi
 
-end=128
-i=1
-rm -r /tmp/cassandra/*
-while [ $i -lt $end ]; do
-  java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric $mode $i 12
-  i=`expr $i + 1`
-done
+#end=128
+#i=1
+#rm -r /tmp/cassandra/*
+#while [ $i -lt $end ]; do
+#  java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric $mode $i 12
+#  i=`expr $i + 1`
+#done
 
+i=1
+max_curr_ver=128
+while [ $i -le $max_curr_ver ]; do
+  rm -r /tmp/cassandra/*
+  j=1
+  max_new_ver=50
+  while [ $j -lt $max_new_ver ]; do
+    java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric $mode $i $j 5
+    j=`expr $j + 1`
+  done
+  i=`expr $i + 8`
+done

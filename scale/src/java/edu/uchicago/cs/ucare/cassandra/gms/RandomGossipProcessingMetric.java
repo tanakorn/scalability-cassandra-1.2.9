@@ -86,6 +86,9 @@ public class RandomGossipProcessingMetric {
             System.exit(1);
         }
         String testStatus = args[0];
+        int currentVersion = Integer.parseInt(args[1]);
+        int newVersion = Integer.parseInt(args[2]);
+        int repeat = Integer.parseInt(args[3]);
         if (testStatus.equals("boot")) {
             
         } else if (testStatus.equals("normal")) {
@@ -94,14 +97,24 @@ public class RandomGossipProcessingMetric {
             System.err.println("status must be boot/normal");
             System.exit(2);
         }
-        int numNewVersion = Integer.parseInt(args[1]);
+//        int numNewVersion = Integer.parseInt(args[1]);
         Gossiper.registerStatic(StorageService.instance);
         Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
-        InetAddress firstNode = InetAddress.getByName("127.0.0.1");
-        for (int i = 1; i < numStubs; ++i) {
-            randomTest(i, testStatus);
+        String s = currentVersion + " " + newVersion + " ";
+        for (int i = 0; i < repeat; ++i) {
+            s += randomTest(currentVersion, newVersion, testStatus) + " ";
         }
+        System.out.println(s);
+//        InetAddress firstNode = InetAddress.getByName("127.0.0.1");
+//        for (int i = 1; i < numStubs; ++i) {
+//            for (int j = 1; j < numStubs - i; ++j) {
+//                randomTest(j, i, testStatus);
+//            }
+//        }
+//        for (int i = 1; i < numStubs; ++i) {
+//            randomTest(i, testStatus);
+//        }
         System.exit(0);
     }
     
@@ -110,7 +123,7 @@ public class RandomGossipProcessingMetric {
         return msgIn;
     }
     
-    public static void randomTest(int newVersion, String testStatus) throws UnknownHostException {
+    public static long randomTest(int currentVersion, int newVersion, String testStatus) throws UnknownHostException {
         assert newVersion < numStubs;
         Random rand = new Random();
 
@@ -134,11 +147,11 @@ public class RandomGossipProcessingMetric {
             assert false;
         }
 
-        int gossipeeSize = rand.nextInt(numStubs - newVersion) + 1;
+        int gossipeeSize = currentVersion;
 //        GossiperStub gossipee = new GossiperStub(InetAddress.getByName("127.0.0.1"), "Test Cluster", "", 1024, new Murmur3Partitioner());
         InetAddress gossipeeAddress = InetAddress.getByName("127.0.0.1");
         GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
-        while (gossipee.endpointStateMap.size() != gossipeeSize) {
+        while (gossipee.endpointStateMap.size() < gossipeeSize) {
             int index = rand.nextInt(numStubs) + 1;
             InetAddress address = InetAddress.getByName("127.0.0." + index);
             if (index == 2 || gossipee.endpointStateMap.containsKey(address)) {
@@ -146,6 +159,7 @@ public class RandomGossipProcessingMetric {
             }
             GossiperStub stub = stubGroup.getStub(address);
             gossipee.endpointStateMap.putAll(stub.endpointStateMap);
+            gossipee.tokenMetadata.updateNormalTokens(stub.tokens, stub.broadcastAddress);
         }
 
         InetAddress gossiperAddress = InetAddress.getByName("127.0.0.2");
@@ -160,55 +174,15 @@ public class RandomGossipProcessingMetric {
             GossiperStub stub = stubGroup.getStub(address);
             gossiper.endpointStateMap.putAll(stub.endpointStateMap);
         }
+//        System.out.println("size " + gossiper.getTokenMetadata().tokenToEndpointMap.size() + " " + gossipee.getTokenMetadata().tokenToEndpointMap.size());
 
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
         long s = System.currentTimeMillis();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
         long e = System.currentTimeMillis();
-        System.out.println(newVersion + " " + (e - s));
-    }
-    
-    public static void test(InetAddress gossiperAddress, InetAddress gossipeeAddress, String testStatus) throws UnknownHostException {
-        GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
-        final List<InetAddress> addressList = new LinkedList<InetAddress>();
-        for (int i = 1; i <= numStubs; ++i) {
-            addressList.add(InetAddress.getByName("127.0.0." + i));
-        }
-        logger.info("Simulate " + numStubs + " nodes = " + addressList);
-
-        stubGroup = stubGroupBuilder.setClusterId("Test Cluster")
-                .setDataCenter("").setNumTokens(1024).setAddressList(addressList)
-                .setPartitioner(new Murmur3Partitioner()).build();
-        stubGroup.prepareInitialState();
-        GossiperStub prevInitStub = null;
-        for (int i = 1; i <= numStubs; ++i) {
-            GossiperStub stub = stubGroup.getStub(InetAddress.getByName("127.0.0." + i));
-            if (prevInitStub != null) {
-                stub.endpointStateMap.putAll(prevInitStub.endpointStateMap);
-            }
-            prevInitStub = stub;
-        }
-        stubGroup.setupTokenState();
-        if (testStatus.equals("boot")) {
-            stubGroup.setBootStrappingStatusState();
-        } else if (testStatus.equals("normal")) {
-            stubGroup.setNormalStatusState();
-        } else {
-            assert false;
-        }
-        stubGroup.setSeverityState(0.0);
-        stubGroup.setLoad(10000);
-        GossiperStub gossiper = stubGroup.getStub(gossiperAddress);
-        GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
-        int gossiperSize = gossiper.getEndpointStateMap().size();
-        int gossipeeSize = gossipee.getEndpointStateMap().size();
-        MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
-        msgIn.setTo(gossipeeAddress);
-        long s = System.currentTimeMillis();
-        MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-        long e = System.currentTimeMillis();
-        System.out.println((gossiperSize - gossipeeSize) + " " + (e - s));
+//        System.out.println(currentVersion + " " + newVersion + " " + (e - s));
+        return e - s;
     }
     
 }
