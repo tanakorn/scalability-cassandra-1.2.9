@@ -65,7 +65,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         
-        int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+//        int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+        int currentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
         
         int bootstrapCount = 0;
         int normalCount = 0;

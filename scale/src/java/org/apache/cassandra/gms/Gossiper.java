@@ -1273,8 +1273,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     bootstrapCount++;
                 } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     normalCount++;
-                    GossiperStub calculatedStub = WholeClusterSimulator.stubGroup.getStub(ep);
-                    stub.getTokenMetadata().updateNormalTokens(calculatedStub.tokens, ep);
+//                    GossiperStub calculatedStub = WholeClusterSimulator.stubGroup.getStub(ep);
+//                    stub.getTokenMetadata().updateNormalTokens(calculatedStub.tokens, ep);
+                    stub.getTokenMetadata().endpointWithTokens.add(ep);
                 }
             }
             /*
