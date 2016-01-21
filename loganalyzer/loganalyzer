@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+import os, os.path, sys
+
+import pyutil
+
+def main():
+
+  if len(sys.argv) < 2:
+    sys.stderr.write('usage: %s logDir [outputDir]\n' % os.path.basename(sys.argv[0]))
+    exit(1)
+
+  logDir = sys.argv[1]
+
+  try:
+    allFiles = os.listdir(logDir)
+  except OSError as e:
+    sys.stderr.write('%s is not directory or does not exist\n' % logDir)
+    exit(2)
+
+  pyutil.read_machinelist(logDir)
+  if len(sys.argv) >= 3:
+    outputDir = sys.argv[2]
+  else:
+    outputDir = logDir + '/output'
+  if not os.path.exists(outputDir):
+    os.mkdir(outputDir)
+  if not 'scale.log' in allFiles:
+    print 'There is not `scale.log` file in %s, this is logging from real run' % logDir
+    analyzeRealRun(logDir, outputDir)
+  else:
+    print 'There is `scale.log` file in %s, this is logging from cluster simulation' % logDir
+    analyzeClusterSim(logDir, outputDir)
+
+def analyzeRealRun(logDir, outputDir):
+  from loganalyze import realrun
+  numNodes = pyutil.num_nodes
+  for i in range(1, numNodes + 1):
+    logFile = open(logDir + '/node' + str(i) + '/scale1.log')
+    for line in logFile:
+      realrun.analyze(line, nid=i)
+  realrun.writeOutput(outputDir, str(numNodes))
+
+def analyzeClusterSim(logDir, outputDir):
+  from loganalyze import clussim
+  logFile = open(logDir + '/scale.log')
+  for line in logFile:
+    clussim.analyze(line)
+  clussim.writeOutput(outputDir, str(pyutil.num_nodes))
+
+if __name__ == '__main__':
+  main()
+
