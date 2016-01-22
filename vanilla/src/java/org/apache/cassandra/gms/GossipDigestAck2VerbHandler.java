@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
@@ -42,6 +43,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
         Klogger.logger.info(to + " doVerb ack2");
+        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 1024;
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -106,6 +108,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+        int realUpdate = (int) result[8];
         for (InetAddress receivingAddress : updatedNodes) {
             EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
             Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -127,7 +130,9 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
+            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                    + currentVersion + " ; transmission " + transmissionTime);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }

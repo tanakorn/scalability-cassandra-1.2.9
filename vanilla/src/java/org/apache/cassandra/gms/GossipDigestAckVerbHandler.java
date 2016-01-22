@@ -29,6 +29,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
 import edu.uchicago.cs.ucare.util.Klogger;
@@ -53,6 +54,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             return;
         }
 
+        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 1024;
         GossipDigestAck gDigestAckMessage = message.payload;
         long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
@@ -60,6 +62,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         
         int bootstrapCount = 0;
         int normalCount = 0;
+        int realUpdate = 0;
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
@@ -68,6 +71,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+            realUpdate = (int) result[8];
             for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
                 Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -121,7 +125,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
+            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                    + currentVersion + " ; transmission " + transmissionTime);
         }
     }
 }

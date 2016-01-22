@@ -39,8 +39,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     private static final Logger logger = LoggerFactory.getLogger(SimulatedGossipDigestAckVerbHandler.class);
     private static final Map<String, byte[]> emptyMap = Collections.<String, byte[]>emptyMap();
     
-    private Random rand = new Random();
-    
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
@@ -65,11 +63,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         
-//        int currentVersion = receiverStub.getTokenMetadata().tokenToEndpointMap.size() / 1024;
-        int currentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
+        int senderCurrentVersion = senderStub.getTokenMetadata().endpointWithTokens.size();
         
         int bootstrapCount = 0;
         int normalCount = 0;
+        int realUpdate = 0;
+        int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
 
         Map<InetAddress, double[]> updatedNodeInfo = null;
         Object[] result = null;
@@ -145,7 +144,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
         }
         
-        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+        int roundCurrentVersion = (senderCurrentVersion / 8) * 8 + 1;
         int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
 
         long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
@@ -164,6 +163,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+            realUpdate = (int) result[9];
             if (!updatedNodes.isEmpty()) {
                 StringBuilder sb = new StringBuilder(to.toString());
                 sb.append(" hop ");
@@ -200,7 +200,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.info(sb.toString());
             }
             if (bootstrapCount != 0 || normalCount != 0) {
-                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
+                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
             }
         }
     }

@@ -42,6 +42,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         logger.info(to + " doVerb ack2");
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
+        int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
@@ -83,6 +84,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+        int realUpdate = (int) result[9];
         if (!updatedNodes.isEmpty()) {
             StringBuilder sb = new StringBuilder(to.toString());
             sb.append(" hop ");
@@ -135,7 +137,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
         }
         if (bootstrapCount != 0 || normalCount != 0) {
-            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount + " normal " + normalCount + " ; transmission " + transmissionTime);
+            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
         }
     }
 }

@@ -1247,6 +1247,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int bootstrapCount = 0;
         int normalCount = 0;
         Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
+        int realUpdate = 0;
         Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
@@ -1273,8 +1274,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     bootstrapCount++;
                 } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     normalCount++;
-//                    GossiperStub calculatedStub = WholeClusterSimulator.stubGroup.getStub(ep);
-//                    stub.getTokenMetadata().updateNormalTokens(calculatedStub.tokens, ep);
+                    if (!stub.getTokenMetadata().endpointWithTokens.contains(ep)) {
+                        realUpdate++;
+                    }
                     stub.getTokenMetadata().endpointWithTokens.add(ep);
                 }
             }
@@ -1338,7 +1340,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNodes.add(ep);
             }
         }
-        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)

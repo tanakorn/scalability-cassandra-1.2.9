@@ -1215,8 +1215,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * Note: Any time a node state changes from STATUS_NORMAL, it will not be visible to new nodes. So it follows that
      * you should never bootstrap a new node during a removetoken, decommission or move.
      */
-    public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
+    public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
+        int update = 0;
         switch (state)
         {
             case STATUS:
@@ -1229,7 +1230,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
                     handleStateBootstrap(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_NORMAL))
-                    handleStateNormal(endpoint, pieces);
+                    update = handleStateNormal(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
                     handleStateRemoving(endpoint, pieces);
                 else if (moveName.equals(VersionedValue.STATUS_LEAVING))
@@ -1260,6 +1261,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
                 SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
                 break;
         }
+        return update;
     }
 
     private String quote(String value)
@@ -1342,7 +1344,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      * @param endpoint node
      * @param pieces STATE_NORMAL,token
      */
-    private void handleStateNormal(final InetAddress endpoint, String[] pieces)
+    private int handleStateNormal(final InetAddress endpoint, String[] pieces)
     {
         long s = System.currentTimeMillis();
         assert pieces.length >= 2;
@@ -1452,8 +1454,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpoint(ep);
-        if (!tokensToUpdateInSystemTable.isEmpty())
+        int update = 0;
+        if (!tokensToUpdateInSystemTable.isEmpty()) {
+            update = 1;
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
+        }
         if (!localTokensToRemove.isEmpty())
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
 
@@ -1471,6 +1476,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         calculatePendingRanges();
         long t = System.currentTimeMillis() - s;
         Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
+        return update;
     }
 
     /**
@@ -1966,12 +1972,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         return changedRanges;
     }
 
-    public void onJoin(InetAddress endpoint, EndpointState epState)
+    public int onJoin(InetAddress endpoint, EndpointState epState)
     {
+        int update = 0;
         for (Map.Entry<ApplicationState, VersionedValue> entry : epState.getApplicationStateMap().entrySet())
         {
-            onChange(endpoint, entry.getKey(), entry.getValue());
+            update += onChange(endpoint, entry.getKey(), entry.getValue());
         }
+        return update;
     }
 
     public void onAlive(InetAddress endpoint, EndpointState state)
