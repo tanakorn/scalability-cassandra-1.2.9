@@ -281,7 +281,7 @@ public class WholeClusterSimulator {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (InetAddress seed : seeds) {
+                for (InetAddress seed : addressList) {
                     GossiperStub stub = stubGroup.getStub(seed);
                     stub.setupTokenState();
                     stub.setBootStrappingStatusState();
@@ -291,7 +291,7 @@ public class WholeClusterSimulator {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (InetAddress seed : seeds) {
+                for (InetAddress seed : addressList) {
                     GossiperStub stub = stubGroup.getStub(seed);
                     stub.updateNormalTokens();
                     stub.setupTokenState();
