@@ -281,23 +281,27 @@ public class WholeClusterSimulator {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (InetAddress seed : addressList) {
-                    GossiperStub stub = stubGroup.getStub(seed);
-                    stub.setupTokenState();
-                    stub.setBootStrappingStatusState();
+                for (InetAddress address : addressList) {
+                    if (!seeds.contains(address)) {
+                        GossiperStub stub = stubGroup.getStub(address);
+                        stub.setupTokenState();
+                        stub.setBootStrappingStatusState();
+                    }
                 }
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (InetAddress seed : addressList) {
-                    GossiperStub stub = stubGroup.getStub(seed);
-                    stub.updateNormalTokens();
-                    stub.setupTokenState();
-                    stub.setNormalStatusState();
-                    stub.setSeverityState(0.0);
-                    stub.setLoad(10000);
+                for (InetAddress address : addressList) {
+                    if (!seeds.contains(address)) {
+                        GossiperStub stub = stubGroup.getStub(address);
+                        stub.updateNormalTokens();
+                        stub.setupTokenState();
+                        stub.setNormalStatusState();
+                        stub.setSeverityState(0.0);
+                        stub.setLoad(10000);
+                    }
                 }
             }
         });
