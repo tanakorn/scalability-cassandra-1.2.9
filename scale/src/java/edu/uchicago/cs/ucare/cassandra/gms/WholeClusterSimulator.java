@@ -238,32 +238,75 @@ public class WholeClusterSimulator {
                 .setNumTokens(1024).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
-//        stubGroup.listen();
         // I should start MyGossiperTask here
         timer.schedule(new MyGossiperTask(), 0, 1000);
-//        Thread syncProcessThread = new Thread(new syncprocessor());
-//        syncprocessthread.start();
-//        Thread[] ackProcessThreadPool = new Thread[addressList.size()];
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
             Thread t = new Thread(new AckProcessor(address));
             ackProcessThreadPool.add(t);
             t.start();
         }
-//        for (int i = 0; i < ackProcessThreadPool.length; ++i) {
-//           ackProcessThreadPool[i] = new Thread(new AckProcessor());
-//           ackProcessThreadPool[i].start();
-//        }
-        stubGroup.setupTokenState();
-        stubGroup.setBootStrappingStatusState();
-        for (InetAddress seed : seeds) {
-            stubGroup.getStub(seed).setNormalStatusState();
-        }
+        Thread seedThread = new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                for (InetAddress seed : seeds) {
+                    GossiperStub stub = stubGroup.getStub(seed);
+                    stub.setupTokenState();
+                    stub.setBootStrappingStatusState();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                for (InetAddress seed : seeds) {
+                    GossiperStub stub = stubGroup.getStub(seed);
+                    stub.updateNormalTokens();
+                    stub.setupTokenState();
+                    stub.setNormalStatusState();
+                    stub.setSeverityState(0.0);
+                    stub.setLoad(10000);
+                }
+            }
+        });
+        seedThread.start();
+        
+        Thread otherThread = new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                for (InetAddress seed : seeds) {
+                    GossiperStub stub = stubGroup.getStub(seed);
+                    stub.setupTokenState();
+                    stub.setBootStrappingStatusState();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                for (InetAddress seed : seeds) {
+                    GossiperStub stub = stubGroup.getStub(seed);
+                    stub.updateNormalTokens();
+                    stub.setupTokenState();
+                    stub.setNormalStatusState();
+                    stub.setSeverityState(0.0);
+                    stub.setLoad(10000);
+                }
+            }
+        });
+        otherThread.start();
+
         // Replace hard-coded number here with ring_deplay
-        Thread.sleep(10000);
-        stubGroup.setNormalStatusState();
-        stubGroup.setSeverityState(0.0);
-        stubGroup.setLoad(10000);
+//        stubGroup.setNormalStatusState();
+//        stubGroup.setSeverityState(0.0);
+//        stubGroup.setLoad(10000);
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {

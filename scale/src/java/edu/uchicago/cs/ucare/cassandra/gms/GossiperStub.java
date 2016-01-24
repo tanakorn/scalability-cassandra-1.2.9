@@ -162,6 +162,10 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         state.addApplicationState(ApplicationState.TOKENS, versionedValueFactory.tokens(tokens));
 	}
 	
+	public void updateNormalTokens() {
+        tokenMetadata.updateNormalTokens(tokens, broadcastAddress);
+	}
+	
 	public void setBootStrappingStatusState() {
 		state.addApplicationState(ApplicationState.STATUS, versionedValueFactory.bootstrapping(tokens));
 	}
