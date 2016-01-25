@@ -252,8 +252,8 @@ public class WholeClusterSimulator {
             public void run() {
                 for (InetAddress seed : seeds) {
                     GossiperStub stub = stubGroup.getStub(seed);
-                    stub.updateNormalTokens();
                     stub.setupTokenState();
+                    stub.updateNormalTokens();
                     stub.setNormalStatusState();
                     stub.setSeverityState(0.0);
                     stub.setLoad(10000);
