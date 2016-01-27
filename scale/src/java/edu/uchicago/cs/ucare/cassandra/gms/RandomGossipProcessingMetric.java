@@ -31,7 +31,7 @@ public class RandomGossipProcessingMetric {
 
     public static GossiperStubGroup stubGroup;
     
-    public static final int numStubs = 128;
+    public static final int numStubs = 255;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
@@ -89,6 +89,9 @@ public class RandomGossipProcessingMetric {
         int currentVersion = Integer.parseInt(args[1]);
         int newVersion = Integer.parseInt(args[2]);
         int repeat = Integer.parseInt(args[3]);
+        if ((currentVersion + newVersion) > numStubs) {
+            System.exit(1);
+        }
         if (testStatus.equals("boot")) {
             
         } else if (testStatus.equals("normal")) {
@@ -106,15 +109,6 @@ public class RandomGossipProcessingMetric {
             s += randomTest(currentVersion, newVersion, testStatus) + " ";
         }
         System.out.println(s);
-//        InetAddress firstNode = InetAddress.getByName("127.0.0.1");
-//        for (int i = 1; i < numStubs; ++i) {
-//            for (int j = 1; j < numStubs - i; ++j) {
-//                randomTest(j, i, testStatus);
-//            }
-//        }
-//        for (int i = 1; i < numStubs; ++i) {
-//            randomTest(i, testStatus);
-//        }
         System.exit(0);
     }
     
@@ -174,7 +168,6 @@ public class RandomGossipProcessingMetric {
             GossiperStub stub = stubGroup.getStub(address);
             gossiper.endpointStateMap.putAll(stub.endpointStateMap);
         }
-//        System.out.println("size " + gossiper.getTokenMetadata().tokenToEndpointMap.size() + " " + gossipee.getTokenMetadata().tokenToEndpointMap.size());
 
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
