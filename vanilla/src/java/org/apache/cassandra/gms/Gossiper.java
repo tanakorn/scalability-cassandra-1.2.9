@@ -182,38 +182,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
                     doStatusCheck();
-                    int seenNode = endpointStateMap.size();
-                    int deadNode = 0;
-                    int nonMemberNode = 0;
-                    int notCompletedNode = 0;
-                    StringBuilder strBuilder;
-                    strBuilder = new StringBuilder("Dead nodes: ");
-                    StringBuilder strBuilder2 = new StringBuilder("Non-member nodes: ");
-                    StringBuilder strBuilder3 = new StringBuilder("Not-completed nodes: ");
-                    for (InetAddress address : endpointStateMap.keySet()) {
-                    	EndpointState state = endpointStateMap.get(address);
-                        int thisNumTokens = StorageService.instance.getTokenMetadata().getTokenSize(address);
-                        boolean isMember = StorageService.instance.getTokenMetadata().isMember(address);
-                    	if (!state.isAlive()) {
-                    		deadNode++;
-                    		strBuilder.append(address.toString());
-                    		strBuilder.append(", ");
-                    	}
-                    	if (!isMember) {
-                    		nonMemberNode++;
-                    		strBuilder2.append(address.toString());
-                    		strBuilder2.append(", ");
-                    	}
-                    	if (thisNumTokens != numTokens) {
-                    		notCompletedNode++;
-                    		strBuilder3.append(address.toString());
-                    		strBuilder3.append(", ");
-                    	}
-                    }
-                    Klogger.logger.info("RingInfo: seen nodes = " + seenNode + 
-                    		", non-member nodes = " + nonMemberNode + 
-                    		", not-completed nodes = " + notCompletedNode + 
-                    		", dead nodes = " + deadNode);
                 }
             }
             catch (Exception e)
@@ -240,6 +208,37 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         {
             throw new RuntimeException(e);
         }
+        Thread infoPrinter = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                String thisAddress = FBUtilities.getBroadcastAddress().toString();
+                while (true) {
+                    int seenNode = endpointStateMap.size();
+                    int deadNode = 0;
+                    int memberNode = 0;
+                    for (InetAddress address : endpointStateMap.keySet()) {
+                        EndpointState state = endpointStateMap.get(address);
+                        boolean isMember = StorageService.instance.getTokenMetadata().isMember(address);
+                        if (!state.isAlive()) {
+                            deadNode++;
+                        }
+                        if (isMember) {
+                            memberNode++;
+                        }
+                    }
+                    Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            
+        });
+        infoPrinter.start();
     }
 
     protected void checkSeedContact(InetAddress ep)

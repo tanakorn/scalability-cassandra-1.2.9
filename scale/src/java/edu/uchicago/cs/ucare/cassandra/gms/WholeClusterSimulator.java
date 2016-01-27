@@ -173,54 +173,6 @@ public class WholeClusterSimulator {
             normalGossipExecRecords.get(currentVersion).put(newVersion, execTime);
         }
         buffReader.close();
-//        String mode = args[4];
-//        if (mode.equals("offline")) {
-//            buffReader = new BufferedReader(new FileReader(args[2]));
-//            while ((line = buffReader.readLine()) != null) {
-//                String[] tokens = line.split(" ");
-//                int numNormalVersion = Integer.parseInt(tokens[0]);
-//                double execTime = Double.parseDouble(tokens[1]) / 1000;
-//                normalGossipExecRecords[numNormalVersion] = execTime;
-//            }
-//            buffReader.close();
-//        } else if (mode.equals("real-med")) {
-//            buffReader = new BufferedReader(new FileReader(args[3]));
-//            SimpleRegression regression = new SimpleRegression();
-//            while ((line = buffReader.readLine()) != null) {
-//                String[] tokens = line.split(" ");
-//                int numNormalVersion = Integer.parseInt(tokens[0]);
-//                regression.addData(numNormalVersion, Double.parseDouble(tokens[6]));
-//            }
-//            buffReader.close();
-//            double slope = regression.getSlope();
-//            double intercept = regression.getIntercept();
-//            for (int i = 0; i < MAX_NODE; ++i) {
-//                normalGossipExecRecords[i] = slope * i + intercept;
-//                if (normalGossipExecRecords[i] < 0) {
-//                    normalGossipExecRecords[i] = 0;
-//                }
-//            }
-//        } else if (mode.equals("real-mean")) {
-//            buffReader = new BufferedReader(new FileReader(args[3]));
-//            SimpleRegression regression = new SimpleRegression();
-//            while ((line = buffReader.readLine()) != null) {
-//                String[] tokens = line.split(" ");
-//                int numNormalVersion = Integer.parseInt(tokens[0]);
-//                regression.addData(numNormalVersion, Double.parseDouble(tokens[2]));
-//            }
-//            buffReader.close();
-//            double slope = regression.getSlope();
-//            double intercept = regression.getIntercept();
-//            for (int i = 0; i < MAX_NODE; ++i) {
-//                normalGossipExecRecords[i] = slope * i + intercept;
-//                if (normalGossipExecRecords[i] < 0) {
-//                    normalGossipExecRecords[i] = 0;
-//                }
-//            }
-//        } else {
-//            System.err.println("Wrong mode");
-//            System.exit(1);
-//        }
 //        Gossiper.registerStatic(StorageService.instance);
 //        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
@@ -296,11 +248,10 @@ public class WholeClusterSimulator {
             }
         });
         otherThread.start();
+        
+        Thread infoPrinter = new Thread(new RingInfoPrinter());
+        infoPrinter.start();
 
-        // Replace hard-coded number here with ring_deplay
-//        stubGroup.setNormalStatusState();
-//        stubGroup.setSeverityState(0.0);
-//        stubGroup.setLoad(10000);
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
@@ -322,7 +273,6 @@ public class WholeClusterSimulator {
         }
         Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
         return result;
-//        double execTime = normalGossipExecRecords[numNormal];
 //        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
 //        return execTimeMilli;
 //        double sdExecTime = normalGossipExecSdRecords[numNormal];
@@ -453,5 +403,34 @@ public class WholeClusterSimulator {
         }
         
     }
+    
+    public static class RingInfoPrinter implements Runnable {
+        
+        @Override
+        public void run() {
+            while (true) {
+                for (GossiperStub stub : stubGroup) {
+                    String thisAddress = stub.getInetAddress().toString();
+                    int seenNode = stub.endpointStateMap.size();
+                    int memberNode = stub.getTokenMetadata().endpointWithTokens.size();
+                    int deadNode = 0;
+                    for (InetAddress address : stub.endpointStateMap.keySet()) {
+                        EndpointState state = stub.endpointStateMap.get(address);
+                        if (!state.isAlive()) {
+                            deadNode++;
+                        }
+                    }
+                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+}
     
 }
