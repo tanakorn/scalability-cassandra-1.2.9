@@ -11,5 +11,5 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
-java -classpath $classpath -Dobserved.nodes=$observed_nodes edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat nome_normal.dat2 &
+java -classpath $classpath -Dobserved.nodes=$observed_nodes edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat nome_normal.dat &
 
