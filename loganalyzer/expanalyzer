@@ -8,7 +8,7 @@ fi
 expdir=$1
 
 subexps="vanilla clussim"
-allsize="32 64 128"
+allsize="32 64 96 128 160"
 for subexp in $subexps; do
   subexpdir=$expdir/$subexp
   if ! [ -d $subexpdir ]; then
