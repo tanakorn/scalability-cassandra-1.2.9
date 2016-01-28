@@ -45,7 +45,7 @@ public class WholeClusterSimulator {
     public static GossiperStubGroup stubGroup;
     
     public static int numStubs;
-    public static final int MAX_NODE = 128;
+    public static final int MAX_NODE = 160;
     public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
@@ -261,17 +261,20 @@ public class WholeClusterSimulator {
     
     static Random rand = new Random();
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
-        if (currentVersion > 121) {
-            currentVersion = 121;
+        if (currentVersion > 153) {
+            currentVersion = 153;
         }
         if (numNormal > numStubs - currentVersion) {
             numNormal = numStubs - currentVersion;
             numNormal = (numNormal / 4) * 4 + 1;
         }
-        if (numNormal > 49) {
-            numNormal = 49;
+        if (numNormal > 69) {
+            numNormal = 69;
         }
         Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
+        if (result == null) {
+            System.out.println(currentVersion + " " + numNormal);
+        }
         return result;
 //        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
 //        return execTimeMilli;
