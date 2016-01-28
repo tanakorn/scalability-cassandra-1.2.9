@@ -9,17 +9,17 @@ class StableAnalyzer(analyze.BaseAnalyzer):
     self.ringInfo = {}
 
   def analyze(self, logLine, **kwargs):
-    if 'RingInfo' in logLine:
+    if ' ringinfo ' in logLine:
       tokens = logLine.split()
       timestamp = analyze.extractTimestamp(tokens)
-      nid = kwargs['nid']
+      address = tokens[9][1:]
+      nid = pyutil.ip2nid[address]
       if nid not in self.ringInfo:
         self.ringInfo[nid] = [ timestamp, None ]
       else:
-        seenNode = int(tokens[11][:-1])
-        nonMemberNode = int(tokens[15][:-1])
-        deadNode = int(tokens[23])
-        if seenNode < pyutil.num_nodes or nonMemberNode != 0 or deadNode != 0:
+        memberNode = int(tokens[17][0:-1])
+        deadNode = int(tokens[21])
+        if memberNode < pyutil.num_nodes or deadNode != 0:
           self.ringInfo[nid][1] = None
         elif not self.ringInfo[nid][1]:
           self.ringInfo[nid][1] = timestamp

@@ -6,42 +6,24 @@ class StableAnalyzer(analyze.BaseAnalyzer):
 
   def __init__(self):
     # ringInfo is a list, [ startTime, stableTime ] stableTime = None means not stable
-    self.ringInfo = {}
+    self.clusterRingInfo = [ None, None ]
 
   def analyze(self, logLine, **kwargs):
-    if ' ringinfo ' in logLine:
+    if ' stable ' in logLine:
       tokens = logLine.split()
       timestamp = analyze.extractTimestamp(tokens)
-      address = tokens[9][1:]
-      nid = pyutil.ip2nid[address]
-      if nid not in self.ringInfo:
-        self.ringInfo[nid] = [ timestamp, None ]
+      isStable = True if tokens[9] == 'yes' else False
+      if not self.clusterRingInfo[0]:
+        self.clusterRingInfo[0] = timestamp
+      if isStable:
+        if not self.clusterRingInfo[1]:
+          self.clusterRingInfo[1] = timestamp
       else:
-        memberNode = int(tokens[17][0:-1])
-        deadNode = int(tokens[21])
-        if memberNode < pyutil.num_nodes or deadNode != 0:
-          self.ringInfo[nid][1] = None
-        elif not self.ringInfo[nid][1]:
-          self.ringInfo[nid][1] = timestamp
+        self.clusterRingInfo[1] = None
 
   def analyzedResult(self):
-
-    clusterStartTime = None
-    clusterStableTime = 0
-    for nid in self.ringInfo:
-      ringInfo = self.ringInfo[nid]
-      if not clusterStartTime or clusterStartTime > ringInfo[0]:
-        clusterStartTime = ringInfo[0]
-      if not ringInfo[1]:
-        break
-      elif clusterStableTime < ringInfo[1]:
-        clusterStableTime = ringInfo[1]
-
-    stableTime = 0
-    if not clusterStableTime:
-      stableTime = -1
-    else:
-      stableTime = clusterStableTime - clusterStartTime
+    
+    stableTime = -1 if not self.clusterRingInfo[1] else self.clusterRingInfo[1] - self.clusterRingInfo[0]
 
     return { 'stable_time' : str(stableTime) + '\n' }
   
