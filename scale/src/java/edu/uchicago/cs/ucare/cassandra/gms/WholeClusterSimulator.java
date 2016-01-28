@@ -412,9 +412,10 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             while (true) {
+                boolean isStable = true;
                 for (GossiperStub stub : stubGroup) {
-                    String thisAddress = stub.getInetAddress().toString();
-                    int seenNode = stub.endpointStateMap.size();
+//                    String thisAddress = stub.getInetAddress().toString();
+//                    int seenNode = stub.endpointStateMap.size();
                     int memberNode = stub.getTokenMetadata().endpointWithTokens.size();
                     int deadNode = 0;
                     for (InetAddress address : stub.endpointStateMap.keySet()) {
@@ -423,11 +424,20 @@ public class WholeClusterSimulator {
                             deadNode++;
                         }
                     }
-                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+//                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
+//                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    if (memberNode != numStubs || deadNode > 0) {
+                        isStable = false;
+                        break;
+                    }
+                }
+                if (isStable) {
+                    logger.info("stable status yes");
+                } else {
+                    logger.info("stable status no");
                 }
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

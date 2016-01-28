@@ -230,7 +230,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
                             ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     try {
-                        Thread.sleep(10000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
