@@ -425,7 +425,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         return false;
     }
     
-    private void markDead(InetAddress addr, EndpointState localState) {
+    private void markDead(InetAddress addr, EndpointState localState, double phi) {
+        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
         localState.markDead();
         liveEndpoints.remove(addr);
         unreachableEndpoints.put(addr, System.currentTimeMillis());
@@ -434,10 +435,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     @Override
     public void convict(InetAddress ep, double phi) {
         // TODO Auto-generated method stub
-        logger.info(broadcastAddress + " convict " + ep + " with phi " + phi);
         EndpointState epState = endpointStateMap.get(ep);
         if (epState.isAlive() && !isDeadState(epState)) {
-            markDead(ep, epState);
+            markDead(ep, epState, phi);
         }
         else {
             epState.markDead();
