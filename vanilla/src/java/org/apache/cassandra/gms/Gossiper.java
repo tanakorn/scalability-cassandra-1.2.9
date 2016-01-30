@@ -117,7 +117,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         public final int numTokens = DatabaseDescriptor.getNumTokens();
         
-        int round = 0;
+//        int round = 0;
 
         public void run()
         {
@@ -130,21 +130,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().updateHeartBeat();
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
-                ++round;
-                Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
                 
-                for (InetAddress add : endpointStateMap.keySet()) {
-                    EndpointState ep = endpointStateMap.get(add);
-                    VersionedValue vv = ep.getApplicationState(ApplicationState.STATUS);
-                    if (vv != null) {
-                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " knows " + add + " status as " + vv.value);
-                    } else {
-                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " doesn't know " + add);
-                    }
-                }
-
                 if ( gDigests.size() > 0 )
                 {
                     GossipDigestSyn digestSynMessage = new GossipDigestSyn(DatabaseDescriptor.getClusterName(),
@@ -176,8 +164,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                        gossipedToSeed check.
 
                        See CASSANDRA-150 for more exposition. */
-                    if (!gossipedToSeed || liveEndpoints.size() < seeds.size())
+                    if (!gossipedToSeed || liveEndpoints.size() < seeds.size()) {
                         doGossipToSeed(message);
+                    }
 
                     if (logger.isTraceEnabled())
                         logger.trace("Performing status check ...");
@@ -577,6 +566,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
+        Klogger.logger.info("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
         return seeds.contains(to);
     }
@@ -585,6 +575,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private boolean doGossipToLiveMember(MessageOut<GossipDigestSyn> message)
     {
         int size = liveEndpoints.size();
+        Klogger.logger.info("live endpoints = " + liveEndpoints);
         if ( size == 0 )
             return false;
         return sendGossip(message, liveEndpoints);
@@ -618,6 +609,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
             if ( liveEndpoints.size() == 0 )
             {
+                Klogger.logger.info("Special gossip to seed");
                 sendGossip(prod, seeds);
             }
             else
@@ -625,8 +617,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 /* Gossip with the seed with some probability. */
                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
                 double randDbl = random.nextDouble();
-                if ( randDbl <= probability )
+                if ( randDbl <= probability ) {
+                    Klogger.logger.info("Special gossip to seed");
                     sendGossip(prod, seeds);
+                }
             }
         }
     }
