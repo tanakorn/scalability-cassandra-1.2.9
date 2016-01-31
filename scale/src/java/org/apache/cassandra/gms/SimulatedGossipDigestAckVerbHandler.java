@@ -146,8 +146,10 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         int roundCurrentVersion = (senderCurrentVersion / 8) * 8 + 1;
         int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
 
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum];
+        if (normalNodeNum != 0) {
+            sleepTime += WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        }
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);
@@ -202,8 +204,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                         + receiverCurrentVersion + " ; transmission " + transmissionTime);
-            } else {
-                logger.info("should be fast " + ackHandlerTime);
             }
         }
     }

@@ -126,8 +126,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
         int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
         int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum];
+        if (normalNodeNum != 0) {
+            sleepTime += WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        }
+//        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
+//                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
         gDigestAckMessage.setSleepTime(sleepTime);
