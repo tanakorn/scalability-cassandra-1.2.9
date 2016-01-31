@@ -33,4 +33,30 @@ public class StackTracePrinter {
     	logger.info(resultBuilder.toString());
 	}
 
+	public static void print(Logger logger, String prefix) {
+        StringBuilder resultBuilder = new StringBuilder("Print stack trace: " + prefix + "\n");
+        StackTraceElement[] trace= Thread.currentThread().getStackTrace();
+        resultBuilder.append(trace[2].getClassName());
+        resultBuilder.append('.');
+        resultBuilder.append(trace[2].getMethodName());
+        for (int i = 2; i < trace.length; ++i) {
+            resultBuilder.append('\n');
+            resultBuilder.append(trace[i].toString());
+        }
+        logger.info(resultBuilder.toString());
+    }
+    
+    public static void print(String prefix) {
+        StringBuilder resultBuilder = new StringBuilder("Print stack trace: " + prefix + "\n");
+        StackTraceElement[] trace= Thread.currentThread().getStackTrace();
+        resultBuilder.append(trace[2].getClassName());
+        resultBuilder.append('.');
+        resultBuilder.append(trace[2].getMethodName());
+        for (int i = 2; i < trace.length; ++i) {
+            resultBuilder.append('\n');
+            resultBuilder.append(trace[i].toString());
+        }
+        logger.info(resultBuilder.toString());
+    }
+
 }

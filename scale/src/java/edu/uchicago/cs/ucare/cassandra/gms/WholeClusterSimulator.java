@@ -288,6 +288,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
+            logger.info("Do gossip task");
             long start = System.currentTimeMillis();
             for (GossiperStub performer : stubGroup) {
                 InetAddress performerAddress = performer.getInetAddress();
@@ -402,7 +403,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
-//                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+                logger.info(address + " processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();

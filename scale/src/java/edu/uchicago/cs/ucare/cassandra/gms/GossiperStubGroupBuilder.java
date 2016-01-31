@@ -81,6 +81,7 @@ public class GossiperStubGroupBuilder {
                 stubs.add(stub);
             }
         }
+        System.out.println(stubs.size());
         return new GossiperStubGroup(clusterId, dataCenter, stubs, numTokens, partitioner);
     }
     

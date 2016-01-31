@@ -1128,10 +1128,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
             subscriber.onRestart(stub, ep, epState);
 
-        if (!isDeadStateStatic(epState))
+        if (!isDeadStateStatic(epState)) {
+            logger.info("Marking " + ep + " alive due to not dead state");
             markAliveStatic(stub, ep, epState);
-        else
-        {
+        } else {
+            logger.info("Not marking " + ep + " alive due to dead state");
             logger.debug("Not marking " + ep + " alive due to dead state");
             markDeadStatic(stub, ep, epState);
         }

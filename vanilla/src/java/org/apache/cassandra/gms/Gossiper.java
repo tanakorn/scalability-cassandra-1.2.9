@@ -42,6 +42,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 
 import edu.uchicago.cs.ucare.util.Klogger;
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction
@@ -835,7 +836,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void markAlive(InetAddress addr, EndpointState localState)
     {
-//    	StackTracePrinter.print(logger);
+    	StackTracePrinter.print(Klogger.logger, FBUtilities.getBroadcastAddress() + " mark alive " + addr);
         if (logger.isTraceEnabled())
             logger.trace("marking as alive {}", addr);
         localState.markAlive();
@@ -890,10 +891,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             subscriber.onRestart(ep, epState);
         }
 
-        if (!isDeadState(epState))
+        if (!isDeadState(epState)) {
+            Klogger.logger.info("Marking " + ep + " alive due to not dead state");
             markAlive(ep, epState);
-        else
+        } else
         {
+            Klogger.logger.info("Not marking " + ep + " alive due to dead state");
             logger.debug("Not marking " + ep + " alive due to dead state");
             markDead(ep, epState);
         }
@@ -1168,6 +1171,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         DatabaseDescriptor.getEndpointSnitch().gossiperStarting();
         if (logger.isTraceEnabled())
             logger.trace("gossip started with generation " + localState.getHeartBeatState().getGeneration());
+        Klogger.logger.info("gossip started with generation " + localState.getHeartBeatState().getGeneration());
 
         scheduledGossipTask = executor.scheduleWithFixedDelay(new GossipTask(),
                                                               Gossiper.intervalInMillis,
