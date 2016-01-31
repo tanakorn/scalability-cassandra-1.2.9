@@ -202,6 +202,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                         + receiverCurrentVersion + " ; transmission " + transmissionTime);
+            } else {
+                logger.info("should be fast " + ackHandlerTime);
             }
         }
     }

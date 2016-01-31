@@ -128,6 +128,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                     + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                     + currentVersion + " ; transmission " + transmissionTime);
+        } else {
+            Klogger.logger.info("should be fast " + ackHandlerTime);
         }
     }
 }

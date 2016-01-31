@@ -140,6 +140,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
                     + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                     + receiverCurrentVersion + " ; transmission " + transmissionTime);
+        } else {
+            logger.info("should be fast " + ack2HandlerTime);
         }
     }
 }
