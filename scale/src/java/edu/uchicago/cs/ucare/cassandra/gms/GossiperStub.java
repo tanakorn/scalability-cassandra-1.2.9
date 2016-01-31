@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStub;
-import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 public class GossiperStub implements InetAddressStub, IFailureDetectionEventListener {
 	
@@ -446,7 +445,6 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     public void markAlive(InetAddress addr, EndpointState localState) {
-        StackTracePrinter.print(logger, broadcastAddress + " mark alive " + addr);
         localState.markAlive();
         localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
         liveEndpoints.add(addr);

@@ -288,7 +288,6 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            logger.info("Do gossip task");
             long start = System.currentTimeMillis();
             for (GossiperStub performer : stubGroup) {
                 InetAddress performerAddress = performer.getInetAddress();
@@ -296,13 +295,11 @@ public class WholeClusterSimulator {
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
                 Set<InetAddress> seeds = performer.getSeeds();
-                logger.info(performerAddress + " live endpoints = " + liveEndpoints);
                 if (!liveEndpoints.isEmpty()) {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
                     LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
-                    logger.info(performerAddress + " gossip to " + liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -334,7 +331,6 @@ public class WholeClusterSimulator {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
                                 LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
-                                logger.info(performerAddress + " special gossip to seed");
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -347,7 +343,6 @@ public class WholeClusterSimulator {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
                                     LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
-                                    logger.info(performerAddress + " special gossip to seed");
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -403,7 +398,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
-                logger.info(address + " processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+//                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();

@@ -42,7 +42,6 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 
 import edu.uchicago.cs.ucare.util.Klogger;
-import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 /**
  * This module is responsible for Gossiping information for the local endpoint. This abstraction
@@ -567,7 +566,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
-        Klogger.logger.info("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
         return seeds.contains(to);
     }
@@ -576,7 +574,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private boolean doGossipToLiveMember(MessageOut<GossipDigestSyn> message)
     {
         int size = liveEndpoints.size();
-        Klogger.logger.info("live endpoints = " + liveEndpoints);
         if ( size == 0 )
             return false;
         return sendGossip(message, liveEndpoints);
@@ -610,7 +607,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
             if ( liveEndpoints.size() == 0 )
             {
-                Klogger.logger.info("Special gossip to seed");
                 sendGossip(prod, seeds);
             }
             else
@@ -619,7 +615,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
                 double randDbl = random.nextDouble();
                 if ( randDbl <= probability ) {
-                    Klogger.logger.info("Special gossip to seed");
                     sendGossip(prod, seeds);
                 }
             }
@@ -836,7 +831,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void markAlive(InetAddress addr, EndpointState localState)
     {
-    	StackTracePrinter.print(Klogger.logger, FBUtilities.getBroadcastAddress() + " mark alive " + addr);
+//    	StackTracePrinter.print(logger);
         if (logger.isTraceEnabled())
             logger.trace("marking as alive {}", addr);
         localState.markAlive();
@@ -891,12 +886,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             subscriber.onRestart(ep, epState);
         }
 
-        if (!isDeadState(epState)) {
-            Klogger.logger.info("Marking " + ep + " alive due to not dead state");
+        if (!isDeadState(epState))
             markAlive(ep, epState);
-        } else
+        else
         {
-            Klogger.logger.info("Not marking " + ep + " alive due to dead state");
             logger.debug("Not marking " + ep + " alive due to dead state");
             markDead(ep, epState);
         }
@@ -1171,7 +1164,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         DatabaseDescriptor.getEndpointSnitch().gossiperStarting();
         if (logger.isTraceEnabled())
             logger.trace("gossip started with generation " + localState.getHeartBeatState().getGeneration());
-        Klogger.logger.info("gossip started with generation " + localState.getHeartBeatState().getGeneration());
 
         scheduledGossipTask = executor.scheduleWithFixedDelay(new GossipTask(),
                                                               Gossiper.intervalInMillis,
