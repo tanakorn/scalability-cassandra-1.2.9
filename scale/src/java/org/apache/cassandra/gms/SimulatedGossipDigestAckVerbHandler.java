@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.MessagingService.Verb;
+
 
 //import edu.uchicago.cs.ucare.cassandra.gms.GossipProcessingMetric;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
@@ -113,6 +115,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             MessageIn<GossipDigestAck2> msgIn = RandomGossipProcessingMetric.convertOutToIn(gDigestAck2Message);
             msgIn.setTo(from);
             long s = System.currentTimeMillis();
+            RandomGossipProcessingMetric.fill();
             MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_ACK2).doVerb(msgIn, 
                     Integer.toString(RandomGossipProcessingMetric.idGen.incrementAndGet()));
             long t = System.currentTimeMillis() - s;

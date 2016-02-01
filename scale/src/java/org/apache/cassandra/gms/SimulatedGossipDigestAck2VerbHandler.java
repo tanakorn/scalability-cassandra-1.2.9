@@ -75,6 +75,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                     + " ; transmission n/a ; before " + numBefore + " after " + numAfter
                     + " ; copytime " + copyTime + " updatetime " + updateTime);
         }
+        RandomGossipProcessingMetric.execTime = ack2HandlerTime;
 
     }
 }

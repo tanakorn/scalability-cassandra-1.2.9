@@ -86,10 +86,14 @@ public class RandomGossipProcessingMetric {
             System.exit(1);
         }
         String testStatus = args[0];
-        int currentVersion = Integer.parseInt(args[1]);
-        int newVersion = Integer.parseInt(args[2]);
-        int repeat = Integer.parseInt(args[3]);
-        if ((currentVersion + newVersion) > numStubs) {
+        currentVersion = Integer.parseInt(args[1]);
+        newVersion = Integer.parseInt(args[2]);
+        realUpdate = Integer.parseInt(args[3]);
+        int repeat = Integer.parseInt(args[4]);
+        if ((currentVersion + newVersion) > numStubs || newVersion < realUpdate) {
+            System.exit(1);
+        }
+        if ((newVersion - realUpdate) > currentVersion) {
             System.exit(1);
         }
         if (testStatus.equals("boot")) {
@@ -104,9 +108,9 @@ public class RandomGossipProcessingMetric {
         Gossiper.registerStatic(StorageService.instance);
         Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
-        String s = currentVersion + " " + newVersion + " ";
+        String s = currentVersion + " " + newVersion + " " + realUpdate + " ";
         for (int i = 0; i < repeat; ++i) {
-            s += randomTest(currentVersion, newVersion, testStatus) + " ";
+            s += randomTest(testStatus) + " ";
         }
         System.out.println(s);
         System.exit(0);
@@ -117,8 +121,16 @@ public class RandomGossipProcessingMetric {
         return msgIn;
     }
     
-    public static long randomTest(int currentVersion, int newVersion, String testStatus) throws UnknownHostException {
+    public static int currentVersion;
+    public static int newVersion;
+    public static int realUpdate;
+    public static long execTime;
+    
+    public static long randomTest(String testStatus) throws UnknownHostException {
+        assert realUpdate < numStubs;
         assert newVersion < numStubs;
+        assert currentVersion < numStubs;
+
         Random rand = new Random();
 
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
@@ -141,7 +153,8 @@ public class RandomGossipProcessingMetric {
             assert false;
         }
 
-        int gossipeeSize = currentVersion;
+        int diff = newVersion - realUpdate;
+        int gossipeeSize = currentVersion - diff;
 //        GossiperStub gossipee = new GossiperStub(InetAddress.getByName("127.0.0.1"), "Test Cluster", "", 1024, new Murmur3Partitioner());
         InetAddress gossipeeAddress = InetAddress.getByName("127.0.0.1");
         GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
@@ -152,7 +165,7 @@ public class RandomGossipProcessingMetric {
                 continue;
             }
             GossiperStub stub = stubGroup.getStub(address);
-            gossipee.endpointStateMap.putAll(stub.endpointStateMap);
+            gossipee.endpointStateMap.put(stub.broadcastAddress, stub.state);
             gossipee.tokenMetadata.updateNormalTokens(stub.tokens, stub.broadcastAddress);
         }
 
@@ -166,16 +179,42 @@ public class RandomGossipProcessingMetric {
                 continue;
             }
             GossiperStub stub = stubGroup.getStub(address);
-            gossiper.endpointStateMap.putAll(stub.endpointStateMap);
+            gossiper.endpointStateMap.put(stub.broadcastAddress, stub.state);
         }
-
+        
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
         long s = System.currentTimeMillis();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
         long e = System.currentTimeMillis();
 //        System.out.println(currentVersion + " " + newVersion + " " + (e - s));
-        return e - s;
+//        return e - s;
+        return execTime;
+    }
+    
+    public static void fill() {
+        InetAddress gossipeeAddress = null;
+        InetAddress gossiperAddress = null;
+        try {
+            gossipeeAddress = InetAddress.getByName("127.0.0.1");
+            gossiperAddress = InetAddress.getByName("127.0.0.2");
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
+        GossiperStub gossiper = stubGroup.getStub(gossiperAddress);
+        int diff = newVersion - realUpdate;
+        for (InetAddress address : gossiper.endpointStateMap.keySet()) {
+            if (diff == 0) {
+                break;
+            }
+            GossiperStub stub = stubGroup.getStub(address);
+            gossipee.endpointStateMap.put(stub.broadcastAddress, stub.state);
+            gossipee.tokenMetadata.updateNormalTokens(stub.tokens, stub.broadcastAddress);
+            diff--;
+        }
+        
     }
     
 }
