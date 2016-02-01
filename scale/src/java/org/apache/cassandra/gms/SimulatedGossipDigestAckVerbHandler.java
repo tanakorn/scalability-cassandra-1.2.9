@@ -89,7 +89,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 if (realUpdate != 0) {
                     sleepTime += WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
                 }
-                sleepTime += (normalCount - realUpdate) * 40;
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
