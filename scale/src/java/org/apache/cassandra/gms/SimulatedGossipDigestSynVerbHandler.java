@@ -141,8 +141,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
-        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
-//        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
         long execTime = System.currentTimeMillis() - receiveTime;
         logger.info(to + " doVerb end sync " + execTime);
     }
