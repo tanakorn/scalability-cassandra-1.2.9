@@ -44,7 +44,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
-        int currentVersion = senderStub.getTokenMetadata().endpointWithTokens.size();
+//        int currentVersion = senderStub.getTokenMetadata().endpointWithTokens.size();
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestSynMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -110,11 +110,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
-        if (bootNodeNum == 128) {
-            bootNodeNum = 127;
+        if (bootNodeNum == 160) {
+            bootNodeNum = 159;
         }
-        if (normalNodeNum == 128) {
-            normalNodeNum = 127;
+        if (normalNodeNum == 160) {
+            normalNodeNum = 159;
         }
         Map<InetAddress, EndpointState> localEpStateMap = receiverStub.getEndpointStateMap();
         for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
@@ -124,17 +124,17 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         String ackId = from + "_" + gDigestAckMessage.payload.msgId;
         receiverStub.ackNewVersionBoot.put(ackId, bootNodeNum);
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
-        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
-        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum];
-        if (normalNodeNum != 0) {
-            sleepTime += WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-        }
+//        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+//        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
+//        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum];
+//        if (normalNodeNum != 0) {
+//            sleepTime += WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+//        }
 //        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
 //                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-        long wakeUpTime = System.currentTimeMillis() + sleepTime;
-        gDigestAckMessage.setWakeUpTime(wakeUpTime);
-        gDigestAckMessage.setSleepTime(sleepTime);
+//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
+//        gDigestAckMessage.setWakeUpTime(wakeUpTime);
+//        gDigestAckMessage.setSleepTime(sleepTime);
         gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
