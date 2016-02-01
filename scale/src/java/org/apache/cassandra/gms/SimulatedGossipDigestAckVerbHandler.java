@@ -210,6 +210,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     + receiverCurrentVersion + " ; transmission " + transmissionTime);
         }
         long execTime = System.currentTimeMillis() - receiveTime;
-        logger.info("doVerb end ack " + execTime);
+        logger.info(to + " doVerb end ack " + execTime);
     }
 }

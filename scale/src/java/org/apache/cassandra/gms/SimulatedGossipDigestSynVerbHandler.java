@@ -144,7 +144,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
         long execTime = System.currentTimeMillis() - receiveTime;
-        logger.info("doVerb end sync " + execTime);
+        logger.info(to + " doVerb end sync " + execTime);
     }
 
     /*

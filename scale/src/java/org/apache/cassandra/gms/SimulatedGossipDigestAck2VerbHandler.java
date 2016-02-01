@@ -145,6 +145,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                 + receiverCurrentVersion + " ; transmission " + transmissionTime);
         long execTime = System.currentTimeMillis() - receiveTime;
-        logger.info("doVerb end ack2 " + execTime);
+        logger.info(to + " doVerb end ack2 " + execTime);
     }
 }
