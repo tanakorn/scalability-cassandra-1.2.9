@@ -133,13 +133,18 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         receiverStub.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
-        if (allBoot != 0 || allNormal != 0) {
-            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
-        }
-        if (bootstrapCount != 0 || normalCount != 0) {
-            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
-                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
-        }
+//        if (allBoot != 0 || allNormal != 0) {
+//            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
+//        }
+//        if (bootstrapCount != 0 || normalCount != 0) {
+//            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
+//        }
+        logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+                + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                + receiverCurrentVersion + " ; transmission " + transmissionTime);
+        long execTime = System.currentTimeMillis() - receiveTime;
+        logger.info("doVerb end ack2 " + execTime);
     }
 }

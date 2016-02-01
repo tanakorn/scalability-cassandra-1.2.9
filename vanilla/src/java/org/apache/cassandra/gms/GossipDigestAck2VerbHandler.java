@@ -126,15 +126,18 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
-        if (allBoot != 0 || allNormal != 0) {
-            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
-        }
-        if (bootstrapCount != 0 || normalCount != 0) {
+//        if (allBoot != 0 || allNormal != 0) {
+//            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
+//        }
+//        if (bootstrapCount != 0 || normalCount != 0) {
+//            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                    + currentVersion + " ; transmission " + transmissionTime);
+//        }
             Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
                     + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                     + currentVersion + " ; transmission " + transmissionTime);
-        } else {
-            Klogger.logger.info("should be fast " + ack2HandlerTime);
-        }
+        long execTime = System.currentTimeMillis() - receiveTime;
+        Klogger.logger.info("doVerb end ack2 " + execTime);
     }
 }

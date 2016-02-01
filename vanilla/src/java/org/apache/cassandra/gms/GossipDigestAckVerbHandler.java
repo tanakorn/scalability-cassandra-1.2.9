@@ -124,12 +124,15 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
-        if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " ; transmission " + transmissionTime);
-        } else {
-            Klogger.logger.info("should be fast " + ackHandlerTime);
-        }
+//        if (bootstrapCount != 0 || normalCount != 0) {
+//            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                    + currentVersion + " ; transmission " + transmissionTime);
+//        }
+        Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                + currentVersion + " ; transmission " + transmissionTime);
+        long execTime = System.currentTimeMillis() - receiveTime;
+        Klogger.logger.info("doVerb end ack " + execTime);
     }
 }

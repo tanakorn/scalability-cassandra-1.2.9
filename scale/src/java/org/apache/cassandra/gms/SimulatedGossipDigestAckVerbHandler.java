@@ -200,11 +200,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 }
                 logger.info(sb.toString());
             }
-            if (bootstrapCount != 0 || normalCount != 0) {
-                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
-            }
+//            if (bootstrapCount != 0 || normalCount != 0) {
+//                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+//                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
+//            }
+            logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
         }
+        long execTime = System.currentTimeMillis() - receiveTime;
+        logger.info("doVerb end ack " + execTime);
     }
 }

@@ -112,6 +112,8 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);
+        long execTime = System.currentTimeMillis() - receiveTime;
+        Klogger.logger.info("doVerb end sync " + execTime);
     }
 
     /*
