@@ -110,11 +110,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
-        if (bootNodeNum == 128) {
-            bootNodeNum = 127;
+        if (bootNodeNum == 256) {
+            bootNodeNum = 255;
         }
-        if (normalNodeNum == 128) {
-            normalNodeNum = 127;
+        if (normalNodeNum == 256) {
+            normalNodeNum = 255;
         }
         Map<InetAddress, EndpointState> localEpStateMap = receiverStub.getEndpointStateMap();
         for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
