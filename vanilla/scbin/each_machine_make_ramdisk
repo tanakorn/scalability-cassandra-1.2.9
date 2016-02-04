@@ -17,3 +17,6 @@ cd $cwd
 mkdir $operating_dir || (echo "$operating_dir exists, cannot continue" ; exit 1)
 sudo mount -t tmpfs -o size=2048M tmpfs $operating_dir
 
+mkdir /tmp/cassandra
+sudo mount -t tmpfs -o size=2048M tmpfs /tmp/cassandra
+
