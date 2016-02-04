@@ -8,8 +8,6 @@ class TSilenceExtractor(analyze.BaseAnalyzer):
 
   def __init__(self):
     allNides = pyutil.nid2ip.keys()
-    #self.tsilence = []
-    #self.tsilenceAvg = []
     self.numTsilence = 0.0
     self.tsilenceCount = {}
     self.tsilenceAvgCount = {}
@@ -28,8 +26,6 @@ class TSilenceExtractor(analyze.BaseAnalyzer):
       if tsilenceAvg not in self.tsilenceAvgCount:
         self.tsilenceAvgCount[tsilenceAvg] = 0
       self.tsilenceAvgCount[tsilenceAvg] += 1
-      #observer = pyutil.ip2nid[tokens[7][1:]]
-      #observee = pyutil.ip2nid[tokens[10][1:]]
       if timestamp not in self.tsilenceAvgByTime:
         self.tsilenceAvgByTime[timestamp] = []
       self.tsilenceAvgByTime[timestamp].append(tsilenceAvg)
