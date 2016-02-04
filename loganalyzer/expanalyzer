@@ -8,7 +8,7 @@ fi
 expdir=$1
 
 subexps="vanilla clussim"
-allsize="32 64 96 128 160"
+allsize="32 64 96 128 160 192 224 256"
 for subexp in $subexps; do
   subexpdir=$expdir/$subexp
   if ! [ -d $subexpdir ]; then
@@ -24,7 +24,7 @@ for subexp in $subexps; do
       echo There is no ${size}-node in $subexp, skip ...
       continue
     fi
-    loganalyzer $logdir $outputdir
+    time loganalyzer $logdir $outputdir
   done
 done
 
