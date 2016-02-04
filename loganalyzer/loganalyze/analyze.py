@@ -72,3 +72,18 @@ def calcAverage(data):
   sd = sum(sd) / len(sd)
   sd = math.pow(sd, 0.5)
   return avg, sd
+
+def calcCdf(data, ndigit):
+  dataSize = len(data)
+  valueCount = {}
+  for i in data:
+    value = round(i, ndigit)
+    if value not in valueCount:
+      valueCount[value] = 0
+    valueCount[value] += 1
+  cumulative = 0.0
+  cdf = {}
+  for i in sorted(valueCount.keys()):
+    cumulative += valueCount[i]
+    cdf[i] = cumulative / dataSize
+  return cdf

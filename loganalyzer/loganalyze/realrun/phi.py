@@ -8,7 +8,8 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
     # this is a nested map that maps observer -> observee -> phi list
     self.phiMap = { i : { j : [] for j in pyutil.nid2ip.keys() } for i in pyutil.nid2ip.keys() }
     self.revertPhiMap = { i : { j : [] for j in pyutil.nid2ip.keys() } for i in pyutil.nid2ip.keys() }
-    self.allPhi = []
+    self.phiCount = {}
+    self.numPhi = 0.0
 
   def analyze(self, logLine, **kwargs):
     observer = kwargs['nid']
@@ -22,8 +23,13 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
     if ' allphi ' in logLine:
       tokens = logLine.split()
       if len(tokens) == 11:
-        allPhi = tokens[10][:-1].split(',')
-        self.allPhi += allPhi
+        allPhi = map(float, tokens[10][:-1].split(','))
+        self.numPhi += len(allPhi)
+        for phi in allPhi:
+          roundPhi = round(phi, 2)
+          if roundPhi not in self.phiCount:
+            self.phiCount[roundPhi] = 0
+          self.phiCount[roundPhi] += 1
 
   def analyzedResult(self):
     # I should do something smart here
@@ -48,27 +54,30 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
       maxPhiInObserversResult += '%d %d %f\n' % (observer, maxPhiInObserver[0], maxPhiInObserver[1])
 
     revertMaxPhiMap = {}
-    #maxPhiOfObservees = {}
     maxPhiOfObserveesResult = ''
     for observee in self.revertPhiMap:
       revertMaxPhiMap[observee] = {}
-      #maxPhiOfObservees[observee] = (0, 0)
       maxPhiOfObservee = (0, 0)
       for observer in self.revertPhiMap[observee]:
         if observer == observee:
           continue
         thisMaxPhi = 0 if not self.revertPhiMap[observee][observer] else max(self.revertPhiMap[observee][observer])
         revertMaxPhiMap[observee][observer] = thisMaxPhi
-        #if maxPhiOfObservees[observee][1] < thisMaxPhi:
-          #maxPhiOfObservees[observee] = (observer, thisMaxPhi)
         if maxPhiOfObservee[1] < thisMaxPhi:
           maxPhiOfObservee = (observer, thisMaxPhi)
       maxPhiOfObserveesResult += '%d %d %f\n' % (observee, maxPhiOfObservee[0], maxPhiOfObservee[1])
+
+    allPhiCdfReport = ''
+    cumulative = 0.0
+    for phi in self.phiCount:
+      thisPhiPercent = self.phiCount[phi] / self.numPhi
+      cumulative += thisPhiPercent
+      allPhiCdfReport += '%f %f %f\n' % (phi, thisPhiPercent, cumulative)
 
     return { 
         'maxphi' : '\n'.join(allMaxPhi) + '\n',
         'maxphi_in_observers' : maxPhiInObserversResult,
         'maxphi_of_observees' : maxPhiOfObserveesResult,
-        'allphi' : '\n'.join(self.allPhi) + '\n',
+        'allphi_cdf' : allPhiCdfReport,
     }
 
