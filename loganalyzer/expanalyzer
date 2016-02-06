@@ -24,7 +24,8 @@ for subexp in $subexps; do
       echo There is no ${size}-node in $subexp, skip ...
       continue
     fi
-    time loganalyzer $logdir $outputdir
+    loganalyzer $logdir $outputdir &
   done
 done
 
+wait
