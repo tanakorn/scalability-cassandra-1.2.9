@@ -11,7 +11,7 @@ class TSilenceExtractor(analyze.BaseAnalyzer):
     self.numTsilence = 0.0
     self.tsilenceCount = {}
     self.tsilenceAvgCount = {}
-    self.tsilenceAvgByTime = { }
+    self.tsilenceAvgByTime = {}
 
   def analyze(self, logLine, **kwargs):
     if ' t_silence ' in logLine:
