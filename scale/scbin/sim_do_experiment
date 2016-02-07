@@ -32,7 +32,8 @@ cd $scriptdir
 logdir=${cassandra_log_dir}
 mkdir -p $logdir
 rm -r $logdir/*
-for n in 32 64 96 128 160 192 224 255; do
+#for n in 32 64 96 128 160 192 224 255; do
+for n in 128 160 192 224 255; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
   rm -r /tmp/n${n}

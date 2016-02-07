@@ -3,7 +3,8 @@
 scriptdir=`dirname $0`
 cd $scriptdir
 
-for n in 4 8 12 16 20 24 28 32; do
+#for n in 4 8 12 16 20 24 28 32; do
+for n in 16 20 24 28 32; do
   ./gen_nmc_machines.sh $n
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "cassandra_log_dir=/users/tanakorn/scale/result/ca-6127/n$n" >> scdeploy.conf.$n
