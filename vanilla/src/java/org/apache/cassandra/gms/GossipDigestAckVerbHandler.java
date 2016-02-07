@@ -104,10 +104,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             if (val != null) {
                 if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
                     sendingBoot++;
-                    Klogger.logger.info("ack " + to + " sending boot of " + sendingAddress + " to " + from + " version " + val.version);
+//                    Klogger.logger.info("ack " + to + " sending boot of " + sendingAddress + " to " + from + " version " + val.version);
                 } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     sendingNormal++;
-                    Klogger.logger.info("ack " + to + " sending normal of " + sendingAddress + " to " + from + " version " + val.version);
+//                    Klogger.logger.info("ack " + to + " sending normal of " + sendingAddress + " to " + from + " version " + val.version);
                 }
             }
         }
