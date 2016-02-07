@@ -50,8 +50,7 @@ public class WholeClusterSimulator {
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
-    private static Timer timer0 = new Timer();
-    private static Timer timer1 = new Timer();
+    private static Timer timer = new Timer();
     private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
@@ -192,8 +191,7 @@ public class WholeClusterSimulator {
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
-        timer0.schedule(new MyGossiperTask(0), 0, 1000);
-        timer1.schedule(new MyGossiperTask(1), 0, 1000);
+        timer.schedule(new MyGossiperTask(), 0, 1000);
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
             Thread t = new Thread(new AckProcessor(address));
@@ -288,21 +286,10 @@ public class WholeClusterSimulator {
     
     public static class MyGossiperTask extends TimerTask {
 
-        static final int NUMGROUPS = 2;
-        
-        final int groupNum;
-        
-        public MyGossiperTask(int groupNum) {
-            this.groupNum = groupNum;
-        }
-        
         @Override
         public void run() {
             long start = System.currentTimeMillis();
             for (GossiperStub performer : stubGroup) {
-                if (performer.hashCode() % NUMGROUPS != groupNum) {
-                    continue;
-                }
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
