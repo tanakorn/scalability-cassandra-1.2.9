@@ -364,9 +364,9 @@ public class WholeClusterSimulator {
                 }
                 performer.doStatusCheck();
             }
-            long finish = System.currentTimeMillis();
-            if (finish - start > 1000) {
-                logger.warn("It took more than 1 s to do gossip task");
+            long gossipingTime = System.currentTimeMillis() - start;
+            if (gossipingTime > 1000) {
+                logger.warn("It took more than 1 s (" + gossipingTime + " ms) to do gossip task");
             }
             logger.info("Gossip message in the queue " + msgQueue.size());
         }
