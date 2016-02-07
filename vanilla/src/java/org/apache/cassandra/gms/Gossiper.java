@@ -131,19 +131,19 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 if (logger.isTraceEnabled())
                     logger.trace("My heartbeat is now " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 ++round;
-                Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
+//                Klogger.logger.info("Gossip round = " + round + " with hb = " + endpointStateMap.get(FBUtilities.getBroadcastAddress()).getHeartBeatState().getHeartBeatVersion());
                 final List<GossipDigest> gDigests = new ArrayList<GossipDigest>();
                 Gossiper.instance.makeRandomGossipDigest(gDigests);
                 
-                for (InetAddress add : endpointStateMap.keySet()) {
-                    EndpointState ep = endpointStateMap.get(add);
-                    VersionedValue vv = ep.getApplicationState(ApplicationState.STATUS);
-                    if (vv != null) {
-                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " knows " + add + " status as " + vv.value);
-                    } else {
-                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " doesn't know " + add);
-                    }
-                }
+//                for (InetAddress add : endpointStateMap.keySet()) {
+//                    EndpointState ep = endpointStateMap.get(add);
+//                    VersionedValue vv = ep.getApplicationState(ApplicationState.STATUS);
+//                    if (vv != null) {
+//                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " knows " + add + " status as " + vv.value);
+//                    } else {
+//                        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " doesn't know " + add);
+//                    }
+//                }
 
                 if ( gDigests.size() > 0 )
                 {
