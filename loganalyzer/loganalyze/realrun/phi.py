@@ -69,7 +69,7 @@ class PhiAnalyzer(analyze.BaseAnalyzer):
 
     allPhiCdfReport = ''
     cumulative = 0.0
-    for phi in self.phiCount:
+    for phi in sorted(self.phiCount):
       thisPhiPercent = self.phiCount[phi] / self.numPhi
       cumulative += thisPhiPercent
       allPhiCdfReport += '%f %f %f\n' % (phi, thisPhiPercent, cumulative)

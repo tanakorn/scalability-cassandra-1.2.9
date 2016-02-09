@@ -17,6 +17,11 @@ class PhiAnalyzer(phi.PhiAnalyzer):
     if ' allphi ' in logLine:
       tokens = logLine.split()
       if len(tokens) == 11:
-        allPhi = tokens[10][:-1].split(',')
-        self.allPhi += allPhi
+        allPhi = map(float, tokens[10][:-1].split(','))
+        self.numPhi += len(allPhi)
+        for phi in allPhi:
+          roundPhi = round(phi, 2)
+          if roundPhi not in self.phiCount:
+            self.phiCount[roundPhi] = 0
+          self.phiCount[roundPhi] += 1
 
