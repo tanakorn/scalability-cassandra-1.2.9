@@ -8,6 +8,7 @@ modClassMap = {
   'hop' : 'HopCounter',
   'tsilence' : 'TSilenceExtractor',
   'message' : 'MessageCounter',
+  'lateness' : 'LatenessCounter',
   'stable' : 'StableAnalyzer',
 }
 
