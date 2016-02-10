@@ -126,8 +126,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
         int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
         int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAckMessage.setWakeUpTime(wakeUpTime);
         gDigestAckMessage.setSleepTime(sleepTime);
@@ -137,8 +136,8 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
-//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
-        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+//        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
     /*

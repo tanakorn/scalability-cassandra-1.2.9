@@ -80,7 +80,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         	        epStateMap, receiverStub.getFailureDetector());
             result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
             try {
-                Thread.sleep(message.getSleepTime());
+                realUpdate = (int) result[9];
+                int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
+                int roundNormalVersion = (realUpdate / 4) * 4 + 1;
+//                Thread.sleep(message.getSleepTime());
+                long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+                Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -143,11 +148,10 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
         }
         
-        int roundCurrentVersion = (senderCurrentVersion / 8) * 8 + 1;
-        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
+        int roundCurrentVersion = (int) (Math.round(senderCurrentVersion / 8.0) * 8 + 1);
+        int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
 
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
         long wakeUpTime = System.currentTimeMillis() + sleepTime;
         gDigestAck2Message.setWakeUpTime(wakeUpTime);
         gDigestAck2Message.setSleepTime(sleepTime);
@@ -155,8 +159,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
-//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
-        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
+        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
+//        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (result != null) {
             bootstrapCount = (int) result[5];

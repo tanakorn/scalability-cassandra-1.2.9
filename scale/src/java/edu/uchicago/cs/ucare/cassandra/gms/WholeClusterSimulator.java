@@ -77,8 +77,8 @@ public class WholeClusterSimulator {
 //        }
 //
 //    });
-    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
-//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
+//    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
+    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -181,9 +181,9 @@ public class WholeClusterSimulator {
         for (int i = 1; i <= numStubs; ++i) {
             addressList.add(InetAddress.getByName("127.0.0." + i));
         }
-//        for (InetAddress address : addressList) {
-//            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-//        }
+        for (InetAddress address : addressList) {
+            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
@@ -299,6 +299,7 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
+                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -313,6 +314,7 @@ public class WholeClusterSimulator {
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
+                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
                         if (!msgQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
@@ -328,6 +330,7 @@ public class WholeClusterSimulator {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -339,6 +342,7 @@ public class WholeClusterSimulator {
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -355,7 +359,7 @@ public class WholeClusterSimulator {
             if (gossipingTime > 1000) {
                 logger.warn("It took more than 1 s (" + gossipingTime + " ms) to do gossip task");
             }
-            logger.info("Gossip message in the queue " + msgQueue.size());
+//            logger.info("Gossip message in the queue " + msgQueue.size());
         }
         
     }
@@ -390,7 +394,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-//            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
