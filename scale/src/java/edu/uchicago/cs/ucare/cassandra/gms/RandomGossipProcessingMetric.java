@@ -90,7 +90,7 @@ public class RandomGossipProcessingMetric {
         newVersion = Integer.parseInt(args[2]);
         realUpdate = Integer.parseInt(args[3]);
         int repeat = Integer.parseInt(args[4]);
-        if ((currentVersion + newVersion) > numStubs || newVersion < realUpdate) {
+        if ((currentVersion + realUpdate) > numStubs || newVersion < realUpdate) {
             System.exit(1);
         }
         if ((newVersion - realUpdate) > currentVersion) {

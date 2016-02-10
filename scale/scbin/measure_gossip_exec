@@ -22,15 +22,21 @@ fi
 #  i=`expr $i + 1`
 #done
 
-i=1
-max_curr_ver=128
+max_curr_ver=255
+max_new_ver=170
+max_real_update=150
+
+i=0
 while [ $i -le $max_curr_ver ]; do
-  rm -r /tmp/cassandra/*
-  j=1
-  max_new_ver=50
+  j=0
   while [ $j -lt $max_new_ver ]; do
-    java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric $mode $i $j 5
-    j=`expr $j + 1`
+    k=0
+    while [ $k -lt $max_real_update ]; do
+      rm -r /tmp/cassandra/*
+      java -Dfile.encoding=UTF-8 -classpath $classpath edu.uchicago.cs.ucare.cassandra.gms.RandomGossipProcessingMetric $mode $i $j $k 3
+      k=`expr $k + 4`
+    done
+    j=`expr $j + 4`
   done
   i=`expr $i + 8`
 done
