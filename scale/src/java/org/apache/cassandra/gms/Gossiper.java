@@ -1294,22 +1294,24 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     normalUpdate += result[2];
                     newRestart++;
                 }
-                else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
+//                else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
+                else 
                 {
                     /* find maximum state */
                     int localMaxVersion = getMaxEndpointStateVersionStatic(localEpStatePtr);
                     int remoteMaxVersion = getMaxEndpointStateVersionStatic(remoteState);
-                    if ( remoteMaxVersion > localMaxVersion )
-                    {
+//                    if ( remoteMaxVersion > localMaxVersion )
+//                    {
                         // apply states, but do not notify since there is no major change
                         long[] result = applyNewStatesStatic(stub, ep, localEpStatePtr, remoteState);
                         copyTime += result[0];
                         updateTime += result[1];
                         normalUpdate += result[2];
                         updatedNode.add(ep);
-                    }
-                    else if (logger.isTraceEnabled())
-                            logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
+//                    }
+//                    else if (logger.isTraceEnabled()) {
+//                        logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
+//                    }
                     if (!localEpStatePtr.isAlive() && !isDeadStateStatic(localEpStatePtr)) // unless of course, it was dead
                         markAliveStatic(stub, ep, localEpStatePtr);
                     newVersion++;
@@ -1317,11 +1319,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                         newVersionTokens++;
                     }
                 }
-                else
-                {
-                    if (logger.isTraceEnabled())
-                        logger.trace("Ignoring remote generation " + remoteGeneration + " < " + localGeneration);
-                }
+//                else
+//                {
+//                    if (logger.isTraceEnabled())
+//                        logger.trace("Ignoring remote generation " + remoteGeneration + " < " + localGeneration);
+//                }
             }
             else
             {
