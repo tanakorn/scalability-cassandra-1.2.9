@@ -67,6 +67,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         int bootstrapCount = 0;
         int normalCount = 0;
         int realUpdate = 0;
+        int numApply = 0;
         int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
 
         Map<InetAddress, double[]> updatedNodeInfo = null;
@@ -81,28 +82,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
             try {
                 realUpdate = (int) result[9];
+                normalCount = (int) result[6];
                 int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
-                int roundNormalVersion = (realUpdate / 4) * 4 + 1;
-//                Thread.sleep(message.getSleepTime());
-                long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+                int roundNormalCount = (normalCount / 4) * 4 + 1;
+                int roundRealUpdate = (realUpdate / 4) * 4 + 1;
+                long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalCount, roundRealUpdate);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-//            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
-//            if (mockExecTime >= 0) {
-//                try {
-////                    Thread.sleep(mockExecTime);
-//                    Thread.sleep(message.getSleepTime());
-//                } catch (InterruptedException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//            } else if (mockExecTime < -10) {
-//                logger.debug(to + " executing past message " + mockExecTime);
-//            }
-            
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -151,10 +140,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         int roundCurrentVersion = (int) (Math.round(senderCurrentVersion / 8.0) * 8 + 1);
         int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
 
-        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-        long wakeUpTime = System.currentTimeMillis() + sleepTime;
-        gDigestAck2Message.setWakeUpTime(wakeUpTime);
-        gDigestAck2Message.setSleepTime(sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
@@ -167,6 +152,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[9];
+            numApply = (int) result[10];
             if (!updatedNodes.isEmpty()) {
                 StringBuilder sb = new StringBuilder(to.toString());
                 sb.append(" hop ");
@@ -204,7 +190,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                        + " normal " + numApply + " realUpdate " + realUpdate + " currentVersion " 
                         + receiverCurrentVersion + " ; transmission " + transmissionTime);
             }
         }

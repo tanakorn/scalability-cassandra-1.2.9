@@ -55,29 +55,10 @@ public class WholeClusterSimulator {
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
-//    public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
-//            new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
-    
     public static long[] bootGossipExecRecords;
-//    public static double[] normalGossipExecRecords;
     
-    public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords;
+    public static Map<Integer, Map<Integer, Map<Integer, Long>>> normalGossipExecRecords;
     
-//    public static double[] normalGossipExecSdRecords;
-    
-//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
-//            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
-
-//    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
-//            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
-//
-//        @Override
-//        public int compare(MessageIn<?> o1, MessageIn<?> o2) {
-//            return (int) (o1.getWakeUpTime() - o2.getWakeUpTime());
-//        }
-//
-//    });
-//    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
     public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
@@ -150,9 +131,7 @@ public class WholeClusterSimulator {
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[MAX_NODE];
-//        normalGossipExecRecords = new double[MAX_NODE];
-        normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
-//        normalGossipExecSdRecords = new double[MAX_NODE];
+        normalGossipExecRecords = new HashMap<Integer, Map<Integer, Map<Integer, Long>>>();
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
@@ -166,11 +145,16 @@ public class WholeClusterSimulator {
             String[] tokens = line.split(" ");
             int currentVersion = Integer.parseInt(tokens[0]);
             int newVersion = Integer.parseInt(tokens[1]);
-            long execTime = (long) Double.parseDouble(tokens[2]);
+            int realUpdate = Integer.parseInt(tokens[2]);
+            long execTime = (long) Double.parseDouble(tokens[3]);
             if (!normalGossipExecRecords.containsKey(currentVersion)) {
-                normalGossipExecRecords.put(currentVersion, new HashMap<Integer, Long>());
+                normalGossipExecRecords.put(currentVersion, new HashMap<Integer, Map<Integer, Long>>());
             }
-            normalGossipExecRecords.get(currentVersion).put(newVersion, execTime);
+            Map<Integer, Map<Integer, Long>> innerMap1 = normalGossipExecRecords.get(currentVersion);
+            if (!innerMap1.containsKey(newVersion)) {
+                innerMap1.put(newVersion, new HashMap<Integer, Long>());
+            }
+            innerMap1.get(newVersion).put(realUpdate, execTime);
         }
         buffReader.close();
 //        Gossiper.registerStatic(StorageService.instance);
@@ -260,7 +244,7 @@ public class WholeClusterSimulator {
     }
     
     static Random rand = new Random();
-    public static long getExecTimeNormal(int currentVersion, int numNormal) {
+    public static long getExecTimeNormal(int currentVersion, int numNormal, int realUpdate) {
         if (currentVersion > 249) {
             currentVersion = 249;
         }
@@ -268,10 +252,13 @@ public class WholeClusterSimulator {
             numNormal = numStubs - currentVersion;
             numNormal = (numNormal / 4) * 4 + 1;
         }
-        if (numNormal > 173) {
-            numNormal = 173;
+        if (numNormal > 169) {
+            numNormal = 169;
         }
-        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
+        if (realUpdate > 169) {
+            realUpdate = 169;
+        }
+        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal).get(realUpdate);
         if (result == null) {
             System.out.println(currentVersion + " " + numNormal);
         }
