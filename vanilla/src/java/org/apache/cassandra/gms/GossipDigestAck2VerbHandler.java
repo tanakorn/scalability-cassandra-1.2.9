@@ -109,6 +109,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         int realUpdate = (int) result[8];
+        int numApply = (int) result[9];
         for (InetAddress receivingAddress : updatedNodes) {
             EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
             Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -132,7 +133,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         if (bootstrapCount != 0 || normalCount != 0) {
             Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
                     + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " ; transmission " + transmissionTime);
+                    + currentVersion + " numApply " + numApply + " ; transmission " + transmissionTime);
         }
         Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }

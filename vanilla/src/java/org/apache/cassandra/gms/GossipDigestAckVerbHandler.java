@@ -63,6 +63,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         int bootstrapCount = 0;
         int normalCount = 0;
         int realUpdate = 0;
+        int numApply = 0;
         if ( epStateMap.size() > 0 )
         {
             /* Notify the Failure Detector */
@@ -72,6 +73,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[8];
+            numApply = (int) result[9];
             for (InetAddress receivingAddress : updatedNodes) {
                 EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
                 Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
@@ -104,10 +106,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             if (val != null) {
                 if (val.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
                     sendingBoot++;
-//                    Klogger.logger.info("ack " + to + " sending boot of " + sendingAddress + " to " + from + " version " + val.version);
                 } else if (val.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     sendingNormal++;
-//                    Klogger.logger.info("ack " + to + " sending normal of " + sendingAddress + " to " + from + " version " + val.version);
                 }
             }
         }
@@ -127,7 +127,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         if (bootstrapCount != 0 || normalCount != 0) {
             Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                     + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " ; transmission " + transmissionTime);
+                    + currentVersion + " numApply " + numApply + " ; transmission " + transmissionTime);
         }
     }
 }
