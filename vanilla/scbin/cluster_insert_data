@@ -8,5 +8,6 @@ if [ ! -z $1 ]; then
 fi
 for i in `ls $data_dir`; do
   $script_dir/../bin/cassandra-cli --host 192.168.1.1 -f $data_dir/$i
+  sleep 1
 done
 

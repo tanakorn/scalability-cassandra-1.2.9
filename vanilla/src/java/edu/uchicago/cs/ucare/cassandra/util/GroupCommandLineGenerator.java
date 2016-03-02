@@ -48,7 +48,7 @@ public class GroupCommandLineGenerator {
 				keySpace = keySpaceName + i;
 				writer.write("create keyspace " + keySpace
 				        + " WITH placement_strategy = 'NetworkTopologyStrategy' "
-				        + "AND strategy_options = [{datacenter1:" + replicaFactor + "}];\n");
+				        + "AND strategy_options = {datacenter1:" + replicaFactor + "};\n");
 				writer.write("use " + keySpace + ";\n");
 				for (int j = 0; j < numFamily; ++j) {
 					family = familyName + j;

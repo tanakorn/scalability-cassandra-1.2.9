@@ -6,7 +6,9 @@ data_dir=/tmp/data
 if [ ! -z $1 ]; then
   data_dir=$1
 fi
+rm /tmp/insert.out /tmp/insert.err 2> /dev/null
 for i in `ls $data_dir`; do
-  $script_dir/../bin/cassandra-cli --host 127.0.0.1 -f $data_dir/$i
+  $script_dir/../bin/cassandra-cli --host 127.0.0.1 -f $data_dir/$i >> /tmp/insert.out 2>> /tmp/insert.err
+  sleep 1
 done
 
