@@ -66,6 +66,10 @@ def calcStat(data):
   uqPos = dataSize * 3 / 4
   return sortedData[0], sortedData[lqPos], sortedData[medPos], sortedData[uqPos], sortedData[-1]
 
+def calcStatStr(data):
+  stat = calcStat(data)
+  return '%f %f %f %f %f' % stat
+
 def calcAverage(data):
   avg = sum(data) / len(data)
   sd = map(lambda x: math.pow(x - avg, 2), data)
@@ -87,3 +91,11 @@ def calcCdf(data, ndigit):
     cumulative += valueCount[i]
     cdf[i] = cumulative / dataSize
   return cdf
+
+def calcCdfStr(data, ndigit):
+  cdf = calcCdf(data, ndigit)
+  cdfStr = ''
+  for i in sorted(cdf.keys()):
+    cdfStr += '%f %f\n' % (i, cdf[i])
+  return cdfStr
+

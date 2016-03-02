@@ -7,7 +7,7 @@ fi
 
 expdir=$1
 
-subexps="vanilla clussim"
+subexps="real sim"
 allsize="32 64 96 128 160 192 224 256"
 for subexp in $subexps; do
   subexpdir=$expdir/$subexp

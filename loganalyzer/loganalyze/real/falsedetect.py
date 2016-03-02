@@ -22,8 +22,9 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
       self.startTimestamp = timestamp
     if not self.endTimestamp or timestamp > self.endTimestamp:
       self.endTimestamp = timestamp
-    if 'now DOWN' in logLine:
-      observee = pyutil.ip2nid[tokens[8][1:]]
+    downKeyword = 'now DOWN'
+    if logLine[-len(downKeyword):] == downKeyword:
+      observee = pyutil.ip2nid[tokens[6][1:]]
       self.falseMap[observer][observee].append(timestamp)
       self.revertFalseMap[observee][observer].append(timestamp)
 

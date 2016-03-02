@@ -1,3 +1,3 @@
 
-__all__ = [ 'realrun', 'clussim' ]
+__all__ = [ 'real', 'sim' ]
 

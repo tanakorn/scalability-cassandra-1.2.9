@@ -1,8 +1,0 @@
-#!/bin/sh
-
-logdir=${1:-n}
-for log in `ls $logdir/node*/scale1.log`; do
-  echo -n $log:
-  grep RingInfo $log | tail -n 1
-done 
-

@@ -1,6 +1,6 @@
 from .. import analyze
 
-from ..realrun import newversion
+from ..real import newversion
 import pyutil
 
 class NewVersionCounter(newversion.NewVersionCounter):

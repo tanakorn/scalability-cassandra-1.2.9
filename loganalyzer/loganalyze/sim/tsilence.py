@@ -1,6 +1,6 @@
 from .. import analyze
 
-from ..realrun import tsilence
+from ..real import tsilence
 import pyutil
 
 class TSilenceExtractor(tsilence.TSilenceExtractor):
