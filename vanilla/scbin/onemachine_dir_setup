@@ -16,7 +16,7 @@ mkdir $operating_dir/log
 i=1
 while [ $i -le $num_node ]; do
   cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
-  token=`java -cp ../build/classes/main edu.uchicago.cs.ucare.cassandra.util.TokenGenerator $num_node $i`
+  token=`java -cp $scriptdir/../build/classes/main edu.uchicago.cs.ucare.cassandra.util.TokenGenerator $num_node $i`
   cd $operating_dir/cassconf/conf$i
   sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.template | sed "s:\$ip_address:127.0.0.$i:g" | sed "s:\$id:$i:g" | sed "s:\$token:$token:g" > cassandra.yaml
   cd $cwd

@@ -1,6 +1,7 @@
 cluster_name: 'Test Cluster'
-num_tokens: 1024
-initial_token:
+auto_bootstrap: false
+num_tokens: 1
+initial_token: $token
 hinted_handoff_enabled: true
 max_hint_window_in_ms: 10800000 # 3 hours
 hinted_handoff_throttle_in_kb: 1024
@@ -8,7 +9,7 @@ max_hints_delivery_threads: 2
 authenticator: AllowAllAuthenticator
 authorizer: AllowAllAuthorizer
 permissions_validity_in_ms: 2000
-partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+partitioner: org.apache.cassandra.dht.RandomPartitioner
 data_file_directories:
     - /$operating_dir/lib/node$id/data
 commitlog_directory: /$operating_dir/lib/node$id/commitlog
