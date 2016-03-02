@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+    <File name="CASS" fileName="${sys:cassandra.log.dir}/node${sys:log4j.file.id}.log" append="true">
+      <PatternLayout pattern="%p %d{DEFAULT} %d{UNIX_MILLIS} %F:%L %m%n"/>
+    </File>
+    <File name="SCALE" fileName="${sys:cassandra.log.dir}/scale${sys:log4j.file.id}.log" append="true">
+      <PatternLayout pattern="%p %d{DEFAULT} %d{UNIX_MILLIS} %F:%L %m%n"/>
+    </File>
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%p %d{DEFAULT} %d{UNIX_MILLIS} %F:%L %m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Logger name="edu.uchicago.cs.ucare.util.Klogger" level="INFO" additivity="false">
+      <AppenderRef ref="SCALE"/>
+    </Logger>
+    <Root level="INFO">
+      <AppenderRef ref="CASS"/>
+    </Root>
+  </Loggers>
+</Configuration>
