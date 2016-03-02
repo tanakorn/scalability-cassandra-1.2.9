@@ -2798,6 +2798,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
     public void decommission() throws InterruptedException
     {
+        Klogger.logger.info("Decommisson start");
         if (!tokenMetadata.isMember(FBUtilities.getBroadcastAddress()))
             throw new UnsupportedOperationException("local node is not a member of the token ring yet");
         if (tokenMetadata.cloneAfterAllLeft().sortedTokens().size() < 2)
@@ -2827,6 +2828,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             }
         };
         unbootstrap(finishLeaving);
+        Klogger.logger.info("Decommisson finish");
     }
 
     private void leaveRing()
