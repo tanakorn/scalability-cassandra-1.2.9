@@ -1,20 +1,20 @@
-package edu.uchicago.cs.ucare.util;
+package edu.uchicago.cs.ucare.cassandra.util;
 
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class SimpleCqlGenerator {
+public class SimpleCommandLineGenerator {
 
 	public static void main(String[] args) {
-		String fileName = "/tmp/data.cql";
+		String fileName = "/tmp/data.dat";
 		if (args.length >= 1) {
 			fileName = args[0];
 		}
-		int numKeySpace = 50;
+		int numKeySpace = 5;
 		if (args.length >= 2) {
 			numKeySpace = Integer.parseInt(args[1]);
 		}
-		int numFamily = 50;
+		int numFamily = 10;
 		if (args.length >= 3) {
 			numFamily = Integer.parseInt(args[2]);
 		}
@@ -22,9 +22,13 @@ public class SimpleCqlGenerator {
 		if (args.length >= 4) {
 			numCol = Integer.parseInt(args[3]);
 		}
-		int numKey = 100;
+		int numKey = 1;
 		if (args.length >= 5) {
 			numKey = Integer.parseInt(args[4]);
+		}
+		int replicaFactor = 1;
+		if (args.length >= 6) {
+			replicaFactor = Integer.parseInt(args[5]);
 		}
 		
 		String keySpaceName = "KeySpace";
@@ -37,7 +41,9 @@ public class SimpleCqlGenerator {
 			String keySpace, family, col, key, value;
 			for (int i = 0; i < numKeySpace; ++i) {
 				keySpace = keySpaceName + i;
-				writer.write("create keyspace " + keySpace + ";\n");
+				writer.write("create keyspace " + keySpace
+				        + " WITH placement_strategy = 'NetworkTopologyStrategy' "
+				        + "AND strategy_options = [{datacenter1:" + replicaFactor + "}];\n");
 				writer.write("use " + keySpace + ";\n");
 				for (int j = 0; j < numFamily; ++j) {
 					family = familyName + j;
