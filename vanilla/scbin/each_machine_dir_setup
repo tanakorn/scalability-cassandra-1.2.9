@@ -16,9 +16,9 @@ cd $cwd
 
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 my_id=`grep "\<$my_ip\>" $machinelist | awk '{print $1}'`
-#if [ ! $my_id ]; then
-  #
-#fi
+
+phy_node=`wc -l $machinelist | awk '{print $1}'`
+all_node=`expr $phy_node \* $num_node`
 
 rm -r $operating_dir/* 2> /dev/null
 
@@ -30,9 +30,11 @@ mkdir $operating_dir/log
 i=1
 while [ $i -le $num_node ]; do
   ip=192.168.${my_id}.${i}
+  token_id=`expr \( $my_id - 1 \) \* $num_node + $i - 1`
+  token=`java -cp ../build/classes/main edu.uchicago.cs.ucare.cassandra.util.TokenGenerator $all_node $token_id`
   cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
   cd $operating_dir/cassconf/conf$i
-  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" > cassandra.yaml
+  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.multi.template | sed "s:\$ip_address:$ip:g" | sed "s:\$machine_id:$my_id:g" | sed "s:\$id:$i:g" | sed "s:\$token:$token:g" > cassandra.yaml
   cd $cwd
   i=`expr $i + 1`
 done
@@ -43,6 +45,7 @@ fi
 
 cp -r $scriptdir/resources/bin $operating_dir
 cp $scriptdir/resources/allnode_start $operating_dir
+cp $scriptdir/resources/allnode_decom $operating_dir
 cp $scriptdir/resources/onenode_start $operating_dir
 cp $scriptdir/resources/onenode_stop $operating_dir
 cp $scriptdir/resources/sc.properties $operating_dir
@@ -50,9 +53,5 @@ cp $scriptdir/resources/sc.properties $operating_dir
 echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
 echo num_node=$num_node >> $operating_dir/sc.conf
 echo property_file=$property_file >> $operating_dir/sc.conf
-echo aspectj=$aspectj >> $operating_dir/sc.conf
 echo id_offset=$my_id >> $operating_dir/sc.conf
-echo observed_nodes=$observed_nodes >> $operating_dir/sc.conf
 
-echo bids.outputdir=$rawdata_dir >> $operating_dir/sc.properties
-mkdir $rawdata_dir

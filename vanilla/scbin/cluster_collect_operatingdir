@@ -4,12 +4,12 @@ scriptdir=`dirname $0`
 
 . $scriptdir/readconfig
 
-mkdir -p $cassandra_data_dir
+mkdir -p $cassandra_operating_dir
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
 awk '{
   if ("'$my_ip'" == $2)
-    system("cp -r '$operating_dir' '$cassandra_data_dir'/machine"$1)
+    system("cp -r '$operating_dir' '$cassandra_operating_dir'/machine"$1)
   else
-    system("scp -r "$2":'$operating_dir' '$cassandra_data_dir'/machine"$1)
+    system("scp -r "$2":'$operating_dir' '$cassandra_operating_dir'/machine"$1)
 }' $machinelist
 

@@ -16,9 +16,11 @@ all_ip=`awk '{print $2}' $machinelist`
 for ip in $all_ip; do
   if [ $ip = $my_ip ]; then
     cd $scriptdir
-    ./each_machine_dir_setup $1
+    ./each_machine_dir_setup $1 & 
   else
     now="`date`"
-    ssh -o "$SSH_OPTION" $ip "sudo date --set='$now' > /dev/null; cd $scriptdir; ./each_machine_dir_setup $1"
+    ssh -o "$SSH_OPTION" $ip "sudo date --set='$now' > /dev/null; cd $scriptdir; ./each_machine_dir_setup $1" &
   fi
 done
+wait
+

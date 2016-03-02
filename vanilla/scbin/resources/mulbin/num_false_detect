@@ -1,4 +1,0 @@
-#!/bin/sh
-
-grep 'now DOWN' $1/*/*.log | wc -l
-

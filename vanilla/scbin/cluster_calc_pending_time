@@ -1,0 +1,45 @@
+#!/bin/sh
+
+cwd=`pwd`
+scriptdir=`dirname $0`
+cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
+
+
+. $scriptdir/readconfig
+
+$scriptdir/gendata /tmp/d-1-0-0-0 1 0 0 0
+$scriptdir/gendata /tmp/d-20-0-0-0 20 0 0 0
+
+$scriptdir/gendata /tmp/d-1-1-1-1 1 1 1 1
+$scriptdir/gendata /tmp/d-1-1-1-1000 1 1 1 1000
+
+$scriptdir/gendata /tmp/d-1-30-0-0 1 30 0 0
+
+$scriptdir/gendata /tmp/d-1-1-3-20 1 1 3 20
+$scriptdir/gendata /tmp/d-1-1-30-20 1 1 30 20
+
+all_exp="d-1-0-0-0 d-20-0-0-0 d-1-1-1-1 d-1-1-1-1000 d-1-30-0-0 d-1-1-3-20 d-1-1-30-20"
+
+mkdir -p $cassandra_log_dir
+rm -r $cassandra_log_dir/* 2> /dev/null
+mkdir -p /tmp/exp
+rm -r /tmp/exp/*
+for exp in $all_exp; do
+  $scriptdir/cluster_dir_setup
+  $scriptdir/cluster_start
+  sleep 30
+  $scriptdir/../bin/cassandra-cli --host 192.168.1.1 -f /tmp/$exp
+  sleep 2
+  $scriptdir/cluster_stop
+  sleep 2
+  $scriptdir/cluster_start
+  sleep 30
+  $scriptdir/cluster_stop
+  sleep 2
+  $scriptdir/cluster_collect_logdir
+  cp -r $cassandra_log_dir /tmp/exp/$exp
+done
+rm -r $cassandra_log_dir/*
+cp -r /tmp/exp $cassandra_log_dir

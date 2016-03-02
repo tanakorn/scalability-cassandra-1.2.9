@@ -22,7 +22,7 @@ fi
 
 base_jvm_opts="-Dcassandra.log.dir=$operating_dir/log"
 if [ $property_file ]; then
-  base_jvm_opts="$base_jvm_opts -Dbids.properties=$property_file"
+  base_jvm_opts="$base_jvm_opts"
 fi
 export CASSANDRA_HOME=$cassandra_home
 #for jar in `ls $aspectj/lib/*.jar`; do
@@ -34,10 +34,10 @@ else
   id=$node_id
 fi
 export CASSANDRA_CONF=$operating_dir/cassconf/conf$node_id
-export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$node_id -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
+export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$node_id -Dcassandra.id=$id -Dcassandra.ring_delay_ms=15000"
 if [ $observed_nodes ]; then
   export JVM_OPTS="$JVM_OPTS -Dobserved.nodes=$observed_nodes"
 fi
 export NODE_ID=$node_id
 mkdir -p $operating_dir/pid
-bin/cassandra -p  $operating_dir/pid/node${node_id}.pid
+bin/cassandra -p  $operating_dir/pid/n${node_id}.pid

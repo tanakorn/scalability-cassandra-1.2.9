@@ -8,10 +8,21 @@ mkdir -p $cassandra_log_dir
 rm -r $cassandra_log_dir/*
 cp $machinelist $cassandra_log_dir/machinelist
 my_ip=`ifconfig eth0 | grep "\<inet\>" | awk '{print $2}' | awk -F : '{print $2}'`
-awk '{
-  if ("'$my_ip'" == $2)
-    system("cp -r '$operating_dir/log' '$cassandra_log_dir'/node"$1)
+while read line ; do
+  id=`echo $line | awk '{print $1}'`
+  ip=`echo $line | awk '{print $2}'`
+  if `echo $cassandra_log_dir | grep -q "^/users/tanakorn/"`; then
+    ssh $ip cp -r $operating_dir/log $cassandra_log_dir/machine$id &
   else
-    system("scp -r "$2":'$operating_dir/log' '$cassandra_log_dir'/node"$1)
-}' $machinelist
+    scp -r $ip $operating_dir/log $cassandra_log_dir/machine$id &
+  fi
+done < $machinelist
+wait
+
+#awk '{
+#  if ("'$my_ip'" == $2)
+#    system("cp -r '$operating_dir/log' '$cassandra_log_dir'/node"$1)
+#  else
+#    system("scp -r "$2":'$operating_dir/log' '$cassandra_log_dir'/node"$1)
+#}' $machinelist
 

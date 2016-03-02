@@ -1,5 +1,11 @@
 #!/bin/sh
 
+os=`uname`
+if [ ! $os = Linux ]; then
+  echo Multi-machine remote run supports only Linux
+  exit 1
+fi
+
 cwd=`pwd`
 scriptdir=`dirname $0`
 cd $scriptdir
@@ -7,7 +13,6 @@ scriptdir=`pwd`
 cd $cwd
 
 . $scriptdir/readconfig
-. $scriptdir/ipman
 
 cd $scriptdir
 
@@ -22,19 +27,15 @@ if [ -z "$test_size" ]; then
 fi
 
 for n in $test_size; do
-  echo Testing $n physical machines
   ./gen_nmc_machinelist $n
   cp scdeploy.conf.exp scdeploy.conf.$n
-  echo "cassandra_log_dir=$cassandra_log_dir/n$n" >> scdeploy.conf.$n
   echo "cassandra_data_dir=$cassandra_data_dir/n$n" >> scdeploy.conf.$n
   ./cluster_dir_setup scdeploy.conf.$n
   ./cluster_start scdeploy.conf.$n
   sleep 30
-  ../bin/cassandra-cli --host 192.168.1.1 -f /users/tanakorn/scale/cass-3831/20keys.dat
+  $scriptdir/../bin/cassandra-cli --host 192.168.1.1 -f $data_creation_file
   sleep 10
-  ../bin/nodetool --host 192.168.${n}.1 decommission
-  sleep 300
   ./cluster_stop scdeploy.conf.$n
-  ./cluster_collect_logdir scdeploy.conf.$n
+  ./cluster_collect_rawdata scdeploy.conf.$n
 done
 

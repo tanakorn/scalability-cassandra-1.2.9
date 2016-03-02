@@ -14,8 +14,9 @@ all_ip=`awk '{print $2}' $machinelist`
 for ip in $all_ip; do
   if [ $ip = $my_ip ]; then
     cd $scriptdir
-    sudo ./each_machine_ip_setup
+    sudo ./each_machine_ip_setup &
   else
-    ssh -o "StrictHostKeyChecking no" $ip "cd $scriptdir; sudo ./each_machine_ip_setup"
+    ssh -o "StrictHostKeyChecking no" $ip "cd $scriptdir; sudo ./each_machine_ip_setup" &
   fi
 done
+wait

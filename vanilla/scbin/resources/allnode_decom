@@ -1,0 +1,25 @@
+#!/bin/sh
+
+operating_dir=`dirname $0`
+
+conf_file=$operating_dir/sc.conf
+if [ $# -eq 1 ]; then
+  conf_file=$1
+fi
+
+if [ ! -f $conf_file ]; then
+  echo There is no such configuration file : $conf_file
+  exit 1
+fi
+
+. $conf_file
+
+mkdir -p $operating_dir/pid
+
+export CASSANDRA_HOME=$cassandra_home
+i=1
+while [ $i -le $num_node ]; do
+  port=`expr 7198 + $i`
+  bin/nodetool --host 127.0.0.1 --port $port decommission
+  i=`expr $i + 1`
+done

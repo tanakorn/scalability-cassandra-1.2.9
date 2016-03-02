@@ -1,6 +1,6 @@
 Instructions for working on PRObE cluster 
 
-1. Generate machine list by running `gen_nmc_machine.sh`
+1. Generate machine list by running `gen_nmc_machinelist`
 gen_nmc_machine.sh receives the number of machines as the first
 argument. Sometime some machines in the cluster cannot start up, and
 we do not want to use those machines, we can tell gen_nmc_machine.sh

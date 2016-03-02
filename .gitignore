@@ -5,6 +5,7 @@ gen-java/
 *.pyc
 scdeploy.conf
 scdeploy.conf.*
+!scdeploy.conf.template
 machinelist*
 skiplist
 .settings
