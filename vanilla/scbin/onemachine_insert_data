@@ -1,0 +1,12 @@
+#!/bin/sh
+
+script_dir=`dirname $0`
+
+data_dir=/tmp/data
+if [ ! -z $1 ]; then
+  data_dir=$1
+fi
+for i in `ls $data_dir`; do
+  $script_dir/../bin/cassandra-cli --host 127.0.0.1 -f $data_dir/$i
+done
+

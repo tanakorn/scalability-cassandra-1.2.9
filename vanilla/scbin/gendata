@@ -29,4 +29,4 @@ if [ -z $CLASSPATH ]; then
 fi
 
 $JAVA -ea -cp $CLASSPATH -Xmx256M \
-    edu.uchicago.cs.ucare.cassandra.util.SimpleCommandLineGenerator "$@"
+    edu.uchicago.cs.ucare.cassandra.util.GroupCommandLineGenerator "$@"
