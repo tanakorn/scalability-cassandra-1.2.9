@@ -30,7 +30,7 @@ for n in $test_size; do
   ./cluster_dir_setup scdeploy.conf.$n
   ./cluster_start scdeploy.conf.$n
   sleep 30
-  ../bin/cassandra-cli --host 192.168.1.1 -f /users/tanakorn/scale/cass-3831/20keys.dat
+  ./cluster_insert_data $data_creation_file
   sleep 10
   ../bin/nodetool --host 192.168.${n}.1 decommission
   sleep 300
