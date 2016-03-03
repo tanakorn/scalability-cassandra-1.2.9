@@ -11,25 +11,37 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
     allNids = pyutil.nid2ip.keys()
     self.falseMap = { observer : { observee : [] for observee in allNids } for observer in allNids }
     self.revertFalseMap = { observee : { observer : [] for observer in allNids } for observee in allNids }
-    self.startTimestamp = None
-    self.endTimestamp = None
+    self.decomTime = None
 
   def analyze(self, logLine, **kwargs):
     observer = kwargs['nid']
     tokens = logLine.split()
-    timestamp = analyze.extractTimestamp(tokens)
-    if not self.startTimestamp or timestamp < self.startTimestamp:
-      self.startTimestamp = timestamp
-    if not self.endTimestamp or timestamp > self.endTimestamp:
-      self.endTimestamp = timestamp
     downKeyword = 'now DOWN'
+    decomKeyword = 'Decommission operation starts'
     if logLine[-len(downKeyword):] == downKeyword:
-      observee = pyutil.ip2nid[tokens[6][1:]]
+      timestamp = int(tokens[4])
+      observee = pyutil.ip2nid[tokens[7][1:]]
       self.falseMap[observer][observee].append(timestamp)
       self.revertFalseMap[observee][observer].append(timestamp)
+    elif logLine[-len(decomKeyword):] == decomKeyword:
+      self.decomTime = int(tokens[6])
 
   def analyzedResult(self):
+    decomIp = '192.168.%d.1' % (pyutil.num_node / 8)
+    decomId = pyutil.ip2nid[decomIp]
     numFalse = 0
+    for observer in self.falseMap:
+      for observee in self.falseMap[observer]:
+        if observee != decomId:
+          for timestamp in self.falseMap[observer][observee]:
+            if self.decomTime < timestamp:
+              numFalse += 1
+
+    return {
+      'num_false' : '%d\n' % numFalse,
+    }
+
+    '''
     numFlappings = 0
     numsDeadObservees = []
     numsWrongObservers = []
@@ -126,4 +138,5 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
       'acc_dead_observees' : accDeadObserveesResult,
       'avg_acc_dead_declare' : avgAccDeadDeclareResult,
     }
+    '''
 

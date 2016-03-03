@@ -4,7 +4,7 @@ import importlib
 modClassMap = { 
 #  'phi' : 'PhiAnalyzer',
   'falsedetect' : 'FalseDetectionCounter',
-  'exectime' : 'ExecTimeAnalyzer',
+#  'exectime' : 'ExecTimeAnalyzer',
 #  'hop' : 'HopCounter',
 #  'tsilence' : 'TSilenceExtractor',
 #  'message' : 'MessageCounter',

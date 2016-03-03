@@ -24,6 +24,7 @@ class BaseAnalyzer(object):
 
 extractedTimeCache = { }
 def extractTime(logLine):
+  print 'We should not call this function anymore'
   global extractedTimeCache
   if type(logLine) == str:
     tokens = logLine.split()
