@@ -17,14 +17,14 @@ class FalseDetectionCounter(analyze.BaseAnalyzer):
     observer = kwargs['nid']
     tokens = logLine.split()
     downKeyword = 'now DOWN'
-    decomKeyword = 'Decommission operation starts'
+    decomKeyword = 'Decommission start'
     if logLine[-len(downKeyword):] == downKeyword:
-      timestamp = int(tokens[4])
-      observee = pyutil.ip2nid[tokens[7][1:]]
+      timestamp = int(tokens[3])
+      observee = pyutil.ip2nid[tokens[6][1:]]
       self.falseMap[observer][observee].append(timestamp)
       self.revertFalseMap[observee][observer].append(timestamp)
     elif logLine[-len(decomKeyword):] == decomKeyword:
-      self.decomTime = int(tokens[6])
+      self.decomTime = int(tokens[3])
 
   def analyzedResult(self):
     decomIp = '192.168.%d.1' % (pyutil.num_node / 8)
