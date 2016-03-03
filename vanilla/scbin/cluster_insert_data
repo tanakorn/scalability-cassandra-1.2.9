@@ -6,7 +6,14 @@ data_dir=/tmp/data
 if [ ! -z $1 ]; then
   data_dir=$1
 fi
+rm /tmp/insert.out /tmp/insert.err 2> /dev/null
 for i in `ls $data_dir`; do
-  $script_dir/../bin/cassandra-cli --host 192.168.1.1 -f $data_dir/$i
+  finish=0
+  while [ $finish -eq 0 ]; do
+    $script_dir/../bin/cassandra-cli --host 192.168.1.1 -f $data_dir/$i 2>&1 | grep "Authenticated to keyspace"
+    if [ $? -eq 0 ]; then
+      finish=1
+    fi
+  done
 done
 

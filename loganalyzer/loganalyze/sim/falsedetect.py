@@ -1,6 +1,6 @@
 from .. import analyze
 
-from ..realrun import falsedetect
+from ..real import falsedetect
 import pyutil
 
 # The difference between real run and cluster simulation is how to parse log line
