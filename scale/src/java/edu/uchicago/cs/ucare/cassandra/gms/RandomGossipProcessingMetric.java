@@ -31,7 +31,8 @@ public class RandomGossipProcessingMetric {
 
     public static GossiperStubGroup stubGroup;
     
-    public static final int numStubs = 255;
+    public static int numStubs;
+    public static int tokens;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
@@ -81,15 +82,17 @@ public class RandomGossipProcessingMetric {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 2) {
-            System.err.println("Please specify node status (boot/normal) and the number of new version");
+        if (args.length < 7) {
+            System.err.println("usage: GossipProcessingMetric <test_status> <allNodes> <tokens> <currentVersion> <newVersion> <realUpdate> <repeat>");
             System.exit(1);
         }
         String testStatus = args[0];
-        currentVersion = Integer.parseInt(args[1]);
-        newVersion = Integer.parseInt(args[2]);
-        realUpdate = Integer.parseInt(args[3]);
-        int repeat = Integer.parseInt(args[4]);
+        numStubs = Integer.parseInt(args[1]);
+        tokens = Integer.parseInt(args[2]);
+        currentVersion = Integer.parseInt(args[3]);
+        newVersion = Integer.parseInt(args[4]);
+        realUpdate = Integer.parseInt(args[5]);
+        int repeat = Integer.parseInt(args[6]);
         if ((currentVersion + realUpdate) > numStubs || newVersion < realUpdate) {
             System.exit(1);
         }
@@ -136,12 +139,14 @@ public class RandomGossipProcessingMetric {
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
         for (int i = 1; i <= numStubs; ++i) {
-            addressList.add(InetAddress.getByName("127.0.0." + i));
+            int a = i / 256;
+            int b = i % 256;
+            addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster")
-                .setDataCenter("").setNumTokens(1024).setAddressList(addressList)
+                .setDataCenter("").setNumTokens(tokens).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
         stubGroup.setupTokenState();
@@ -160,7 +165,9 @@ public class RandomGossipProcessingMetric {
         GossiperStub gossipee = stubGroup.getStub(gossipeeAddress);
         while (gossipee.endpointStateMap.size() < gossipeeSize) {
             int index = rand.nextInt(numStubs) + 1;
-            InetAddress address = InetAddress.getByName("127.0.0." + index);
+            int a = index / 256;
+            int b = index % 256;
+            InetAddress address = InetAddress.getByName("127.0." + a + "." + b);
             if (index == 2 || gossipee.endpointStateMap.containsKey(address)) {
                 continue;
             }
@@ -174,7 +181,9 @@ public class RandomGossipProcessingMetric {
         GossiperStub gossiper = stubGroup.getStub(gossiperAddress);
         while (gossiper.endpointStateMap.size() != newVersion) {
             int index = rand.nextInt(numStubs) + 1;
-            InetAddress address = InetAddress.getByName("127.0.0." + index);
+            int a = index / 256;
+            int b = index % 256;
+            InetAddress address = InetAddress.getByName("127.0." + a + "." + b);
             if (gossiper.endpointStateMap.containsKey(address) || gossipee.endpointStateMap.containsKey(address)) {
                 continue;
             }
