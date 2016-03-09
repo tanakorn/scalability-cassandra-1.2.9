@@ -8,3 +8,5 @@ scdeploy.conf.*
 machinelist*
 skiplist
 .settings
+
+.DS_Store
