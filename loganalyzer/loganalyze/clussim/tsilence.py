@@ -15,14 +15,20 @@ class TSilenceExtractor(tsilence.TSilenceExtractor):
       tsilenceAvg = map(lambda x: round(float(x[1]) / 1000, 2), timeData)
 
       self.numTsilence += len(tsilence)
+
       for time in tsilence:
         if time not in self.tsilenceCount:
           self.tsilenceCount[time] = 0
         self.tsilenceCount[time] +=1
+
       for time in tsilenceAvg:
         if time not in self.tsilenceAvgCount:
           self.tsilenceAvgCount[time] = 0
         self.tsilenceAvgCount[time] +=1
+
+      if timestamp not in self.tsilenceByTime:
+        self.tsilenceByTime[timestamp] = []
+      self.tsilenceByTime[timestamp] += tsilence
 
       if timestamp not in self.tsilenceAvgByTime:
         self.tsilenceAvgByTime[timestamp] = []
