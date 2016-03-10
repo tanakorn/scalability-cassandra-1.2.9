@@ -39,7 +39,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long receiveTime = System.currentTimeMillis();
     	InetAddress from = message.from;
         InetAddress to = message.to;
-        logger.info(to + " doVerb ack2");
+//        logger.info(to + " doVerb ack2");
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
@@ -99,39 +99,39 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         int realUpdate = (int) result[9];
         if (!updatedNodes.isEmpty()) {
-            StringBuilder sb = new StringBuilder(to.toString());
-            sb.append(" hop ");
-            for (InetAddress receivingAddress : updatedNodes) {
-                EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-                sb.append(ep.hopNum);
-                sb.append(",");
-            }
-            logger.info(sb.toString());
+//            StringBuilder sb = new StringBuilder(to.toString());
+//            sb.append(" hop ");
+//            for (InetAddress receivingAddress : updatedNodes) {
+//                EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+//                sb.append(ep.hopNum);
+//                sb.append(",");
+//            }
+//            logger.info(sb.toString());
         }
         if (!updatedNodeInfo.isEmpty()) {
-            StringBuilder sb = new StringBuilder(to.toString());
-            sb.append(" t_silence ");
-            for (InetAddress address : updatedNodeInfo.keySet()) {
-                double[] updatedInfo = updatedNodeInfo.get(address); 
-                sb.append(updatedInfo[0]);
-                sb.append(":");
-                sb.append(updatedInfo[1]);
-                sb.append(",");
-            }
-            logger.info(sb.toString());
+//            StringBuilder sb = new StringBuilder(to.toString());
+//            sb.append(" t_silence ");
+//            for (InetAddress address : updatedNodeInfo.keySet()) {
+//                double[] updatedInfo = updatedNodeInfo.get(address); 
+//                sb.append(updatedInfo[0]);
+//                sb.append(":");
+//                sb.append(updatedInfo[1]);
+//                sb.append(",");
+//            }
+//            logger.info(sb.toString());
         }
         updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
         if (!updatedNodeInfo.isEmpty()) {
-            StringBuilder sb = new StringBuilder(to.toString());
-            sb.append(" t_silence ");
-            for (InetAddress address : updatedNodeInfo.keySet()) {
-                double[] updatedInfo = updatedNodeInfo.get(address); 
-                sb.append(updatedInfo[0]);
-                sb.append(":");
-                sb.append(updatedInfo[1]);
-                sb.append(",");
-            }
-            logger.info(sb.toString());
+//            StringBuilder sb = new StringBuilder(to.toString());
+//            sb.append(" t_silence ");
+//            for (InetAddress address : updatedNodeInfo.keySet()) {
+//                double[] updatedInfo = updatedNodeInfo.get(address); 
+//                sb.append(updatedInfo[0]);
+//                sb.append(":");
+//                sb.append(updatedInfo[1]);
+//                sb.append(",");
+//            }
+//            logger.info(sb.toString());
         }
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);

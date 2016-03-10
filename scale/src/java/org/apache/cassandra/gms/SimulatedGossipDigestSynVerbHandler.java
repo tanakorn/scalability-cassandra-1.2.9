@@ -40,7 +40,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
-        logger.info(to + " doVerb syn");
+//        logger.info(to + " doVerb syn");
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);

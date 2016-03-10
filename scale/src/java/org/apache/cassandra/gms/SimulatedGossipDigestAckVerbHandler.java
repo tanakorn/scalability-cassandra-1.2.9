@@ -44,7 +44,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
-        logger.info(to + " doVerb ack");
+//        logger.info(to + " doVerb ack");
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
 //        if (!Gossiper.instance.isEnabled())
@@ -175,39 +175,39 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[9];
             if (!updatedNodes.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" hop ");
-                for (InetAddress receivingAddress : updatedNodes) {
-                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-                    sb.append(ep.hopNum);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" hop ");
+//                for (InetAddress receivingAddress : updatedNodes) {
+//                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+//                    sb.append(ep.hopNum);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
             }
             if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" t_silence ");
-                for (InetAddress address : updatedNodeInfo.keySet()) {
-                    double[] updatedInfo = updatedNodeInfo.get(address); 
-                    sb.append(updatedInfo[0]);
-                    sb.append(":");
-                    sb.append(updatedInfo[1]);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" t_silence ");
+//                for (InetAddress address : updatedNodeInfo.keySet()) {
+//                    double[] updatedInfo = updatedNodeInfo.get(address); 
+//                    sb.append(updatedInfo[0]);
+//                    sb.append(":");
+//                    sb.append(updatedInfo[1]);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
             }
             updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
             if (!updatedNodeInfo.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" t_silence ");
-                for (InetAddress address : updatedNodeInfo.keySet()) {
-                    double[] updatedInfo = updatedNodeInfo.get(address); 
-                    sb.append(updatedInfo[0]);
-                    sb.append(":");
-                    sb.append(updatedInfo[1]);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" t_silence ");
+//                for (InetAddress address : updatedNodeInfo.keySet()) {
+//                    double[] updatedInfo = updatedNodeInfo.get(address); 
+//                    sb.append(updatedInfo[0]);
+//                    sb.append(":");
+//                    sb.append(updatedInfo[1]);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
             }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 

@@ -433,10 +433,14 @@ public class WholeClusterSimulator {
                         break;
                     }
                 }
+                int flapping = 0;
+                for (GossiperStub stub : stubGroup) {
+                    flapping += stub.flapping;
+                }
                 if (isStable) {
-                    logger.info("stable status yes");
+                    logger.info("stable status yes " + flapping);
                 } else {
-                    logger.info("stable status no");
+                    logger.info("stable status no " + flapping);
                 }
                 try {
                     Thread.sleep(5000);
