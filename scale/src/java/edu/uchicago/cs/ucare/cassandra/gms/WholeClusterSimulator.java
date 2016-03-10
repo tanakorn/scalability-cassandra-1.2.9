@@ -260,8 +260,7 @@ public class WholeClusterSimulator {
         }
         Long result = normalGossipExecRecords.get(currentVersion).get(numNormal).get(realUpdate);
         if (result == null) {
-            System.out.println(currentVersion + " " + numNormal + " " + realUpdate);
-            return 100;
+            System.out.println(currentVersion + " " + numNormal);
         }
         return result;
 //        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
