@@ -64,17 +64,28 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
 //        int tmpNormalCount = (int) result[6];
         try {
-            int normalCount = (int) result[6];
             int realUpdate = (int) result[9];
             int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
-            int roundNormalCount = (normalCount / 4) * 4 + 1;
-            int roundRealUpdate = (realUpdate / 4) * 4 + 1;
-            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalCount, roundRealUpdate);
+            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
+//            Thread.sleep(message.getSleepTime());
+            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+//        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+//        if (mockExecTime >= 0) {
+//            try {
+////                Thread.sleep(mockExecTime);
+//                Thread.sleep(message.getSleepTime());
+//            } catch (InterruptedException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//        } else if (mockExecTime < -10) {
+//            logger.debug(to + " executing past message " + mockExecTime);
+//        }
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];

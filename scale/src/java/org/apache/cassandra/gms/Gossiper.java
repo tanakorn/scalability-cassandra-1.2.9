@@ -1248,7 +1248,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         int normalCount = 0;
         Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
         int realUpdate = 0;
-        int numApply = 0;
         Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
@@ -1310,12 +1309,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                         // apply states, but do not notify since there is no major change
                         applyNewStatesStatic(stub, ep, localEpStatePtr, remoteState.copy());
                         updatedNodes.add(ep);
-                        if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
-                            VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
-                            if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
-                                numApply++;
-                            }
-                        }
                     }
                     else if (logger.isTraceEnabled())
                             logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
@@ -1347,7 +1340,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNodes.add(ep);
             }
         }
-        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate, numApply };
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate };
     }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
