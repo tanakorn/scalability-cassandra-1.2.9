@@ -15,9 +15,11 @@ mkdir $operating_dir/log
 
 i=1
 while [ $i -le $num_node ]; do
+  a=`expr \( $i - 1 \) / 255`
+  b=`expr \( $i - 1 \) % 255 + 1`
   cp -r $scriptdir/resources/conf $operating_dir/cassconf/conf$i
   cd $operating_dir/cassconf/conf$i
-  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.template | sed "s:\$ip_address:127.0.0.$i:g" | sed "s:\$id:$i:g" > cassandra.yaml
+  sed "s:\$operating_dir:$operating_dir:g" cassandra.yaml.template | sed "s:\$ip_address:127.0.${a}.${b}:g" | sed "s:\$id:$i:g" > cassandra.yaml
   cd $cwd
   i=`expr $i + 1`
 done

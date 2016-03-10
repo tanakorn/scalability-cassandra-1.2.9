@@ -5,7 +5,9 @@ scriptdir=`dirname $0`
 i=2
 os=`uname`
 while [ true ]; do
-  ip=127.0.0.$i
+  a=`expr \( $i - 1 \) / 255`
+  b=`expr \( $i - 1 \) % 255 + 1`
+  ip=127.0.${a}.${b}
   ifconfig | grep -q "\<$ip\>"
   if [ $? -eq 0 ]; then
     echo Removing $ip

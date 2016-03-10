@@ -7,7 +7,9 @@ scriptdir=`dirname $0`
 i=2
 os=`uname`
 while [ $i -le $num_node ]; do
-  ip=127.0.0.$i
+  a=`expr \( $i - 1 \) / 255`
+  b=`expr \( $i - 1 \) % 255 + 1`
+  ip=127.0.${a}.${b}
   ifconfig | grep -q "\<$ip\>"
   if [ $? -ne 0 ]; then
     echo Adding $ip
