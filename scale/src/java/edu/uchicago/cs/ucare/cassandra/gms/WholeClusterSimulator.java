@@ -49,7 +49,7 @@ public class WholeClusterSimulator {
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
-    private static Timer timer = new Timer();
+    private static Timer[] timers;
     private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
@@ -192,7 +192,23 @@ public class WholeClusterSimulator {
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
-        timer.schedule(new MyGossiperTask(), 0, 1000);
+        
+        int numGossiper = numStubs / 10;
+        timers = new Timer[numGossiper];
+        LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
+        for (int i = 0; i < numGossiper; ++i) {
+            timers[i] = new Timer();
+            subStub[i] = new LinkedList<GossiperStub>();
+        }
+        int ii = 0;
+        for (GossiperStub stub : stubGroup) {
+            subStub[ii].add(stub);
+            ii = (ii + 1) % numGossiper;
+        }
+        for (int i = 0; i < numGossiper; ++i) {
+            timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
+        }
+//        timer.schedule(new MyGossiperTask(), 0, 1000);
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
             Thread t = new Thread(new AckProcessor(address));
@@ -283,11 +299,17 @@ public class WholeClusterSimulator {
     }
     
     public static class MyGossiperTask extends TimerTask {
+        
+        List<GossiperStub> stubs;
+        
+        public MyGossiperTask(List<GossiperStub> stubs) {
+            this.stubs = stubs;
+        }
 
         @Override
         public void run() {
             long start = System.currentTimeMillis();
-            for (GossiperStub performer : stubGroup) {
+            for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
@@ -443,7 +465,7 @@ public class WholeClusterSimulator {
                     logger.info("stable status no " + flapping);
                 }
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
