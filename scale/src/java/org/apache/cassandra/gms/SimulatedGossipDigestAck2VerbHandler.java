@@ -66,9 +66,17 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         try {
             int realUpdate = (int) result[9];
             int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
-            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
+//            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
+            long sleepTime = 0;
+            if (realUpdate != 0) {
+                int floorNormalVersion = (realUpdate / 4) * 4;
+                int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
+                long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
+                long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
+                sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+            }
 //            Thread.sleep(message.getSleepTime());
-            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+//            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block

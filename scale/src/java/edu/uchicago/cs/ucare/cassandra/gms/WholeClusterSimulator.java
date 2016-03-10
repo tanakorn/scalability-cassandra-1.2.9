@@ -45,7 +45,6 @@ public class WholeClusterSimulator {
     public static GossiperStubGroup stubGroup;
     
     public static int numStubs;
-    public static final int MAX_NODE = 255;
     public static final int QUARANTINE_DELAY = 10000;
 
     public static final AtomicInteger idGen = new AtomicInteger(0);
@@ -149,7 +148,7 @@ public class WholeClusterSimulator {
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
-        bootGossipExecRecords = new long[MAX_NODE];
+        bootGossipExecRecords = new long[numStubs];
 //        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
 //        normalGossipExecSdRecords = new double[MAX_NODE];
@@ -179,7 +178,9 @@ public class WholeClusterSimulator {
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
         for (int i = 1; i <= numStubs; ++i) {
-            addressList.add(InetAddress.getByName("127.0.0." + i));
+            int a = (i - 1) / 255;
+            int b = (i - 1) % 255 + 1;
+            addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
@@ -261,15 +262,12 @@ public class WholeClusterSimulator {
     
     static Random rand = new Random();
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
-        if (currentVersion > 249) {
-            currentVersion = 249;
-        }
         if (numNormal > numStubs - currentVersion) {
             numNormal = numStubs - currentVersion;
-            numNormal = (numNormal / 4) * 4 + 1;
+            numNormal = (numNormal / 4) * 4;
         }
-        if (numNormal > 173) {
-            numNormal = 173;
+        if (numNormal == 0) {
+            return 0;
         }
         Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
         if (result == null) {

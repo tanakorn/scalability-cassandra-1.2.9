@@ -82,9 +82,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             try {
                 realUpdate = (int) result[9];
                 int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
-                int roundNormalVersion = (realUpdate / 4) * 4 + 1;
+                long sleepTime = 0;
+                if (realUpdate != 0) {
+                    int floorNormalVersion = (realUpdate / 4) * 4;
+                    int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
+                    long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
+                    long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
+                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+                }
 //                Thread.sleep(message.getSleepTime());
-                long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+//                long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
@@ -148,13 +155,13 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
         }
         
-        int roundCurrentVersion = (int) (Math.round(senderCurrentVersion / 8.0) * 8 + 1);
-        int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
+//        int roundCurrentVersion = (int) (Math.round(senderCurrentVersion / 8.0) * 8 + 1);
+//        int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
 
-        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-        long wakeUpTime = System.currentTimeMillis() + sleepTime;
-        gDigestAck2Message.setWakeUpTime(wakeUpTime);
-        gDigestAck2Message.setSleepTime(sleepTime);
+//        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
+//        gDigestAck2Message.setWakeUpTime(wakeUpTime);
+//        gDigestAck2Message.setSleepTime(sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
