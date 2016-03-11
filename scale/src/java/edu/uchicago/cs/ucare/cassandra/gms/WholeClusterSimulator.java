@@ -382,7 +382,7 @@ public class WholeClusterSimulator {
             if (gossipingTime > 1000) {
                 long lateness = gossipingTime - 1000;
                 long totalLateness = lateness * stubs.size();
-                logger.warn("Lateness " + lateness + " " + totalLateness);
+                logger.warn("Sending lateness " + lateness + " " + totalLateness);
             }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
         }
