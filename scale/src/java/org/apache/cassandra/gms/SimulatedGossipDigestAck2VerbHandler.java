@@ -62,8 +62,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), remoteEpStateMap, receiverStub.getFailureDetector());
         Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
-//        int tmpNormalCount = (int) result[6];
         try {
+            int normalCount = (int) result[6];
             int realUpdate = (int) result[9];
             int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
 //            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
@@ -74,6 +74,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
                 long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
                 sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+                    sleepTime += (normalCount - realUpdate) * 5;
             }
 //            Thread.sleep(message.getSleepTime());
 //            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
