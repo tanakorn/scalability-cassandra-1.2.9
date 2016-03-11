@@ -380,7 +380,9 @@ public class WholeClusterSimulator {
             }
             long gossipingTime = System.currentTimeMillis() - start;
             if (gossipingTime > 1000) {
-                logger.warn("It took more than 1 s ( " + (gossipingTime - 1000) + " ms ) to do gossip task");
+                long lateness = gossipingTime - 1000;
+                long totalLateness = lateness * stubs.size();
+                logger.warn("Lateness " + lateness + " " + totalLateness);
             }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
         }
