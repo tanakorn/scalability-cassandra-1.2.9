@@ -94,9 +94,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 Thread.sleep(sleepTime);
                 realSleep = System.currentTimeMillis() - realSleep;
                 long lateness = realSleep - sleepTime;
-                if (lateness > 1) {
-                    logger.info("Processing lateness " + lateness);
-                }
+                lateness = lateness < 0 ? 0 : lateness;
+                logger.info("Processing lateness " + lateness);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
