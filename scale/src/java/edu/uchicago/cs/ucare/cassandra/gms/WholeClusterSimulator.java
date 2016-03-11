@@ -311,6 +311,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
+            logger.info("Generating gossip syn for " + stubs.size());
             long start = System.currentTimeMillis();
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
