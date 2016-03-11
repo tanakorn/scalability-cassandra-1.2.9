@@ -142,9 +142,9 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 3) {
+        if (args.length < 4) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> ");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
@@ -193,7 +193,10 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
         
-        int numGossiper = numStubs / 10;
+//        int numGossiper = numStubs / 100;
+//        int numGossiper = 2;
+        int numGossiper = Integer.parseInt(args[3]);
+        numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
@@ -377,7 +380,7 @@ public class WholeClusterSimulator {
             }
             long gossipingTime = System.currentTimeMillis() - start;
             if (gossipingTime > 1000) {
-                logger.warn("It took more than 1 s (" + gossipingTime + " ms) to do gossip task");
+                logger.warn("It took more than 1 s ( " + (gossipingTime - 1000) + " ms ) to do gossip task");
             }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
         }
