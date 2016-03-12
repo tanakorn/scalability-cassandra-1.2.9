@@ -110,12 +110,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
                 }
             }
         }
-        if (bootNodeNum == 256) {
-            bootNodeNum = 255;
-        }
-        if (normalNodeNum == 256) {
-            normalNodeNum = 255;
-        }
         Map<InetAddress, EndpointState> localEpStateMap = receiverStub.getEndpointStateMap();
         for (InetAddress sendingAddress : deltaEpStateMap.keySet()) {
             EndpointState ep = deltaEpStateMap.get(sendingAddress);
@@ -137,6 +131,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        WholeClusterSimulator.isProcessing.get(to).set(false);
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
