@@ -131,9 +131,9 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 4) {
+        if (args.length < 6) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_gossipers> <num_processors> <num_resumer>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
@@ -202,8 +202,10 @@ public class WholeClusterSimulator {
         for (int i = 0; i < numGossiper; ++i) {
             timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
         }
-        msgProcessors = Executors.newFixedThreadPool(30);
-        resumeProcessors = Executors.newScheduledThreadPool(30);
+        int numProcessors = Integer.parseInt(args[4]);
+        msgProcessors = Executors.newFixedThreadPool(numProcessors);
+        int numResumers = Integer.parseInt(args[5]);
+        resumeProcessors = Executors.newScheduledThreadPool(numResumers);
         Thread msgProber = new Thread(new MessageProber());
         msgProber.start();
         Thread seedThread = new Thread(new Runnable() {
