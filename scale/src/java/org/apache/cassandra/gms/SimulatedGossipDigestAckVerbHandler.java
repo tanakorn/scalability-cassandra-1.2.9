@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
             }
             long wakeupTime = System.currentTimeMillis() + sleepTime;
-            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
+//            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
+            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime, TimeUnit.MILLISECONDS);
 //            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //            if (mockExecTime >= 0) {
 //                try {
@@ -106,7 +108,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            }
             
         } else {
-            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis() + 1, receiveTime, result, message), 0);
+//            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis() + 1, receiveTime, result, message), 0);
+            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message), 0, TimeUnit.MILLISECONDS);
         }
 
 //        Gossiper.instance.checkSeedContact(from);

@@ -1,8 +1,6 @@
 package edu.uchicago.cs.ucare.scale;
 
-import java.util.TimerTask;
-
-public abstract class ResumeTask extends TimerTask {
+public abstract class ResumeTask implements Runnable {
     
     private long expectedExecutionTime;
     private long lateness;

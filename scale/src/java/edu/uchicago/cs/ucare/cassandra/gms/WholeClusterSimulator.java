@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,7 +56,6 @@ public class WholeClusterSimulator {
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
     private static Timer[] timers;
-    public static final Timer resumeTimer = new Timer();
     private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
@@ -65,6 +65,7 @@ public class WholeClusterSimulator {
     
     public static Map<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>>();
     public static ExecutorService msgProcessors; 
+    public static ScheduledExecutorService resumeProcessors;
     public static Map<InetAddress, AtomicBoolean> isProcessing;
     
     public static final Set<InetAddress> observedNodes;
@@ -202,6 +203,7 @@ public class WholeClusterSimulator {
             timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
         }
         msgProcessors = Executors.newFixedThreadPool(30);
+        resumeProcessors = Executors.newScheduledThreadPool(30);
         Thread msgProber = new Thread(new MessageProber());
         msgProber.start();
         Thread seedThread = new Thread(new Runnable() {

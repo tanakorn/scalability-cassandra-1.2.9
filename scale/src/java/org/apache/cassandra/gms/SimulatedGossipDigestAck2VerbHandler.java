@@ -19,6 +19,7 @@ package org.apache.cassandra.gms;
 
 import java.net.InetAddress;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
         }
         long wakeupTime = System.currentTimeMillis() + sleepTime;
-        WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
+//        WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
+        WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), 
+                sleepTime, TimeUnit.MILLISECONDS);
 //        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //        if (mockExecTime >= 0) {
 //            try {
