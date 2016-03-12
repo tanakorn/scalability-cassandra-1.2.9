@@ -201,7 +201,7 @@ public class WholeClusterSimulator {
         for (int i = 0; i < numGossiper; ++i) {
             timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
         }
-        msgProcessors = Executors.newFixedThreadPool(100);
+        msgProcessors = Executors.newFixedThreadPool(30);
         Thread msgProber = new Thread(new MessageProber());
         msgProber.start();
         Thread seedThread = new Thread(new Runnable() {
@@ -403,15 +403,13 @@ public class WholeClusterSimulator {
 //                        logger.info("There is not a message for " + address + " " + msgQueue.size() + " " + isProcessing.get(address).get());
                     }
                 }
-                try {
-                    if (!isThereMsg) {
-                        Thread.sleep(500);
-                    } else {
-                        Thread.sleep(10);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    if (!isThereMsg) {
+//                        Thread.sleep(5);
+//                    }
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
         
@@ -423,6 +421,9 @@ public class WholeClusterSimulator {
         public void run() {
             while (true) {
                 boolean isStable = true;
+                GossiperStub firstBadNode = null;
+                int badNumMemberNode = -1;
+                int badNumDeadNode = -1;
                 for (GossiperStub stub : stubGroup) {
                     int memberNode = stub.getTokenMetadata().endpointWithTokens.size();
                     int deadNode = 0;
@@ -434,6 +435,9 @@ public class WholeClusterSimulator {
                     }
                     if (memberNode != numStubs || deadNode > 0) {
                         isStable = false;
+                        badNumMemberNode = memberNode;
+                        badNumDeadNode = deadNode;
+                        firstBadNode = stub;
                         break;
                     }
                 }
@@ -444,7 +448,8 @@ public class WholeClusterSimulator {
                 if (isStable) {
                     logger.info("stable status yes " + flapping);
                 } else {
-                    logger.info("stable status no " + flapping);
+                    logger.info("stable status no " + flapping + " ( " + firstBadNode.getInetAddress() 
+                            + " " + badNumMemberNode + " " + badNumDeadNode + " )");
                 }
                 try {
                     Thread.sleep(2000);

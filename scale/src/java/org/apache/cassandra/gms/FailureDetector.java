@@ -364,7 +364,7 @@ class ArrivalWindow
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
         if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
-//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(testNode, phi);
         }
         return (size > 0) ? phi : 0.0;
