@@ -234,8 +234,10 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         public void resume() {
             long lateness = getLateness();
 //            logger.info("Processing lateness " + lateness);
+            long triggeredTime = System.currentTimeMillis();
             InetAddress from = message.from;
             InetAddress to = message.to;
+            logger.info("Processing lateness " + to + " " + expectedExecutionTime + " " + triggeredTime + " " + lateness);
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             Gossiper.instance.checkSeedContact(from);
@@ -278,6 +280,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                             + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
                 }
             }
+            long endTime = System.currentTimeMillis();
+            logger.info("Processing finished " + endTime + " " + (endTime - triggeredTime));
             WholeClusterSimulator.isProcessing.get(to).set(false);
         }
         
