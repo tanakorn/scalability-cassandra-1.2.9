@@ -213,13 +213,37 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         }
         long now = System.currentTimeMillis();
         double phi = hbWnd.phi(now, address, ep);
-        if (logger.isTraceEnabled())
-            logger.trace("PHI for " + ep + " : " + phi);
+//        if (logger.isTraceEnabled())
+//            logger.trace("PHI for " + ep + " : " + phi);
 
         if (phi > getPhiConvictThreshold())
         {
-            logger.trace("notifying listeners that {} is down", ep);
-            logger.trace("intervals: {} mean: {}", hbWnd, hbWnd.mean());
+//            logger.trace("notifying listeners that {} is down", ep);
+//            logger.trace("intervals: {} mean: {}", hbWnd, hbWnd.mean());
+            for ( IFailureDetectionEventListener listener : fdEvntListeners )
+            {
+                listener.convict(ep, phi);
+            }
+        }
+        return phi;
+    }
+    
+    public double interpret(InetAddress ep, int id)
+    {
+        ArrivalWindow hbWnd = arrivalSamples.get(ep);
+        if ( hbWnd == null )
+        {
+            return 0;
+        }
+        long now = System.currentTimeMillis();
+        double phi = hbWnd.phi(now, address, ep, id);
+//        if (logger.isTraceEnabled())
+//            logger.trace("PHI for " + ep + " : " + phi);
+
+        if (phi > getPhiConvictThreshold())
+        {
+//            logger.trace("notifying listeners that {} is down", ep);
+//            logger.trace("intervals: {} mean: {}", hbWnd, hbWnd.mean());
             for ( IFailureDetectionEventListener listener : fdEvntListeners )
             {
                 listener.convict(ep, phi);
@@ -291,12 +315,13 @@ class ArrivalWindow
     // rather mark it down quickly instead of adapting
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
-    public final Map<InetAddress, Double> maxObservedPhi;
+//    public final Map<InetAddress, Double> maxObservedPhi;
+    public final double[] maxObservedPhi;
 
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
-        maxObservedPhi = new HashMap<InetAddress, Double>();
+        maxObservedPhi = new double[WholeClusterSimulator.stubGroup.size()];
     }
 
     synchronized double add(double value, InetAddress observer, InetAddress address)
@@ -357,16 +382,28 @@ class ArrivalWindow
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
         return (size > 0) ? phi : 0.0;
     }
-
+    
     double phi(long tnow, InetAddress observer, InetAddress testNode) {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
-            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
-            maxObservedPhi.put(testNode, phi);
-        }
+        return (size > 0) ? phi : 0.0;
+    }
+
+    double phi(long tnow, InetAddress observer, InetAddress testNode, int testNodeId) {
+        int size = arrivalIntervals.size();
+        double t = tnow - tLast;
+        double mean = mean();
+        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+//        if (maxObservedPhi[testNodeId] < phi) {
+//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+//            maxObservedPhi[testNodeId] = phi;
+//        }
+//        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
+//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+//            maxObservedPhi.put(testNode, phi);
+//        }
         return (size > 0) ? phi : 0.0;
     }
 

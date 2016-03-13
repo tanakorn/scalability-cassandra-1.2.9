@@ -75,9 +75,11 @@ public class GossiperStubGroupBuilder {
     
     public GossiperStubGroup build() {
         List<GossiperStub> stubs = new LinkedList<GossiperStub>();
+        int id = 0;
         if (addressList != null) {
             for (InetAddress address : addressList) {
                 GossiperStub stub = createGossiperStub(address);
+                stub.setId(id++);
                 stubs.add(stub);
             }
         }

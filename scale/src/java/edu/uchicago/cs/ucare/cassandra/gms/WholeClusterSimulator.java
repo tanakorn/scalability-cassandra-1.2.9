@@ -361,7 +361,10 @@ public class WholeClusterSimulator {
                         }
                     }
                 }
+                long dscTime = System.currentTimeMillis();
                 performer.doStatusCheck();
+                dscTime = System.currentTimeMillis() - dscTime;
+                System.out.println(dscTime);
             }
             long gossipingTime = System.currentTimeMillis() - start;
             if (gossipingTime > 1000) {

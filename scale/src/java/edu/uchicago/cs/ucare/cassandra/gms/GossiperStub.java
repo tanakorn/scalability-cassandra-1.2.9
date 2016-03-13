@@ -95,6 +95,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	
 	boolean hasContactedSeed;
 	
+	int id = -1;
+	
 	private static final Random random = new Random();
 	public static InetAddress getRandomAddress(Collection<InetAddress> addressCollection) {
 	    if (addressCollection.isEmpty()) {
@@ -342,6 +344,14 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         this.unreachableEndpoints = unreachableEndpoints;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public Set<InetAddress> getSeeds() {
         return seeds;
     }
@@ -368,6 +378,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 continue;
             }
 
+//            double phi = failureDetector.interpret(endpoint, WholeClusterSimulator.stubGroup.getStub(endpoint).getId());
             double phi = failureDetector.interpret(endpoint);
 //            sb.append(phi);
 //            sb.append(',');
@@ -376,7 +387,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 // check for dead state removal
                 long expireTime = getExpireTimeForEndpoint(endpoint);
                 if (!epState.isAlive() && (now > expireTime)
-                        && (!StorageService.instance.getTokenMetadata().isMember(endpoint))) {
+                        && (!tokenMetadata.isMember(endpoint))) {
                     evictFromMembership(endpoint);
                 }
             }
@@ -429,7 +440,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     private void markDead(InetAddress addr, EndpointState localState, double phi) {
-//        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
+        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
         flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
