@@ -169,7 +169,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         @Override
         public void resume() {
             long lateness = getLateness();
-            logger.info("Processing lateness " + lateness);
+//            logger.info("Processing lateness " + lateness);
             int bootstrapCount = (int) result[5];
             int normalCount = (int) result[6];
             int realUpdate = (int) result[9];
@@ -177,28 +177,28 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             InetAddress to = message.to;
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
             String syncId = from + "_" + message.payload.syncId;
-            long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
+//            long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
             receiverStub.syncReceivedTime.remove(syncId);
             long tmpCurrent = System.currentTimeMillis();
             long ack2HandlerTime = tmpCurrent - receiveTime;
-            long allHandlerTime = tmpCurrent - syncReceivedTime;
+//            long allHandlerTime = tmpCurrent - syncReceivedTime;
             String ackId = from + "_" + message.payload.ackId;
-            int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
+//            int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
             receiverStub.ackNewVersionBoot.remove(ackId);
-            int sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
+//            int sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
             receiverStub.ackNewVersionNormal.remove(ackId);
-            int allBoot = sendingBoot + bootstrapCount;
-            int allNormal = sendingNormal + normalCount;
-            if (allBoot != 0 || allNormal != 0) {
-                logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
-            }
+//            int allBoot = sendingBoot + bootstrapCount;
+//            int allNormal = sendingNormal + normalCount;
+//            if (allBoot != 0 || allNormal != 0) {
+//                logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
+//            }
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             GossipDigestAck2 gDigestAck2Message = message.payload;
             long transmissionTime = receiveTime - gDigestAck2Message.getCreatedTime();
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
+                        + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
             }
             WholeClusterSimulator.isProcessing.get(to).set(false);
         }

@@ -233,7 +233,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         @Override
         public void resume() {
             long lateness = getLateness();
-            logger.info("Processing lateness " + lateness);
+//            logger.info("Processing lateness " + lateness);
             InetAddress from = message.from;
             InetAddress to = message.to;
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
@@ -275,7 +275,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 if (bootstrapCount != 0 || normalCount != 0) {
                     logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                             + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                            + receiverCurrentVersion + " ; transmission " + transmissionTime);
+                            + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
                 }
             }
             WholeClusterSimulator.isProcessing.get(to).set(false);
