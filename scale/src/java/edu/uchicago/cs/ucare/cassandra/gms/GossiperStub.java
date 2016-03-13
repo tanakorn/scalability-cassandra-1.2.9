@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -136,11 +137,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 		failureDetector = new FailureDetector();
 		failureDetector.setAddress(broadcastAddress);
 		failureDetector.registerFailureDetectionEventListener(this);
-        liveEndpoints = new ConcurrentSkipListSet<InetAddress>(inetcomparator);
+        liveEndpoints = Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>());
         unreachableEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         justRemovedEndpoints = new ConcurrentHashMap<InetAddress, Long>();
         expireTimeEndpointMap = new ConcurrentHashMap<InetAddress, Long>();
-        this.seeds = new ConcurrentSkipListSet<InetAddress>(inetcomparator);
+        this.seeds = new HashSet<InetAddress>();
         if (seeds != null) {
             this.seeds.addAll(seeds);
         }
@@ -440,7 +441,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     private void markDead(InetAddress addr, EndpointState localState, double phi) {
-        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
+//        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
         flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
