@@ -324,14 +324,14 @@ public class WholeClusterSimulator {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
-                if (!unreachableEndpoints.isEmpty()) {
-                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+                InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+                if (unreachableReceiver != null) {
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
                         ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
                         if (msgQueue == null) {
-                            System.out.println("msgQueue is null");
+                            System.out.println("msgQueue is null for " + unreachableReceiver);
                         }
                         if (synMsg == null) {
                             System.out.println("syn msg is null");
