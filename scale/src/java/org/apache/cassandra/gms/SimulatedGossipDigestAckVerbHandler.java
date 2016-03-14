@@ -93,7 +93,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
             long wakeupTime = System.currentTimeMillis() + sleepTime;
 //            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
-            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime, TimeUnit.MILLISECONDS);
+//            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime, TimeUnit.MILLISECONDS);
+            WholeClusterSimulator.submitResumeTask(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message));
 //            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //            if (mockExecTime >= 0) {
 //                try {
@@ -108,8 +109,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            }
             
         } else {
-//            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis() + 1, receiveTime, result, message), 0);
-            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message), 0, TimeUnit.MILLISECONDS);
+//            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message), 0, TimeUnit.MILLISECONDS);
+            WholeClusterSimulator.resumeProcessors.execute(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message));
         }
 
 //        Gossiper.instance.checkSeedContact(from);
@@ -281,7 +282,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 }
             }
             long endTime = System.currentTimeMillis();
-            logger.info("Processing finished " + endTime + " " + (endTime - triggeredTime));
+//            logger.info("Processing finished " + endTime + " " + (endTime - triggeredTime));
             WholeClusterSimulator.isProcessing.get(to).set(false);
         }
         

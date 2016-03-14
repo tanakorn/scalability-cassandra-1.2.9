@@ -14,10 +14,12 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,6 +47,8 @@ import org.apache.commons.math.stat.regression.SimpleRegression;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.scale.ResumeTask;
 
 public class WholeClusterSimulator {
 
@@ -67,6 +72,8 @@ public class WholeClusterSimulator {
     public static ExecutorService msgProcessors; 
     public static ScheduledExecutorService resumeProcessors;
     public static Map<InetAddress, AtomicBoolean> isProcessing;
+
+    static Map<Long, Queue<ResumeTask>> taskMap = new ConcurrentHashMap<Long, Queue<ResumeTask>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -387,7 +394,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, Integer.toString(idGen.incrementAndGet()));
+            MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
     }
@@ -402,7 +409,6 @@ public class WholeClusterSimulator {
                     ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
 //                    logger.info("Checking queue for " + address);
                     if (!msgQueue.isEmpty() && isProcessing.get(address).compareAndSet(false, true)) {
-//                        logger.info("There are messages for " + address + " " + msgQueue.size());
                         MessageIn<?> msg = msgQueue.poll();
                         msgProcessors.execute(new MessageProcessor(msg));
                         isThereMsg = true;
@@ -465,7 +471,45 @@ public class WholeClusterSimulator {
                 }
             }
         }
+        
+        
 
-}
+    }
+    
+    public static void submitResumeTask(ResumeTask task) {
+        long expectedTime = task.getExpectedExecutionTime();
+        synchronized (taskMap) {
+            if (!taskMap.containsKey(expectedTime)) {
+                Queue<ResumeTask> queue = new ConcurrentLinkedQueue<ResumeTask>();
+                queue.add(task);
+                taskMap.put(expectedTime, queue);
+                resumeProcessors.schedule(new BatchResumeTask(expectedTime), expectedTime - System.currentTimeMillis(), TimeUnit.MICROSECONDS);
+            } else {
+                taskMap.get(expectedTime).add(task);
+            }
+        }
+    }
+    
+    public static class BatchResumeTask implements Runnable {
+        
+        long expectedTime;
+
+        public BatchResumeTask(long expectedTime) {
+            this.expectedTime = expectedTime;
+        }
+
+
+        @Override
+        public void run() {
+            Queue<ResumeTask> queue = taskMap.get(expectedTime);
+            for (ResumeTask task : queue) {
+                task.run();
+            }
+            synchronized (taskMap) {
+                taskMap.remove(expectedTime);
+            }
+        }
+        
+    }
     
 }

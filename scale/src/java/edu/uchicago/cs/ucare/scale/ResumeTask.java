@@ -2,7 +2,7 @@ package edu.uchicago.cs.ucare.scale;
 
 public abstract class ResumeTask implements Runnable {
     
-    protected long expectedExecutionTime;
+    protected final long expectedExecutionTime;
     private long lateness;
     
     public ResumeTask(long expectedExecutionTime) {
@@ -21,6 +21,10 @@ public abstract class ResumeTask implements Runnable {
     
     public long getLateness() {
         return lateness;
+    }
+    
+    public long getExpectedExecutionTime() {
+        return expectedExecutionTime;
     }
 
 }

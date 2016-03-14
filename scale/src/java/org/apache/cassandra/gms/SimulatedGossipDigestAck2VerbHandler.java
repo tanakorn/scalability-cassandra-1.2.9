@@ -76,8 +76,10 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         }
         long wakeupTime = System.currentTimeMillis() + sleepTime;
 //        WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
-        WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), 
-                sleepTime, TimeUnit.MILLISECONDS);
+//        WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), 
+//                sleepTime, TimeUnit.MILLISECONDS);
+        WholeClusterSimulator.submitResumeTask(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message));
+
 //        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //        if (mockExecTime >= 0) {
 //            try {
@@ -203,7 +205,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                         + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
             }
             long endTime = System.currentTimeMillis();
-            logger.info("Processing finished " + endTime + " " + (endTime - triggeredTime));
+//            logger.info("Processing finished " + endTime + " " + (endTime - triggeredTime));
             WholeClusterSimulator.isProcessing.get(to).set(false);
         }
         
