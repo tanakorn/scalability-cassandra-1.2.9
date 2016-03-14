@@ -330,6 +330,12 @@ public class WholeClusterSimulator {
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
                         ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+                        if (msgQueue == null) {
+                            System.out.println("msgQueue is null");
+                        }
+                        if (synMsg == null) {
+                            System.out.println("syn msg is null");
+                        }
                         if (!msgQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
