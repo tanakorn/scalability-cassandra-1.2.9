@@ -148,7 +148,7 @@ public class WholeClusterSimulator {
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
-        bootGossipExecRecords = new long[numStubs];
+        bootGossipExecRecords = new long[1024];
 //        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
 //        normalGossipExecSdRecords = new double[MAX_NODE];
