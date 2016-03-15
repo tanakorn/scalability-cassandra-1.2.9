@@ -398,13 +398,16 @@ public class WholeClusterSimulator {
     public static class MessageProcessor implements Runnable {
         
         MessageIn<?> msg;
+        long createdTime;
         
         public MessageProcessor(MessageIn<?> msg) {
             this.msg = msg;
+            createdTime = System.currentTimeMillis();
         }
 
         @Override
         public void run() {
+            logger.info("Queued time " + (System.currentTimeMillis() - createdTime));
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
