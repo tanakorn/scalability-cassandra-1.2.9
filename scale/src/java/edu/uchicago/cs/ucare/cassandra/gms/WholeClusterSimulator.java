@@ -477,13 +477,13 @@ public class WholeClusterSimulator {
                             + " " + badNumDeadNode + " ) ; lateness " + ResumeTask.averageLateness()
                             + " " + ResumeTask.maxLateness());
                 }
-                StringBuilder sb = new StringBuilder("max_phi_in_observer");
+                StringBuilder sb = new StringBuilder("max_phi_in_observer ");
                 for (double phi : maxPhiInObserver) {
                     sb.append(phi);
                     sb.append(",");
                 }
                 logger.info(sb.toString());
-                sb = new StringBuilder("max_phi_of_observee");
+                sb = new StringBuilder("max_phi_of_observee ");
                 for (double phi : maxPhiInObserver) {
                     sb.append(phi);
                     sb.append(",");
