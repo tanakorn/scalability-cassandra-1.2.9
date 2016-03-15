@@ -72,6 +72,9 @@ public class WholeClusterSimulator {
     public static ExecutorService msgProcessors; 
     public static ScheduledExecutorService resumeProcessors;
     public static Map<InetAddress, AtomicBoolean> isProcessing;
+    
+    public static double[] maxPhiInObserver;
+    public static double[] maxPhiOfObservee;
 
     static Map<Long, Queue<ResumeTask>> taskMap = new ConcurrentHashMap<Long, Queue<ResumeTask>>();
     
@@ -147,6 +150,8 @@ public class WholeClusterSimulator {
         bootGossipExecRecords = new long[1024];
 //        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
+        maxPhiInObserver = new double[numStubs];
+        maxPhiOfObservee = new double[numStubs];
 //        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
@@ -302,7 +307,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            logger.info("Generating gossip syn for " + stubs.size());
+//            logger.info("Generating gossip syn for " + stubs.size());
             long start = System.currentTimeMillis();
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
@@ -465,11 +470,25 @@ public class WholeClusterSimulator {
                     flapping += stub.flapping;
                 }
                 if (isStable) {
-                    logger.info("stable status yes " + flapping);
+                    logger.info("stable status yes " + flapping + " ; lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness());
                 } else {
-                    logger.info("stable status no " + flapping + " ( " + firstBadNode.getInetAddress() 
-                            + " " + badNumMemberNode + " " + badNumDeadNode + " )");
+                    logger.info("stable status no " + flapping + " ( " 
+                            + firstBadNode.getInetAddress() + " " + badNumMemberNode 
+                            + " " + badNumDeadNode + " ) ; lateness " + ResumeTask.averageLateness()
+                            + " " + ResumeTask.maxLateness());
                 }
+                StringBuilder sb = new StringBuilder("max_phi_in_observer");
+                for (double phi : maxPhiInObserver) {
+                    sb.append(phi);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+                sb = new StringBuilder("max_phi_of_observee");
+                for (double phi : maxPhiInObserver) {
+                    sb.append(phi);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {

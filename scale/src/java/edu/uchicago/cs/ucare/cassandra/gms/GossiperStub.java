@@ -380,7 +380,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             }
 
 //            double phi = failureDetector.interpret(endpoint, WholeClusterSimulator.stubGroup.getStub(endpoint).getId());
-            double phi = failureDetector.interpret(endpoint);
+            double phi = failureDetector.interpret(endpoint, id);
 //            sb.append(phi);
 //            sb.append(',');
             EndpointState epState = endpointStateMap.get(endpoint);

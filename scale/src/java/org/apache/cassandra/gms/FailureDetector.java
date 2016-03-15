@@ -316,12 +316,12 @@ class ArrivalWindow
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
 //    public final Map<InetAddress, Double> maxObservedPhi;
-    public final double[] maxObservedPhi;
+//    public final double[] maxObservedPhi;
 
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
-        maxObservedPhi = new double[WholeClusterSimulator.stubGroup.size()];
+//        maxObservedPhi = new double[WholeClusterSimulator.stubGroup.size()];
     }
 
     synchronized double add(double value, InetAddress observer, InetAddress address)
@@ -391,11 +391,18 @@ class ArrivalWindow
         return (size > 0) ? phi : 0.0;
     }
 
-    double phi(long tnow, InetAddress observer, InetAddress testNode, int testNodeId) {
+    double phi(long tnow, InetAddress observer, InetAddress testNode, int observerId) {
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        if (WholeClusterSimulator.maxPhiInObserver[observerId] < phi) {
+            WholeClusterSimulator.maxPhiInObserver[observerId] = phi;
+        }
+        int observeeId = WholeClusterSimulator.stubGroup.getStub(testNode).getId();
+        if (WholeClusterSimulator.maxPhiOfObservee[observeeId] < phi) {
+            WholeClusterSimulator.maxPhiOfObservee[observeeId] = phi;
+        }
 //        if (maxObservedPhi[testNodeId] < phi) {
 //            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
 //            maxObservedPhi[testNodeId] = phi;
