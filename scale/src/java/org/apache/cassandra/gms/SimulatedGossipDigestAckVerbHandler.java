@@ -264,7 +264,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             MessageIn<GossipDigestAck2> gDigestAck2Message = 
                     MessageIn.create(to,  new GossipDigestAck2(deltaEpStateMap, message.payload.syncId, message.payload.msgId), 
                             emptyMap, MessagingService.Verb.GOSSIP_DIGEST_ACK2, MessagingService.VERSION_12);
-            
             gDigestAck2Message.setTo(from);
             if (logger.isTraceEnabled())
                 logger.trace("Sending a GossipDigestAck2Message to {}", from);

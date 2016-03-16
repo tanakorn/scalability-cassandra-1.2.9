@@ -41,8 +41,6 @@ public class MessageIn<T>
     public final int version;
     
     public InetAddress to;
-    public long wakeUpTime;
-    public long sleepTime;
     
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
@@ -125,22 +123,6 @@ public class MessageIn<T>
         StringBuilder sbuf = new StringBuilder("");
         sbuf.append("FROM:").append(from).append(" TYPE:").append(getMessageType()).append(" VERB:").append(verb);
         return sbuf.toString();
-    }
-
-	public long getWakeUpTime() {
-        return wakeUpTime;
-    }
-
-    public void setWakeUpTime(long wakeUpTime) {
-        this.wakeUpTime = wakeUpTime;
-    }
-
-    public long getSleepTime() {
-        return sleepTime;
-    }
-
-    public void setSleepTime(long sleepTime) {
-        this.sleepTime = sleepTime;
     }
 
     @Override

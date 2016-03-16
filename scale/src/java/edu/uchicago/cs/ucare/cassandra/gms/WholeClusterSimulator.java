@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -23,10 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,16 +30,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
-import org.apache.cassandra.gms.ApplicationState;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
-import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
-import org.apache.commons.math.stat.regression.SimpleRegression;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -335,12 +327,6 @@ public class WholeClusterSimulator {
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
                         ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
-                        if (msgQueue == null) {
-                            System.out.println("msgQueue is null for " + unreachableReceiver);
-                        }
-                        if (synMsg == null) {
-                            System.out.println("syn msg is null");
-                        }
                         if (!msgQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
@@ -379,10 +365,7 @@ public class WholeClusterSimulator {
                         }
                     }
                 }
-//                long dscTime = System.currentTimeMillis();
                 performer.doStatusCheck();
-//                dscTime = System.currentTimeMillis() - dscTime;
-//                System.out.println(dscTime);
             }
             long gossipingTime = System.currentTimeMillis() - start;
             if (gossipingTime > 1000) {
@@ -407,7 +390,6 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            logger.info("Queued time " + (System.currentTimeMillis() - createdTime));
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
@@ -418,25 +400,16 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             while (true) {
-                boolean isThereMsg = false;
                 for (InetAddress address : msgQueues.keySet()) {
                     ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
-//                    logger.info("Checking queue for " + address);
+//                    logger.info("Checking queue for " + address + " ; " + msgQueue.size() + " " + isProcessing.get(address).get());
                     if (!msgQueue.isEmpty() && isProcessing.get(address).compareAndSet(false, true)) {
                         MessageIn<?> msg = msgQueue.poll();
                         msgProcessors.execute(new MessageProcessor(msg));
-                        isThereMsg = true;
                     } else {
 //                        logger.info("There is not a message for " + address + " " + msgQueue.size() + " " + isProcessing.get(address).get());
                     }
                 }
-//                try {
-//                    if (!isThereMsg) {
-//                        Thread.sleep(5);
-//                    }
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
         }
         
@@ -475,9 +448,9 @@ public class WholeClusterSimulator {
                 if (isStable) {
                     logger.info("stable status yes " + flapping + " ; lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness());
                 } else {
-                    logger.info("stable status no " + flapping + " ( " 
+                    logger.info("stable status no " + flapping + " " 
                             + firstBadNode.getInetAddress() + " " + badNumMemberNode 
-                            + " " + badNumDeadNode + " ) ; lateness " + ResumeTask.averageLateness()
+                            + " " + badNumDeadNode + " ; lateness " + ResumeTask.averageLateness()
                             + " " + ResumeTask.maxLateness());
                 }
                 StringBuilder sb = new StringBuilder("max_phi_in_observer ");

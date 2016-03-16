@@ -118,12 +118,6 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         String ackId = from + "_" + gDigestAckMessage.payload.msgId;
         receiverStub.ackNewVersionBoot.put(ackId, bootNodeNum);
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
-//        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
-//        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
-//        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
-//        gDigestAckMessage.setWakeUpTime(wakeUpTime);
-//        gDigestAckMessage.setSleepTime(sleepTime);
         gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
@@ -132,6 +126,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
         WholeClusterSimulator.isProcessing.get(to).set(false);
+        logger.info("sync time " + to + " " + (System.currentTimeMillis() - receiveTime));
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
