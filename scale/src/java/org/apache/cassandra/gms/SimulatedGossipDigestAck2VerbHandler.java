@@ -61,7 +61,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), remoteEpStateMap, receiverStub.getFailureDetector());
-        Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+        Object[] result = Gossiper.determineApplyStateLocallyStatic(receiverStub, remoteEpStateMap);
 //        int tmpNormalCount = (int) result[6];
         try {
             int realUpdate = (int) result[9];
@@ -74,20 +74,31 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
                 long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
                 sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+                long realSleep = System.currentTimeMillis();
+                Thread.sleep(sleepTime);
+                realSleep = System.currentTimeMillis() - realSleep;
+                long lateness = realSleep - sleepTime;
+                lateness = lateness < 0 ? 0 : lateness;
+                logger.info("Processing lateness " + lateness);
             }
 //            Thread.sleep(message.getSleepTime());
 //            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-            long realSleep = System.currentTimeMillis();
-            Thread.sleep(sleepTime);
-            realSleep = System.currentTimeMillis() - realSleep;
-            long lateness = realSleep - sleepTime;
-            if (lateness > 1) {
-                logger.info("Processing lateness " + lateness);
-            }
+//            long realSleep = System.currentTimeMillis();
+//            Thread.sleep(sleepTime);
+//            realSleep = System.currentTimeMillis() - realSleep;
+//            long lateness = realSleep - sleepTime;
+//            lateness = lateness < 0 ? 0 : lateness;
+//            logger.info("Processing lateness " + lateness);
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+//        for (int i = 0; i < result.length; ++i) {
+//            if (!result[i].equals(result2[i])) {
+//                System.out.println(i + " index is not the same");
+//            }
+//        }
 //        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //        if (mockExecTime >= 0) {
 //            try {
@@ -105,39 +116,39 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         int realUpdate = (int) result[9];
         if (!updatedNodes.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" hop ");
-//            for (InetAddress receivingAddress : updatedNodes) {
-//                EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-//                sb.append(ep.hopNum);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
+            StringBuilder sb = new StringBuilder(to.toString());
+            sb.append(" hop ");
+            for (InetAddress receivingAddress : updatedNodes) {
+                EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+                sb.append(ep.hopNum);
+                sb.append(",");
+            }
+            logger.info(sb.toString());
         }
         if (!updatedNodeInfo.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" t_silence ");
-//            for (InetAddress address : updatedNodeInfo.keySet()) {
-//                double[] updatedInfo = updatedNodeInfo.get(address); 
-//                sb.append(updatedInfo[0]);
-//                sb.append(":");
-//                sb.append(updatedInfo[1]);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
+            StringBuilder sb = new StringBuilder(to.toString());
+            sb.append(" t_silence ");
+            for (InetAddress address : updatedNodeInfo.keySet()) {
+                double[] updatedInfo = updatedNodeInfo.get(address); 
+                sb.append(updatedInfo[0]);
+                sb.append(":");
+                sb.append(updatedInfo[1]);
+                sb.append(",");
+            }
+            logger.info(sb.toString());
         }
         updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
         if (!updatedNodeInfo.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" t_silence ");
-//            for (InetAddress address : updatedNodeInfo.keySet()) {
-//                double[] updatedInfo = updatedNodeInfo.get(address); 
-//                sb.append(updatedInfo[0]);
-//                sb.append(":");
-//                sb.append(updatedInfo[1]);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
+            StringBuilder sb = new StringBuilder(to.toString());
+            sb.append(" t_silence ");
+            for (InetAddress address : updatedNodeInfo.keySet()) {
+                double[] updatedInfo = updatedNodeInfo.get(address); 
+                sb.append(updatedInfo[0]);
+                sb.append(":");
+                sb.append(updatedInfo[1]);
+                sb.append(",");
+            }
+            logger.info(sb.toString());
         }
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
