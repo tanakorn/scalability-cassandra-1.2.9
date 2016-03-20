@@ -2,6 +2,7 @@
 
 scriptdir=`dirname $0`
 . $scriptdir/readconfig
+echo $num_node
 classpath=$scriptdir/../build/classes/main:$scriptdir/../build/classes/thrift:$scriptdir/../test/conf
 for jar in ls $scriptdir/../lib/*.jar; do
   classpath=$classpath:$jar
@@ -10,5 +11,7 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
-java -classpath $classpath -Dobserved.nodes=$observed_nodes edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat tok32 $2 &
+java -Xmx16G -Xms16G -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime \
+    -Xloggc:/tmp/gc -classpath $classpath -Dobserved.nodes=$observed_nodes \
+    edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat tok32 10 100 100 &
 
