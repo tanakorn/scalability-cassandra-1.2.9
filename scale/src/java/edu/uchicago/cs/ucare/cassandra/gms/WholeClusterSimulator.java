@@ -390,6 +390,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
+            logger.info("worker_queued time " + (System.currentTimeMillis() - createdTime));
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
