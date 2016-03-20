@@ -430,9 +430,9 @@ public class WholeClusterSimulator {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (msgQueue.size() > 1000) {
-                    logger.info("Backlog for " + address + " " + msgQueue.size());
-                }
+//                if (msgQueue.size() > 100) {
+//                    logger.info("Backlog for " + address + " " + msgQueue.size());
+//                }
             }
         }
         
@@ -470,6 +470,12 @@ public class WholeClusterSimulator {
                     logger.info("stable status yes " + flapping);
                 } else {
                     logger.info("stable status no " + flapping);
+                }
+                for (GossiperStub stub : stubGroup) {
+                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+                    if (queue.size() > 100) {
+                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+                    }
                 }
                 try {
                     Thread.sleep(2000);
