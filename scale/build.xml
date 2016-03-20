@@ -588,7 +588,7 @@
             description="Generates Java Avro classes for client and internal use." />
     
     <target name="avro-interface-generate-internode" unless="avroINProtoUpToDate"
-            depends="init,check-avro-generate">
+            depends="init,check-avro-generate,maven-ant-tasks-retrieve-build">
       <avromacro protocolname="internode" inputfile="${avro.src}/internode.genavro"
                  jsondir="${build.dir}" outputdir="${build.src}"/>
     </target>
@@ -676,7 +676,7 @@
         The build target builds all the .class files
     -->
     <target name="build"
-        depends="avro-generate,build-subprojects,build-project" description="Compile Cassandra classes"/>
+        depends="maven-ant-tasks-retrieve-build,avro-generate,build-subprojects,build-project" description="Compile Cassandra classes"/>
     <target name="build-subprojects" description="Compile Cassandra contrib projects"/>
     <target name="codecoverage" depends="cobertura-instrument,test,cobertura-report" description="Create code coverage report"/>
 
