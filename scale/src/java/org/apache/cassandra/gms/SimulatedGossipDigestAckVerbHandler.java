@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
-        long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
+        long transmissionTime = receiveTime - message.createdTime;
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
@@ -243,7 +242,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             Gossiper.instance.checkSeedContact(from);
             GossipDigestAck gDigestAckMessage = message.payload;
-            long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
+            long transmissionTime = receiveTime - message.createdTime;
             List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
 
             Map<InetAddress, EndpointState> deltaEpStateMap = new HashMap<InetAddress, EndpointState>();
@@ -267,7 +266,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             gDigestAck2Message.setTo(from);
             if (logger.isTraceEnabled())
                 logger.trace("Sending a GossipDigestAck2Message to {}", from);
-            gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
+            gDigestAck2Message.createdTime = System.currentTimeMillis();
             WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
             long ackHandlerTime = System.currentTimeMillis() - receiveTime;
             if (result != null) {

@@ -276,6 +276,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
        MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, 
                emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        message.setTo(to);
+       message.createdTime = System.currentTimeMillis();
        return message;
    }
 	

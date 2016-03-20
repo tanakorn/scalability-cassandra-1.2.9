@@ -41,6 +41,7 @@ public class MessageIn<T>
     public final int version;
     
     public InetAddress to;
+    public long createdTime;
     
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
