@@ -55,7 +55,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
-        long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
+        long transmissionTime = receiveTime - message.createdTime;
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
         
@@ -182,7 +182,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        gDigestAck2Message.payload.setCreatedTime(System.currentTimeMillis());
+        gDigestAck2Message.createdTime = System.currentTimeMillis();
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;

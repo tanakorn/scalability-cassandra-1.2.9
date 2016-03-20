@@ -424,14 +424,15 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
-//                logger.debug("Processing " + ackMessage.verb + " from " + ackMessage.from + " to " + ackMessage.getTo());
+                logger.info("network_queued time " + (System.currentTimeMillis() - ackMessage.createdTime));
+                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-//                if (msgQueue.size() > 1000) {
-//                    logger.warn("Ack queue size is greater than 1000");
-//                }
+                if (msgQueue.size() > 1000) {
+                    logger.info("Backlog for " + address + " " + msgQueue.size());
+                }
             }
         }
         

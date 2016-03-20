@@ -55,7 +55,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        }
 
         GossipDigestAck2 gDigestAck2Message = message.payload;
-        long transmissionTime = receiveTime - gDigestAck2Message.getCreatedTime();
+        long transmissionTime = receiveTime - message.createdTime;
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         /* Notify the Failure Detector */
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
