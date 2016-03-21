@@ -13,12 +13,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,8 +66,6 @@ public class WholeClusterSimulator {
     public static double[] maxPhiInObserver;
     public static double[] maxPhiOfObservee;
 
-    static Map<Long, Queue<ResumeTask>> taskMap = new ConcurrentHashMap<Long, Queue<ResumeTask>>();
-    
     public static final Set<InetAddress> observedNodes;
     static {
         observedNodes = new HashSet<InetAddress>();
@@ -393,7 +389,6 @@ public class WholeClusterSimulator {
             long currentTime = System.currentTimeMillis();
             logger.info("worker_queued time " + (currentTime - createdTime));
             logger.info("network_queued time " + (currentTime - msg.createdTime));
-            logger.info("Doing verb " + msg.verb + " of " + msg.getTo());
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
@@ -473,7 +468,7 @@ public class WholeClusterSimulator {
                     ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
                     int queueSize = msgQueue.size();
                     if (queueSize > 100) {
-                        logger.info("Backlog of " + address + " " + queueSize);
+//                        logger.info("Backlog of " + address + " " + queueSize);
                     }
                 }
                 try {
@@ -490,38 +485,7 @@ public class WholeClusterSimulator {
     
     public static void submitResumeTask(ResumeTask task) {
         long expectedTime = task.getExpectedExecutionTime();
-        synchronized (taskMap) {
-            if (!taskMap.containsKey(expectedTime)) {
-                Queue<ResumeTask> queue = new ConcurrentLinkedQueue<ResumeTask>();
-                queue.add(task);
-                taskMap.put(expectedTime, queue);
-                resumeProcessors.schedule(new BatchResumeTask(expectedTime), expectedTime - System.currentTimeMillis(), TimeUnit.MICROSECONDS);
-            } else {
-                taskMap.get(expectedTime).add(task);
-            }
-        }
+        resumeProcessors.schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MICROSECONDS);
     }
-    
-    public static class BatchResumeTask implements Runnable {
-        
-        long expectedTime;
 
-        public BatchResumeTask(long expectedTime) {
-            this.expectedTime = expectedTime;
-        }
-
-
-        @Override
-        public void run() {
-            Queue<ResumeTask> queue = taskMap.get(expectedTime);
-            for (ResumeTask task : queue) {
-                task.run();
-            }
-            synchronized (taskMap) {
-                taskMap.remove(expectedTime);
-            }
-        }
-        
-    }
-    
 }

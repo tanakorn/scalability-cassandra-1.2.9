@@ -126,6 +126,10 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         gDigestAckMessage.createdTime = System.currentTimeMillis();
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
         WholeClusterSimulator.isProcessing.get(to).set(false);
+//        long synHandlerTime = System.currentTimeMillis() - receiveTime;
+//        long transmissionTime = receiveTime - message.createdTime;
+//        logger.info(to + " executes gossip_syn took " + synHandlerTime + " ms "
+//                + " ; transmission " + transmissionTime);
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
