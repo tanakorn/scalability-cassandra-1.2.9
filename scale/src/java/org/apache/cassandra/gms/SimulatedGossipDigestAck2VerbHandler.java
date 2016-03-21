@@ -62,7 +62,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), remoteEpStateMap, receiverStub.getFailureDetector());
-        Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+//        Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+        Object[] result = Gossiper.determineApplyStateLocallyStatic(receiverStub, remoteEpStateMap);
 //      int tmpNormalCount = (int) result[6];
         int realUpdate = (int) result[9];
         int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
@@ -181,6 +182,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             InetAddress to = message.to;
 //            logger.info("Processing lateness " + to + " " + System.currentTimeMillis() + " " + expectedExecutionTime + " " + lateness);
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
+            Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
+            Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
             String syncId = from + "_" + message.payload.syncId;
 //            long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
             receiverStub.syncReceivedTime.remove(syncId);

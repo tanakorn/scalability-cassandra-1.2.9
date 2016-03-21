@@ -386,9 +386,9 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            long currentTime = System.currentTimeMillis();
-            logger.info("worker_queued time " + (currentTime - createdTime));
-            logger.info("network_queued time " + (currentTime - msg.createdTime));
+//            long currentTime = System.currentTimeMillis();
+//            logger.info("worker_queued time " + (currentTime - createdTime));
+//            logger.info("network_queued time " + (currentTime - msg.createdTime));
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
@@ -468,7 +468,7 @@ public class WholeClusterSimulator {
                     ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
                     int queueSize = msgQueue.size();
                     if (queueSize > 100) {
-//                        logger.info("Backlog of " + address + " " + queueSize);
+                        logger.info("Backlog of " + address + " " + queueSize);
                     }
                 }
                 try {

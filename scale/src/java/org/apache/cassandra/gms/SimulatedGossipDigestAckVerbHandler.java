@@ -79,7 +79,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            Gossiper.instance.applyStateLocally(epStateMap);
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
-            result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+//            result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
             realUpdate = (int) result[9];
             int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
             long sleepTime = 0;
@@ -239,6 +240,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             InetAddress to = message.to;
 //            logger.info("Processing lateness " + to + " " + expectedExecutionTime + " " + triggeredTime + " " + lateness);
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
+            Map<InetAddress, EndpointState> epStateMap = message.payload.getEndpointStateMap();
+            Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             Gossiper.instance.checkSeedContact(from);
             GossipDigestAck gDigestAckMessage = message.payload;
