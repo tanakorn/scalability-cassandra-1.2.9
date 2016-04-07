@@ -392,12 +392,12 @@ public class WholeClusterSimulator {
                 }
                 performer.doStatusCheck();
             }
-            long gossipingTime = System.currentTimeMillis() - start;
-            if (gossipingTime > 1000) {
-                long lateness = gossipingTime - 1000;
-                long totalLateness = lateness * stubs.size();
-                logger.warn("Sending lateness " + lateness + " " + totalLateness);
-            }
+//            long gossipingTime = System.currentTimeMillis() - start;
+//            if (gossipingTime > 1000) {
+//                long lateness = gossipingTime - 1000;
+//                long totalLateness = lateness * stubs.size();
+//                logger.warn("Sending lateness " + lateness + " " + totalLateness);
+//            }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
         }
         
