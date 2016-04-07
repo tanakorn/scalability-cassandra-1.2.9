@@ -523,7 +523,7 @@ public class WholeClusterSimulator {
     
     public static void submitResumeTask(ResumeTask task) {
         long expectedTime = task.getExpectedExecutionTime();
-        resumeProcessors.schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MICROSECONDS);
+        resumeProcessors.schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
     }
 
 }

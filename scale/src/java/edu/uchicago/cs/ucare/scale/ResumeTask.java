@@ -10,7 +10,7 @@ public abstract class ResumeTask implements Runnable {
     public static long totalExpectedSleepTime = 0;
     
     protected final long expectedExecutionTime;
-    private long sleepTime;
+    protected long sleepTime;
     private long lateness;
     
     public ResumeTask(long expectedExecutionTime, long sleepTime) {
