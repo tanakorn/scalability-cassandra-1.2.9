@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -19,22 +18,17 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
-import org.apache.cassandra.gms.ApplicationState;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
-import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
-import org.apache.cassandra.net.MessagingService.Verb;
 import org.apache.cassandra.service.CassandraDaemon;
-import org.apache.commons.math.stat.regression.SimpleRegression;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +44,7 @@ public class WholeClusterSimulator {
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
     private static Timer[] timers;
+    private static MyGossiperTask[] tasks;
     private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
@@ -61,6 +56,10 @@ public class WholeClusterSimulator {
 //    public static double[] normalGossipExecRecords;
     
     public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords;
+    
+    public static long totalProcLateness = 0;
+    public static int numProc = 0;
+    public static long maxProcLateness = 0;
     
 //    public static double[] normalGossipExecSdRecords;
     
@@ -198,9 +197,9 @@ public class WholeClusterSimulator {
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
+        tasks = new MyGossiperTask[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
-            timers[i] = new Timer();
             subStub[i] = new LinkedList<GossiperStub>();
         }
         int ii = 0;
@@ -209,7 +208,9 @@ public class WholeClusterSimulator {
             ii = (ii + 1) % numGossiper;
         }
         for (int i = 0; i < numGossiper; ++i) {
-            timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
+            timers[i] = new Timer();
+            tasks[i] = new MyGossiperTask(subStub[i]);
+            timers[i].schedule(tasks[i], 0, 1000);
         }
 //        timer.schedule(new MyGossiperTask(), 0, 1000);
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
@@ -304,15 +305,27 @@ public class WholeClusterSimulator {
     public static class MyGossiperTask extends TimerTask {
         
         List<GossiperStub> stubs;
+        long previousTime;
+        
+        long totalIntLength;
+        int sentCount;
         
         public MyGossiperTask(List<GossiperStub> stubs) {
             this.stubs = stubs;
+            previousTime = 0;
+            totalIntLength = 0;
+            sentCount = 0;
         }
 
         @Override
         public void run() {
-            logger.info("Generating gossip syn for " + stubs.size());
             long start = System.currentTimeMillis();
+            if (previousTime != 0) {
+                long interval = start - previousTime;
+                totalIntLength += (interval * stubs.size());
+                sentCount += stubs.size();
+            }
+            previousTime = start;
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
@@ -414,6 +427,9 @@ public class WholeClusterSimulator {
         
         InetAddress address;
         
+        public static long networkQueuedTime = 0;
+        public static int processCount = 0;
+        
         public AckProcessor(InetAddress address) {
             this.address = address;
         }
@@ -424,8 +440,10 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
-                logger.info("network_queued time " + (System.currentTimeMillis() - ackMessage.createdTime));
-                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
+                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+                AckProcessor.networkQueuedTime += networkQueuedTime;
+                AckProcessor.processCount += 1;
+//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -466,10 +484,24 @@ public class WholeClusterSimulator {
                 for (GossiperStub stub : stubGroup) {
                     flapping += stub.flapping;
                 }
+                long interval = 0;
+                int sentCount = 0;
+                for (MyGossiperTask task : tasks) {
+                    interval += task.totalIntLength;
+                    sentCount += task.sentCount;
+                }
+                interval = sentCount == 0 ? 0 : interval / sentCount;
+                long avgProcLateness = numProc == 0 ? 0 : totalProcLateness / numProc;
                 if (isStable) {
-                    logger.info("stable status yes " + flapping);
+                    logger.info("stable status yes " + flapping +
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + 
+                            " ; send lateness " + interval +
+                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 } else {
-                    logger.info("stable status no " + flapping);
+                    logger.info("stable status no " + flapping + 
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + 
+                            " ; send lateness " + interval + 
+                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 }
                 for (GossiperStub stub : stubGroup) {
                     LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());

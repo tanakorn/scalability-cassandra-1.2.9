@@ -94,7 +94,12 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     realSleep = System.currentTimeMillis() - realSleep;
                     long lateness = realSleep - sleepTime;
                     lateness = lateness < 0 ? 0 : lateness;
-                    logger.info("Processing lateness " + lateness);
+                    WholeClusterSimulator.totalProcLateness += lateness;
+                    WholeClusterSimulator.numProc++;
+                    if (lateness > WholeClusterSimulator.maxProcLateness) {
+                        WholeClusterSimulator.maxProcLateness = lateness;
+                    }
+//                    logger.info("Processing lateness " + lateness);
                 }
 //                long realSleep = System.currentTimeMillis();
 //                Thread.sleep(sleepTime);
@@ -191,41 +196,41 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[9];
-            if (!updatedNodes.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" hop ");
-                for (InetAddress receivingAddress : updatedNodes) {
-                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-                    sb.append(ep.hopNum);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
-            }
-            if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" t_silence ");
-                for (InetAddress address : updatedNodeInfo.keySet()) {
-                    double[] updatedInfo = updatedNodeInfo.get(address); 
-                    sb.append(updatedInfo[0]);
-                    sb.append(":");
-                    sb.append(updatedInfo[1]);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
-            }
+//            if (!updatedNodes.isEmpty()) {
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" hop ");
+//                for (InetAddress receivingAddress : updatedNodes) {
+//                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+//                    sb.append(ep.hopNum);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
+//            }
+//            if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" t_silence ");
+//                for (InetAddress address : updatedNodeInfo.keySet()) {
+//                    double[] updatedInfo = updatedNodeInfo.get(address); 
+//                    sb.append(updatedInfo[0]);
+//                    sb.append(":");
+//                    sb.append(updatedInfo[1]);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
+//            }
             updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
-            if (!updatedNodeInfo.isEmpty()) {
-                StringBuilder sb = new StringBuilder(to.toString());
-                sb.append(" t_silence ");
-                for (InetAddress address : updatedNodeInfo.keySet()) {
-                    double[] updatedInfo = updatedNodeInfo.get(address); 
-                    sb.append(updatedInfo[0]);
-                    sb.append(":");
-                    sb.append(updatedInfo[1]);
-                    sb.append(",");
-                }
-                logger.info(sb.toString());
-            }
+//            if (!updatedNodeInfo.isEmpty()) {
+//                StringBuilder sb = new StringBuilder(to.toString());
+//                sb.append(" t_silence ");
+//                for (InetAddress address : updatedNodeInfo.keySet()) {
+//                    double[] updatedInfo = updatedNodeInfo.get(address); 
+//                    sb.append(updatedInfo[0]);
+//                    sb.append(":");
+//                    sb.append(updatedInfo[1]);
+//                    sb.append(",");
+//                }
+//                logger.info(sb.toString());
+//            }
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
