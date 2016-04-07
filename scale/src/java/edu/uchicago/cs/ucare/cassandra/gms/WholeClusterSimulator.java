@@ -51,6 +51,7 @@ public class WholeClusterSimulator {
     public static final AtomicInteger idGen = new AtomicInteger(0);
     
     private static Timer[] timers;
+    private static MyGossiperTask[] tasks;
     private static Random random = new Random();
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
@@ -189,9 +190,9 @@ public class WholeClusterSimulator {
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
+        tasks = new MyGossiperTask[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
-            timers[i] = new Timer();
             subStub[i] = new LinkedList<GossiperStub>();
         }
         int ii = 0;
@@ -200,7 +201,9 @@ public class WholeClusterSimulator {
             ii = (ii + 1) % numGossiper;
         }
         for (int i = 0; i < numGossiper; ++i) {
-            timers[i].schedule(new MyGossiperTask(subStub[i]), 0, 1000);
+            timers[i] = new Timer();
+            tasks[i] = new MyGossiperTask(subStub[i]);
+            timers[i].schedule(tasks[i], 0, 1000);
         }
         int numProcessors = Integer.parseInt(args[4]);
         msgProcessors = Executors.newFixedThreadPool(numProcessors);
@@ -288,15 +291,28 @@ public class WholeClusterSimulator {
     public static class MyGossiperTask extends TimerTask {
         
         List<GossiperStub> stubs;
+        long previousTime;
+        
+        long totalIntLength;
+        int sentCount;
         
         public MyGossiperTask(List<GossiperStub> stubs) {
             this.stubs = stubs;
+            previousTime = 0;
+            totalIntLength = 0;
+            sentCount = 0;
         }
 
         @Override
         public void run() {
 //            logger.info("Generating gossip syn for " + stubs.size());
             long start = System.currentTimeMillis();
+            if (previousTime != 0) {
+                long interval = start - previousTime;
+                totalIntLength += (interval * stubs.size());
+                sentCount += stubs.size();
+            }
+            previousTime = start;
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
@@ -376,6 +392,9 @@ public class WholeClusterSimulator {
     
     public static class MessageProcessor implements Runnable {
         
+        public static long networkQueuedTime = 0;
+        public static int processCount = 0;
+        
         MessageIn<?> msg;
         long createdTime;
         
@@ -386,9 +405,12 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-//            long currentTime = System.currentTimeMillis();
+            long currentTime = System.currentTimeMillis();
 //            logger.info("worker_queued time " + (currentTime - createdTime));
 //            logger.info("network_queued time " + (currentTime - msg.createdTime));
+            long networkQueuedTime = currentTime - msg.createdTime;
+            MessageProcessor.networkQueuedTime += networkQueuedTime;
+            MessageProcessor.processCount += 1;
             MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
@@ -444,13 +466,27 @@ public class WholeClusterSimulator {
                 for (GossiperStub stub : stubGroup) {
                     flapping += stub.flapping;
                 }
+                long interval = 0;
+                int sentCount = 0;
+                for (MyGossiperTask task : tasks) {
+                    interval += task.totalIntLength;
+                    sentCount += task.sentCount;
+                }
+                interval = sentCount == 0 ? 0 : interval / sentCount;
                 if (isStable) {
-                    logger.info("stable status yes " + flapping + " ; lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness());
+                    logger.info("stable status yes " + flapping + 
+                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + 
+                            " ; send lateness " + interval +
+                            " ; network lateness " + (MessageProcessor.networkQueuedTime / MessageProcessor.processCount));
                 } else {
-                    logger.info("stable status no " + flapping + " " 
-                            + firstBadNode.getInetAddress() + " " + badNumMemberNode 
-                            + " " + badNumDeadNode + " ; lateness " + ResumeTask.averageLateness()
-                            + " " + ResumeTask.maxLateness());
+//                    logger.info("stable status no " + flapping + " " 
+//                            + firstBadNode.getInetAddress() + " " + badNumMemberNode 
+//                            + " " + badNumDeadNode + " ; lateness " + ResumeTask.averageLateness()
+//                            + " " + ResumeTask.maxLateness());
+                    logger.info("stable status no " + flapping + " " +
+                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() +
+                            " ; send lateness " + interval + 
+                            " ; network lateness " + (MessageProcessor.networkQueuedTime / MessageProcessor.processCount));
                 }
                 StringBuilder sb = new StringBuilder("max_phi_in_observer ");
                 for (double phi : maxPhiInObserver) {
