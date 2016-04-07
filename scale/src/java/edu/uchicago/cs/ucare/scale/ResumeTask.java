@@ -6,11 +6,16 @@ public abstract class ResumeTask implements Runnable {
     private static int resumeCount = 0;
     private static long maxLateness = 0;
     
+    public static long totalRealSleepTime = 0;
+    public static long totalExpectedSleepTime = 0;
+    
     protected final long expectedExecutionTime;
+    private long sleepTime;
     private long lateness;
     
-    public ResumeTask(long expectedExecutionTime) {
+    public ResumeTask(long expectedExecutionTime, long sleepTime) {
         this.expectedExecutionTime = expectedExecutionTime;
+        this.sleepTime = sleepTime;
         lateness = -1;
     }
     
@@ -19,6 +24,9 @@ public abstract class ResumeTask implements Runnable {
         lateness = System.currentTimeMillis() - expectedExecutionTime;
         lateness = lateness < 0 ? 0 : lateness;
         totalLateness += lateness;
+        long realSleepTime = sleepTime + lateness;
+        totalRealSleepTime += realSleepTime;
+        totalExpectedSleepTime += sleepTime;
         resumeCount += 1;
         if (maxLateness < lateness) {
             maxLateness = lateness;

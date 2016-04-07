@@ -94,7 +94,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             long wakeupTime = System.currentTimeMillis() + sleepTime;
 //            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
 //            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime, TimeUnit.MILLISECONDS);
-            WholeClusterSimulator.submitResumeTask(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message));
+            WholeClusterSimulator.submitResumeTask(new SimulatedGDAResumeTask(wakeupTime, sleepTime, receiveTime, result, message));
+//            ResumeTask.totalRealSleep += sleepTime;
 //            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //            if (mockExecTime >= 0) {
 //                try {
@@ -110,7 +111,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             
         } else {
 //            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message), 0, TimeUnit.MILLISECONDS);
-            WholeClusterSimulator.resumeProcessors.execute(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message));
+            WholeClusterSimulator.resumeProcessors.execute(new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message));
         }
 
 //        Gossiper.instance.checkSeedContact(from);
@@ -224,8 +225,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         private Object[] result;
         private MessageIn<GossipDigestAck> message;
 
-        public SimulatedGDAResumeTask(long expectedExecutionTime, long receiveTime, Object[] result, MessageIn<GossipDigestAck> message) {
-            super(expectedExecutionTime);
+        public SimulatedGDAResumeTask(long expectedExecutionTime, long sleepTime, long receiveTime, Object[] result, MessageIn<GossipDigestAck> message) {
+            super(expectedExecutionTime, sleepTime);
             this.receiveTime = receiveTime;
             this.result = result;
             this.message = message;

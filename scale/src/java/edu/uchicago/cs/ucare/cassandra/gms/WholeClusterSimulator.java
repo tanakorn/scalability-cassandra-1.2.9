@@ -473,20 +473,22 @@ public class WholeClusterSimulator {
                     sentCount += task.sentCount;
                 }
                 interval = sentCount == 0 ? 0 : interval / sentCount;
+                double percentLateness = ResumeTask.totalExpectedSleepTime == 0 ? 0 : ((double) ResumeTask.totalRealSleepTime) / (double) ResumeTask.totalExpectedSleepTime;
+                long avgNetworkQueuedTime = MessageProcessor.processCount == 0 ? 0 : MessageProcessor.networkQueuedTime / MessageProcessor.processCount;
                 if (isStable) {
                     logger.info("stable status yes " + flapping + 
-                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + 
+                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
                             " ; send lateness " + interval +
-                            " ; network lateness " + (MessageProcessor.networkQueuedTime / MessageProcessor.processCount));
+                            " ; network lateness " + avgNetworkQueuedTime);
                 } else {
 //                    logger.info("stable status no " + flapping + " " 
 //                            + firstBadNode.getInetAddress() + " " + badNumMemberNode 
 //                            + " " + badNumDeadNode + " ; lateness " + ResumeTask.averageLateness()
 //                            + " " + ResumeTask.maxLateness());
                     logger.info("stable status no " + flapping + " " +
-                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() +
+                            " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
                             " ; send lateness " + interval + 
-                            " ; network lateness " + (MessageProcessor.networkQueuedTime / MessageProcessor.processCount));
+                            " ; network lateness " + avgNetworkQueuedTime);
                 }
                 StringBuilder sb = new StringBuilder("max_phi_in_observer ");
                 for (double phi : maxPhiInObserver) {
