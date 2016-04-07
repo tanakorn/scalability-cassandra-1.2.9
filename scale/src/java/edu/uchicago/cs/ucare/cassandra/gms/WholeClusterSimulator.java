@@ -59,6 +59,8 @@ public class WholeClusterSimulator {
     
     public static long totalProcLateness = 0;
     public static int numProc = 0;
+    public static long totalRealSleep = 0;
+    public static long totalExpectedSleep = 0;
     public static long maxProcLateness = 0;
     
 //    public static double[] normalGossipExecSdRecords;
@@ -492,14 +494,16 @@ public class WholeClusterSimulator {
                 }
                 interval = sentCount == 0 ? 0 : interval / sentCount;
                 long avgProcLateness = numProc == 0 ? 0 : totalProcLateness / numProc;
+                double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
+//                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
-                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + 
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval +
                             " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 } else {
                     logger.info("stable status no " + flapping + 
-                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + 
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval + 
                             " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 }

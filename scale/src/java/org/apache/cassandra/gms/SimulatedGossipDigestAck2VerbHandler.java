@@ -79,6 +79,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 realSleep = System.currentTimeMillis() - realSleep;
                 long lateness = realSleep - sleepTime;
                 lateness = lateness < 0 ? 0 : lateness;
+                WholeClusterSimulator.totalRealSleep += realSleep;
+                WholeClusterSimulator.totalExpectedSleep += sleepTime;
                 WholeClusterSimulator.totalProcLateness += lateness;
                 WholeClusterSimulator.numProc++;
                 if (lateness > WholeClusterSimulator.maxProcLateness) {
