@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,6 +64,9 @@ public class WholeClusterSimulator {
     public static long totalRealSleep = 0;
     public static long totalExpectedSleep = 0;
     public static long maxProcLateness = 0;
+    
+    public static List<Long> procLatenessList = Collections.synchronizedList(new LinkedList<Long>());
+    public static List<Double> percentProcLatenessList = Collections.synchronizedList(new LinkedList<Double>());
     
 //    public static double[] normalGossipExecSdRecords;
     
@@ -512,6 +517,52 @@ public class WholeClusterSimulator {
                     if (queue.size() > 100) {
                         logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
                     }
+                }
+                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
+                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
+                if (tmpLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpLatenessList.size();
+                    for (Long l : tmpLatenessList) {
+                        if (!latenessDist.containsKey(l)) {
+                            latenessDist.put(l, 0.0);
+                        }
+                        latenessDist.put(l, latenessDist.get(l) + unit);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Long l : latenessDist.keySet()) {
+                        double dist = latenessDist.get(l);
+                        sb.append(l);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("abs_lateness " + sb.toString());
+                    System.out.println(sb.toString());
+                }
+                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
+                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
+                if (tmpPercentLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpPercentLatenessList.size();
+                    for (Double d : tmpPercentLatenessList) {
+                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+                        if (!percentLatenessDist.containsKey(roundedD)) {
+                            percentLatenessDist.put(roundedD, 0.0);
+                        }
+                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Double d : percentLatenessDist.keySet()) {
+                        double dist = percentLatenessDist.get(d);
+                        sb.append(d);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("perc_lateness " + sb.toString());
                 }
                 try {
                     Thread.sleep(2000);
