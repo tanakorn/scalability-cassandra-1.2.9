@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -379,12 +381,12 @@ public class WholeClusterSimulator {
                 }
                 performer.doStatusCheck();
             }
-            long gossipingTime = System.currentTimeMillis() - start;
-            if (gossipingTime > 1000) {
-                long lateness = gossipingTime - 1000;
-                long totalLateness = lateness * stubs.size();
-                logger.warn("Sending lateness " + lateness + " " + totalLateness);
-            }
+//            long gossipingTime = System.currentTimeMillis() - start;
+//            if (gossipingTime > 1000) {
+//                long lateness = gossipingTime - 1000;
+//                long totalLateness = lateness * stubs.size();
+//                logger.warn("Sending lateness " + lateness + " " + totalLateness);
+//            }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
         }
         
@@ -475,6 +477,7 @@ public class WholeClusterSimulator {
                 interval = sentCount == 0 ? 0 : interval / sentCount;
                 double percentLateness = ResumeTask.totalExpectedSleepTime == 0 ? 0 : ((double) ResumeTask.totalRealSleepTime) / (double) ResumeTask.totalExpectedSleepTime;
                 long avgNetworkQueuedTime = MessageProcessor.processCount == 0 ? 0 : MessageProcessor.networkQueuedTime / MessageProcessor.processCount;
+//                System.out.println(ResumeTask.totalRealSleepTime + " " + ResumeTask.totalExpectedSleepTime);
                 if (isStable) {
                     logger.info("stable status yes " + flapping + 
                             " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
@@ -508,6 +511,52 @@ public class WholeClusterSimulator {
                     if (queueSize > 100) {
                         logger.info("Backlog of " + address + " " + queueSize);
                     }
+                }
+                List<Long> tmpLatenessList = new LinkedList<Long>(ResumeTask.latenessList);
+                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
+                if (tmpLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpLatenessList.size();
+                    for (Long l : tmpLatenessList) {
+                        if (!latenessDist.containsKey(l)) {
+                            latenessDist.put(l, 0.0);
+                        }
+                        latenessDist.put(l, latenessDist.get(l) + unit);
+                    }
+                    sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Long l : latenessDist.keySet()) {
+                        double dist = latenessDist.get(l);
+                        sb.append(l);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("abs_lateness " + sb.toString());
+                }
+                
+                List<Double> tmpPercentLatenessList = new LinkedList<Double>(ResumeTask.percentLatenessList);
+                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
+                if (tmpPercentLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpPercentLatenessList.size();
+                    for (Double d : tmpPercentLatenessList) {
+                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+                        if (!percentLatenessDist.containsKey(roundedD)) {
+                            percentLatenessDist.put(roundedD, 0.0);
+                        }
+                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
+                    }
+                    sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Double d : percentLatenessDist.keySet()) {
+                        double dist = percentLatenessDist.get(d);
+                        sb.append(d);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("perc_lateness " + sb.toString());
                 }
                 try {
                     Thread.sleep(2000);

@@ -205,7 +205,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             GossipDigestAck2 gDigestAck2Message = message.payload;
             long transmissionTime = receiveTime - message.createdTime;
             if (bootstrapCount != 0 || normalCount != 0) {
-                logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+                logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms " + sleepTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                         + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
             }

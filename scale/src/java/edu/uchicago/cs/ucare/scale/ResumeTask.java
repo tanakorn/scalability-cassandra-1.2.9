@@ -1,5 +1,9 @@
 package edu.uchicago.cs.ucare.scale;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 public abstract class ResumeTask implements Runnable {
     
     private static long totalLateness = 0;
@@ -13,6 +17,9 @@ public abstract class ResumeTask implements Runnable {
     protected long sleepTime;
     private long lateness;
     
+    public static List<Long> latenessList = Collections.synchronizedList(new LinkedList<Long>());
+    public static List<Double> percentLatenessList = Collections.synchronizedList(new LinkedList<Double>());
+    
     public ResumeTask(long expectedExecutionTime, long sleepTime) {
         this.expectedExecutionTime = expectedExecutionTime;
         this.sleepTime = sleepTime;
@@ -22,11 +29,19 @@ public abstract class ResumeTask implements Runnable {
     @Override
     public void run() {
         lateness = System.currentTimeMillis() - expectedExecutionTime;
-        lateness = lateness < 0 ? 0 : lateness;
+        assert lateness >= 0;
+        latenessList.add(lateness);
+
         totalLateness += lateness;
         long realSleepTime = sleepTime + lateness;
+        if (sleepTime != 0) {
+            percentLatenessList.add(((double) realSleepTime) / (double) sleepTime);
+        } else {
+            percentLatenessList.add(100.0);
+        }
         totalRealSleepTime += realSleepTime;
         totalExpectedSleepTime += sleepTime;
+//        System.out.println(realSleepTime + " " + sleepTime);
         resumeCount += 1;
         if (maxLateness < lateness) {
             maxLateness = lateness;

@@ -278,7 +278,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 int normalCount = (int) result[6];
                 int realUpdate = (int) result[9];
                 if (bootstrapCount != 0 || normalCount != 0) {
-                    logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                    logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms " + sleepTime + " ms ; apply boot " + bootstrapCount 
                             + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                             + receiverCurrentVersion + " ; transmission " + transmissionTime + " lateness " + lateness);
                 }
