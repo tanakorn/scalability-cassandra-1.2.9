@@ -75,7 +75,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
                 sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
                 long realSleep = System.currentTimeMillis();
-                Thread.sleep(sleepTime);
+                if (sleepTime > 0) {
+                    Thread.sleep(sleepTime);
+                }
                 realSleep = System.currentTimeMillis() - realSleep;
                 long lateness = realSleep - sleepTime;
                 lateness = lateness < 0 ? 0 : lateness;
@@ -85,9 +87,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
                 WholeClusterSimulator.numProc++;
                 WholeClusterSimulator.procLatenessList.add(lateness);
                 if (sleepTime != 0) {
-                    WholeClusterSimulator.percentProcLatenessList.add(((double) realSleep) / (double) sleepTime);
+                    WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
                 } else {
-                    WholeClusterSimulator.percentProcLatenessList.add(100.0);
+                    WholeClusterSimulator.percentProcLatenessList.add(0.0);
                 }
                 if (lateness > WholeClusterSimulator.maxProcLateness) {
                     WholeClusterSimulator.maxProcLateness = lateness;

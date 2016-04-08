@@ -500,6 +500,7 @@ public class WholeClusterSimulator {
                 interval = sentCount == 0 ? 0 : interval / sentCount;
                 long avgProcLateness = numProc == 0 ? 0 : totalProcLateness / numProc;
                 double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
+                percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
 //                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
@@ -539,7 +540,6 @@ public class WholeClusterSimulator {
                         totalCdf += dist;
                     }
                     logger.info("abs_lateness " + sb.toString());
-                    System.out.println(sb.toString());
                 }
                 List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
                 TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
