@@ -80,7 +80,12 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
 //        WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), 
 //                sleepTime, TimeUnit.MILLISECONDS);
-        WholeClusterSimulator.submitResumeTask(new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message));
+        if (sleepTime > 0) {
+            WholeClusterSimulator.submitResumeTask(new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message));
+        } else {
+            new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message).run();
+        }
+
 //        ResumeTask.totalRealSleep += sleepTime;
 
 //        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();

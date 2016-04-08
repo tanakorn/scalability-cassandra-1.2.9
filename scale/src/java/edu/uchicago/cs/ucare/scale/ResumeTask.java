@@ -35,9 +35,9 @@ public abstract class ResumeTask implements Runnable {
         totalLateness += lateness;
         long realSleepTime = sleepTime + lateness;
         if (sleepTime != 0) {
-            percentLatenessList.add(((double) realSleepTime) / (double) sleepTime);
+            percentLatenessList.add(((((double) realSleepTime) / (double) sleepTime) - 1) * 100);
         } else {
-            percentLatenessList.add(100.0);
+            percentLatenessList.add(0.0);
         }
         totalRealSleepTime += realSleepTime;
         totalExpectedSleepTime += sleepTime;

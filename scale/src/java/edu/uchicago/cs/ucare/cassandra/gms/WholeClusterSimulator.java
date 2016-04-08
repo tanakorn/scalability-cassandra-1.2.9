@@ -476,6 +476,7 @@ public class WholeClusterSimulator {
                 }
                 interval = sentCount == 0 ? 0 : interval / sentCount;
                 double percentLateness = ResumeTask.totalExpectedSleepTime == 0 ? 0 : ((double) ResumeTask.totalRealSleepTime) / (double) ResumeTask.totalExpectedSleepTime;
+                percentLateness = (percentLateness - 1) * 100;
                 long avgNetworkQueuedTime = MessageProcessor.processCount == 0 ? 0 : MessageProcessor.networkQueuedTime / MessageProcessor.processCount;
 //                System.out.println(ResumeTask.totalRealSleepTime + " " + ResumeTask.totalExpectedSleepTime);
                 if (isStable) {
