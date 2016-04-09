@@ -68,6 +68,8 @@ public class WholeClusterSimulator {
     
     public static double[] maxPhiInObserver;
     public static double[] maxPhiOfObservee;
+    
+    public static List<Double> percentSendLatenessList = Collections.synchronizedList(new LinkedList<Double>());
 
     public static final Set<InetAddress> observedNodes;
     static {
@@ -311,8 +313,10 @@ public class WholeClusterSimulator {
             long start = System.currentTimeMillis();
             if (previousTime != 0) {
                 long interval = start - previousTime;
+                interval = interval < 1000 ? 1000 : interval;
                 totalIntLength += (interval * stubs.size());
                 sentCount += stubs.size();
+                percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
             }
             previousTime = start;
             for (GossiperStub performer : stubs) {
@@ -558,6 +562,29 @@ public class WholeClusterSimulator {
                         totalCdf += dist;
                     }
                     logger.info("perc_lateness " + sb.toString());
+                }
+                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
+                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
+                if (tmpPercentSendLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpPercentSendLatenessList.size();
+                    for (Double d : tmpPercentSendLatenessList) {
+                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+                        if (!percentSendLatenessDist.containsKey(roundedD)) {
+                            percentSendLatenessDist.put(roundedD, 0.0);
+                        }
+                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
+                    }
+                    sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Double d : percentSendLatenessDist.keySet()) {
+                        double dist = percentSendLatenessDist.get(d);
+                        sb.append(d);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("perc_send_lateness " + sb.toString());
                 }
                 try {
                     Thread.sleep(2000);
