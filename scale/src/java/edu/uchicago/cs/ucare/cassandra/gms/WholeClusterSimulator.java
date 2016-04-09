@@ -331,6 +331,7 @@ public class WholeClusterSimulator {
             long start = System.currentTimeMillis();
             if (previousTime != 0) {
                 long interval = start - previousTime;
+                interval = interval < 1000 ? 1000 : interval;
                 totalIntLength += (interval * stubs.size());
                 sentCount += stubs.size();
                 percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
