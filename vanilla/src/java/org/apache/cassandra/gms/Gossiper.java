@@ -72,6 +72,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private static final Logger logger = LoggerFactory.getLogger(Gossiper.class);
     public static final Gossiper instance = new Gossiper();
     
+    public int accDown = 0;
+    
     public static final long aVeryLongTime = 259200 * 1000; // 3 days
     private long FatClientTimeout;
     private final Random random = new Random();
@@ -228,7 +230,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                         }
                     }
                     Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode + " acc_down " + accDown);
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
@@ -865,7 +867,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         liveEndpoints.remove(addr);
         unreachableEndpoints.put(addr, System.currentTimeMillis());
         logger.info("InetAddress {} is now DOWN", addr);
-        Klogger.logger.info("InetAddress {} is now DOWN", addr);
+//        Klogger.logger.info("InetAddress {} is now DOWN", addr);
+        accDown++;
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
             subscriber.onDead(addr, localState);
         if (logger.isTraceEnabled())
