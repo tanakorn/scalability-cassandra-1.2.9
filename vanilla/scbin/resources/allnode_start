@@ -37,7 +37,7 @@ while [ $i -le $num_node ]; do
     export JVM_OPTS="$JVM_OPTS -Dobserved.nodes=$observed_nodes"
   fi
   export NODE_ID=$i
-  bin/cassandra -p $operating_dir/pid/n${i}.pid
+  $operating_dir/bin/cassandra -p $operating_dir/pid/n${i}.pid
 #  sleep `expr 5 + $i`
 #  if [ $i -ne 1 ]; then
 #    sleep 4

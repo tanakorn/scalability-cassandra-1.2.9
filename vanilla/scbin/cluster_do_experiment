@@ -1,21 +1,32 @@
 #!/bin/sh
 
+cwd=`pwd`
 scriptdir=`dirname $0`
 cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
 
-#for n in 4 8 12 16 20 24 28 32; do
-for n in 4 16 64 128; do
+. $scriptdir/readconfig
+
+for n in 16; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
-  echo "cassandra_log_dir=/users/tanakorn/scale/cass-6127/result/ca-6127/cpu/n$n" >> scdeploy.conf.$n
-  ./cluster_dir_setup scdeploy.conf.$n
+  echo "cassandra_log_dir=/users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n" >> scdeploy.conf.$n
+  ./onemachine_dir_setup scdeploy.conf.$n
   ./cpu > /tmp/cpu.$n &
-  pid=$!
-  ./cluster_start scdeploy.conf.$n
+  cpupid=$!
+  ./mem > /tmp/mem.$n &
+  mempid=$!
+  sleep 1
+  $operating_dir/allnode_start
   sleep 300
-  ./cluster_stop scdeploy.conf.$n
-  kill $pid
-  cp /tmp/cpu.$n /users/tanakorn/scale/cass-6127/result/ca-6127/cpu
-  ./cluster_collect_logdir scdeploy.conf.$n
+  pkill java
+  kill $cpupid
+  kill $mempid
+  rm -r /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n
+  mkdir /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n
+  cp /tmp/cpu.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/cpu
+  cp /tmp/mem.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/mem
+  cp $operating_dir/log /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/log
 done
 
