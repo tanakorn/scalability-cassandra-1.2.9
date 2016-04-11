@@ -40,7 +40,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = message.to;
-        logger.info(to + " doVerb syn");
+//        logger.info(to + " doVerb syn");
         GossiperStub senderStub = WholeClusterSimulator.stubGroup.getStub(from);
         GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
         receiverStub.syncReceivedTime.put(from + "_" + message.payload.msgId, receiveTime);
@@ -124,21 +124,20 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         String ackId = from + "_" + gDigestAckMessage.payload.msgId;
         receiverStub.ackNewVersionBoot.put(ackId, bootNodeNum);
         receiverStub.ackNewVersionNormal.put(ackId, normalNodeNum);
-        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
-        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
-        long sleepTime = WholeClusterSimulator.bootGossipExecRecords[bootNodeNum] + 
-                WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-        long wakeUpTime = System.currentTimeMillis() + sleepTime;
-        gDigestAckMessage.setWakeUpTime(wakeUpTime);
-        gDigestAckMessage.setSleepTime(sleepTime);
+//        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+//        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
+//        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
+//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
+//        gDigestAckMessage.setWakeUpTime(wakeUpTime);
+//        gDigestAckMessage.setSleepTime(sleepTime);
         gDigestAckMessage.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        gDigestAckMessage.payload.setCreatedTime(System.currentTimeMillis());
-//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
-        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+        gDigestAckMessage.createdTime = System.currentTimeMillis();
+        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+//        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
     /*

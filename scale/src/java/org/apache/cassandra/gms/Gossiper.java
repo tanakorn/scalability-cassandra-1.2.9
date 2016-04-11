@@ -1342,6 +1342,99 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         }
         return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate };
     }
+    
+    static Object[] determineApplyStateLocallyStatic(GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
+    {
+        int newNode = 0;
+        int newNodeToken = 0;
+        int newRestart = 0;
+        int newVersion = 0;
+        int newVersionTokens = 0;
+        int bootstrapCount = 0;
+        int normalCount = 0;
+        Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
+        int realUpdate = 0;
+        Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
+        for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
+        {
+            InetAddress ep = entry.getKey();
+            EndpointState localEpStatePtr = stub.getEndpointStateMap().get(ep);
+            EndpointState remoteState = entry.getValue();
+            
+            if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
+                VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
+                if (status.value.indexOf(VersionedValue.STATUS_BOOTSTRAPPING) == 0) {
+                    bootstrapCount++;
+                } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
+                    normalCount++;
+                    if (!stub.getTokenMetadata().endpointWithTokens.contains(ep)) {
+                        realUpdate++;
+                    }
+//                    stub.getTokenMetadata().endpointWithTokens.add(ep);
+                }
+            }
+            /*
+                If state does not exist just add it. If it does then add it if the remote generation is greater.
+                If there is a generation tie, attempt to break it by heartbeat version.
+            */
+            if ( localEpStatePtr != null )
+            {
+                int localGeneration = localEpStatePtr.getHeartBeatState().getGeneration();
+                int remoteGeneration = remoteState.getHeartBeatState().getGeneration();
+                if (logger.isTraceEnabled())
+                    logger.trace(ep + "local generation " + localGeneration + ", remote generation " + remoteGeneration);
+
+                if (remoteGeneration > localGeneration)
+                {
+                    if (logger.isTraceEnabled())
+                        logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
+                    // major state change will handle the update by inserting the remote state directly
+//                    handleMajorStateChangeStatic(stub, ep, remoteState.copy());
+                    newRestart++;
+                }
+                else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
+                {
+                    /* find maximum state */
+                    int localMaxVersion = getMaxEndpointStateVersionStatic(localEpStatePtr);
+                    int remoteMaxVersion = getMaxEndpointStateVersionStatic(remoteState.copy());
+                    if ( remoteMaxVersion > localMaxVersion )
+                    {
+                        // apply states, but do not notify since there is no major change
+//                        applyNewStatesStatic(stub, ep, localEpStatePtr, remoteState.copy());
+                        updatedNodes.add(ep);
+                    }
+                    else if (logger.isTraceEnabled())
+                            logger.trace("Ignoring remote version " + remoteMaxVersion + " <= " + localMaxVersion + " for " + ep);
+//                    if (!localEpStatePtr.isAlive() && !isDeadStateStatic(localEpStatePtr)) // unless of course, it was dead
+//                        markAliveStatic(stub, ep, localEpStatePtr);
+                    newVersion++;
+                    if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                        newVersionTokens++;
+                    }
+                }
+                else
+                {
+                    if (logger.isTraceEnabled())
+                        logger.trace("Ignoring remote generation " + remoteGeneration + " < " + localGeneration);
+                }
+            }
+            else
+            {
+                // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
+//                FailureDetector.instance.report(ep);
+                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+                updatedNodeInfo.put(ep, updatedInfo);
+//                handleMajorStateChangeStatic(stub, ep, remoteState.copy());
+                newNode++;
+                if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
+                    newNodeToken++;
+                }
+//                stub.getEndpointStateMap().get(ep).setHopNum(remoteState.getHopNum() + 1);
+                updatedNodes.add(ep);
+            }
+        }
+        return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate };
+    }
 
     private void applyNewStates(InetAddress addr, EndpointState localState, EndpointState remoteState)
     {

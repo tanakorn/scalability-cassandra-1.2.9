@@ -44,6 +44,8 @@ public class MessageIn<T>
     public long wakeUpTime;
     public long sleepTime;
     
+    public long createdTime;
+    
     private static Logger logger = LoggerFactory.getLogger(MessageIn.class);
 
     private MessageIn(InetAddress from, T payload, Map<String, byte[]> parameters, MessagingService.Verb verb, int version)
