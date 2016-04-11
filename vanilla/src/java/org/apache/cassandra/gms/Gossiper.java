@@ -965,7 +965,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     bootstrapCount++;
                 } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     normalCount++;
-                    if (StorageService.instance.getTokenMetadata().endpointWithTokens.contains(ep)) {
+                    if (!StorageService.instance.getTokenMetadata().endpointWithTokens.contains(ep)) {
                         realUpdate++;
                     }
                     StorageService.instance.getTokenMetadata().endpointWithTokens.add(ep);
