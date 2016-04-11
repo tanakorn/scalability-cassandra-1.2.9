@@ -17,13 +17,20 @@
  */
 package org.apache.cassandra.service;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,10 +39,10 @@ import javax.management.ObjectName;
 import javax.management.StandardMBean;
 
 import com.google.common.collect.Iterables;
+
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -59,6 +66,17 @@ import org.apache.cassandra.utils.Mx4jTool;
 public class CassandraDaemon
 {
     public static final String MBEAN_NAME = "org.apache.cassandra.db:type=NativeAccess";
+    
+    public static long totalProcLateness = 0;
+    public static int numProc = 0;
+    public static long totalRealSleep = 0;
+    public static long totalExpectedSleep = 0;
+    public static long maxProcLateness = 0;
+    
+    public static List<Long> procLatenessList = Collections.synchronizedList(new LinkedList<Long>());
+    public static List<Double> percentProcLatenessList = Collections.synchronizedList(new LinkedList<Double>());
+    
+    public static List<Double> percentSendLatenessList = Collections.synchronizedList(new LinkedList<Double>());
     
     static
     {
@@ -484,9 +502,57 @@ public class CassandraDaemon
     {
         instance.deactivate();
     }
+    
+    public static long[] bootGossipExecRecords = new long[1024];
+    public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
+    public static void loadProfiling(String bootFile, String normalFile) throws NumberFormatException, IOException {
+        BufferedReader buffReader = new BufferedReader(new FileReader(bootFile));
+        String line;
+        while ((line = buffReader.readLine()) != null) {
+            String[] tokens = line.split(" ");
+            bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
+        }
+        buffReader.close();
+        buffReader = new BufferedReader(new FileReader(normalFile));
+        while ((line = buffReader.readLine()) != null) {
+            String[] tokens = line.split(" ");
+            int currentVersion = Integer.parseInt(tokens[0]);
+            int newVersion = Integer.parseInt(tokens[1]);
+            long execTime = (long) Double.parseDouble(tokens[2]);
+            if (!normalGossipExecRecords.containsKey(currentVersion)) {
+                normalGossipExecRecords.put(currentVersion, new HashMap<Integer, Long>());
+            }
+            normalGossipExecRecords.get(currentVersion).put(newVersion, execTime);
+        }
+        buffReader.close(); 
+    }
+    
+    public static final int numNodes;
+    static {
+        numNodes = Integer.parseInt(System.getProperty("numnodes"));
+    }
+    public static long getExecTimeNormal(int currentVersion, int numNormal) {
+        if (numNormal > numNodes - currentVersion) {
+            numNormal = numNodes - currentVersion;
+            numNormal = (numNormal / 4) * 4;
+        }
+        if (numNormal == 0) {
+            return 0;
+        }
+        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
+        if (result == null) {
+            System.out.println(currentVersion + " " + numNormal);
+        }
+        return result;
+    }
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws NumberFormatException, IOException
     {
+        if (args.length < 2) {
+            System.err.println("Please specify profiling files");
+            System.exit(1);
+        }
+        loadProfiling(args[0], args[1]);
         instance.activate();
     }
     

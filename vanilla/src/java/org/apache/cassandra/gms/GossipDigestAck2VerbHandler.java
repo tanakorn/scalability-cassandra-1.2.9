@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
+import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
@@ -110,6 +111,42 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         int realUpdate = (int) result[8];
         int numApply = (int) result[9];
+        
+        int receiverCurrentVersion = StorageService.instance.getTokenMetadata().endpointWithTokens.size();
+        int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
+        long sleepTime = 0;
+        if (realUpdate != 0) {
+            int floorNormalVersion = (realUpdate / 4) * 4;
+            int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
+            long floorSleepTime = floorNormalVersion == 0 ? 0 : CassandraDaemon.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
+            long ceilingSleepTime = CassandraDaemon.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
+            sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+            long realSleep = System.currentTimeMillis();
+            if (sleepTime > 0) {
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            realSleep = System.currentTimeMillis() - realSleep;
+            long lateness = realSleep - sleepTime;
+            lateness = lateness < 0 ? 0 : lateness;
+            CassandraDaemon.totalRealSleep += realSleep;
+            CassandraDaemon.totalExpectedSleep += sleepTime;
+            CassandraDaemon.totalProcLateness += lateness;
+            CassandraDaemon.numProc++;
+            CassandraDaemon.procLatenessList.add(lateness);
+            if (sleepTime != 0) {
+                CassandraDaemon.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
+            } else {
+                CassandraDaemon.percentProcLatenessList.add(0.0);
+            }
+            if (lateness > CassandraDaemon.maxProcLateness) {
+                CassandraDaemon.maxProcLateness = lateness;
+            }
+        }
+        
         for (InetAddress receivingAddress : updatedNodes) {
             EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
             Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);

@@ -216,15 +216,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 while (true) {
                     int seenNode = endpointStateMap.size();
                     int deadNode = 0;
-                    int memberNode = 0;
+                    int memberNode = StorageService.instance.getTokenMetadata().endpointWithTokens.size();
                     for (InetAddress address : endpointStateMap.keySet()) {
                         EndpointState state = endpointStateMap.get(address);
-                        boolean isMember = StorageService.instance.getTokenMetadata().isMember(address);
                         if (!state.isAlive()) {
                             deadNode++;
-                        }
-                        if (isMember) {
-                            memberNode++;
                         }
                     }
                     Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
@@ -958,6 +954,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
             EndpointState localEpStatePtr = endpointStateMap.get(ep);
             EndpointState remoteState = entry.getValue();
+            
             /*
                 If state does not exist just add it. If it does then add it if the remote generation is greater.
                 If there is a generation tie, attempt to break it by heartbeat version.
@@ -968,6 +965,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     bootstrapCount++;
                 } else if (status.value.indexOf(VersionedValue.STATUS_NORMAL) == 0) {
                     normalCount++;
+                    if (StorageService.instance.getTokenMetadata().endpointWithTokens.contains(ep)) {
+                        realUpdate++;
+                    }
+                    StorageService.instance.getTokenMetadata().endpointWithTokens.add(ep);
                 }
             }
             if ( localEpStatePtr != null )
@@ -982,7 +983,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    realUpdate += handleMajorStateChange(ep, remoteState);
+//                    realUpdate += handleMajorStateChange(ep, remoteState);
+                    handleMajorStateChange(ep, remoteState);
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
@@ -993,7 +995,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if ( remoteMaxVersion > localMaxVersion )
                     {
                         // apply states, but do not notify since there is no major change
-                        realUpdate += applyNewStates(ep, localEpStatePtr, remoteState);
+//                        realUpdate += applyNewStates(ep, localEpStatePtr, remoteState);
+                        applyNewStates(ep, localEpStatePtr, remoteState);
                         updatedNode.add(ep);
                         if (remoteState.applicationState.containsKey(ApplicationState.STATUS)) {
                             VersionedValue status = remoteState.applicationState.get(ApplicationState.STATUS);
@@ -1022,7 +1025,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
                 FailureDetector.instance.report(ep);
-                realUpdate += handleMajorStateChange(ep, remoteState);
+//                realUpdate += handleMajorStateChange(ep, remoteState);
+                handleMajorStateChange(ep, remoteState);
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;

@@ -34,6 +34,9 @@ cp $scriptdir/resources/onenode_start $operating_dir
 cp $scriptdir/resources/onenode_stop $operating_dir
 cp $scriptdir/resources/sc.properties $operating_dir
 
+cp $scriptdir/nome_boot.dat $operating_dir/nome_boot.dat
+cp $scriptdir/tok32 $operating_dir/nome_normal.dat
+
 echo cassandra_home=$cassandra_home > $operating_dir/sc.conf
 echo num_node=$num_node >> $operating_dir/sc.conf
 echo aspectj=$aspectj >> $operating_dir/sc.conf

@@ -32,11 +32,13 @@ while [ $i -le $num_node ]; do
     id=$i
   fi
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
+  export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000 -Dnumnodes=$num_node"
   if [ $observed_nodes ]; then
     export JVM_OPTS="$JVM_OPTS -Dobserved.nodes=$observed_nodes"
   fi
   export NODE_ID=$i
+  export BOOTFILE=$operating_dir/nome_boot.dat 
+  export NORMALFILE=$operating_dir/nome_normal.dat
   $operating_dir/bin/cassandra -p $operating_dir/pid/n${i}.pid
 #  sleep `expr 5 + $i`
 #  if [ $i -ne 1 ]; then

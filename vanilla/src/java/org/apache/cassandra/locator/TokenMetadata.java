@@ -49,6 +49,7 @@ public class TokenMetadata
 
     /* Maintains token to endpoint map of every node in the cluster. */
     public final BiMultiValMap<Token, InetAddress> tokenToEndpointMap;
+    public final Set<InetAddress> endpointWithTokens;
 
     /* Maintains endpoint to host ID map of every node in the cluster */
     private final BiMap<InetAddress, UUID> endpointToHostIdMap;
@@ -115,6 +116,7 @@ public class TokenMetadata
     private TokenMetadata(BiMultiValMap<Token, InetAddress> tokenToEndpointMap, BiMap<InetAddress, UUID> endpointsMap, Topology topology)
     {
         this.tokenToEndpointMap = tokenToEndpointMap;
+        endpointWithTokens = new HashSet<InetAddress>();
         this.topology = topology;
         endpointToHostIdMap = endpointsMap;
         sortedTokens = sortTokens();
@@ -193,6 +195,7 @@ public class TokenMetadata
                 for (Token token : tokens)
                 {
                     InetAddress prev = tokenToEndpointMap.put(token, endpoint);
+                    endpointWithTokens.add(endpoint);
                     if (!endpoint.equals(prev))
                     {
                         if (prev != null)

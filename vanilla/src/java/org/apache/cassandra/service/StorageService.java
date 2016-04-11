@@ -1217,51 +1217,52 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
      */
     public int onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)
     {
-        int update = 0;
-        switch (state)
-        {
-            case STATUS:
-                String apStateValue = value.value;
-                String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
-                assert (pieces.length > 0);
-
-                String moveName = pieces[0];
-
-                if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
-                    handleStateBootstrap(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.STATUS_NORMAL))
-                    update = handleStateNormal(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
-                    handleStateRemoving(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.STATUS_LEAVING))
-                    handleStateLeaving(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.STATUS_LEFT))
-                    handleStateLeft(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.STATUS_MOVING))
-                    handleStateMoving(endpoint, pieces);
-                else if (moveName.equals(VersionedValue.STATUS_RELOCATING))
-                    handleStateRelocating(endpoint, pieces);
-                break;
-            case RELEASE_VERSION:
-                SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
-                break;
-            case DC:
-                SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
-                break;
-            case RACK:
-                SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
-                break;
-            case RPC_ADDRESS:
-                SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
-                break;
-            case SCHEMA:
-                SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
-                break;
-            case HOST_ID:
-                SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
-                break;
-        }
-        return update;
+        return 0;
+//        int update = 0;
+//        switch (state)
+//        {
+//            case STATUS:
+//                String apStateValue = value.value;
+//                String[] pieces = apStateValue.split(VersionedValue.DELIMITER_STR, -1);
+//                assert (pieces.length > 0);
+//
+//                String moveName = pieces[0];
+//
+//                if (moveName.equals(VersionedValue.STATUS_BOOTSTRAPPING))
+//                    handleStateBootstrap(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.STATUS_NORMAL))
+//                    update = handleStateNormal(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.REMOVING_TOKEN) || moveName.equals(VersionedValue.REMOVED_TOKEN))
+//                    handleStateRemoving(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.STATUS_LEAVING))
+//                    handleStateLeaving(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.STATUS_LEFT))
+//                    handleStateLeft(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.STATUS_MOVING))
+//                    handleStateMoving(endpoint, pieces);
+//                else if (moveName.equals(VersionedValue.STATUS_RELOCATING))
+//                    handleStateRelocating(endpoint, pieces);
+//                break;
+//            case RELEASE_VERSION:
+//                SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
+//                break;
+//            case DC:
+//                SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
+//                break;
+//            case RACK:
+//                SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
+//                break;
+//            case RPC_ADDRESS:
+//                SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
+//                break;
+//            case SCHEMA:
+//                SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
+//                break;
+//            case HOST_ID:
+//                SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
+//                break;
+//        }
+//        return update;
     }
 
     private String quote(String value)
