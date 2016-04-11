@@ -8,7 +8,7 @@ cd $cwd
 
 . $scriptdir/readconfig
 
-for n in 16; do
+for n in 30 34; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
   echo "cassandra_log_dir=/users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n" >> scdeploy.conf.$n
@@ -27,6 +27,6 @@ for n in 16; do
   mkdir /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n
   cp /tmp/cpu.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/cpu
   cp /tmp/mem.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/mem
-  cp $operating_dir/log /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/log
+  cp -r $operating_dir/log /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/log
 done
 
