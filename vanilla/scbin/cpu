@@ -21,8 +21,8 @@ while true; do
   let "DIFF_IDLE=$IDLE-$PREV_IDLE"
   let "DIFF_TOTAL=$TOTAL-$PREV_TOTAL"
   let "DIFF_USAGE=(1000*($DIFF_TOTAL-$DIFF_IDLE)/$DIFF_TOTAL+5)/10"
-  d=`date`
-  echo "CPU $DIFF_USAGE"
+  d=`date +%s`
+  echo "CPU $DIFF_USAGE $d"
 
   # Remember the total and idle CPU times for the next check.
   PREV_TOTAL="$TOTAL"
