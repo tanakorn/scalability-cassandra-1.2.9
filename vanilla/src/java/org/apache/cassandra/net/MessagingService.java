@@ -774,9 +774,9 @@ public final class MessagingService implements MessagingServiceMBean
         }
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
-        if (message.getMessageType() == Stage.GOSSIP) {
-            Klogger.logger.info(thisAddress + " received " + message + " ; queue size " + ((JMXEnabledThreadPoolExecutor) stage).getQueue().size());
-        }
+//        if (message.getMessageType() == Stage.GOSSIP) {
+//            Klogger.logger.info(thisAddress + " received " + message + " ; queue size " + ((JMXEnabledThreadPoolExecutor) stage).getQueue().size());
+//        }
         
         assert stage != null : "No stage for message type " + message.verb;
 

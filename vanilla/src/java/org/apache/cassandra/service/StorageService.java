@@ -1476,7 +1476,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
         calculatePendingRanges();
         long t = System.currentTimeMillis() - s;
-        Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
+//        Klogger.logger.info("Handle normal for " + endpoint + " took " + t + " ms");
         return update;
     }
 

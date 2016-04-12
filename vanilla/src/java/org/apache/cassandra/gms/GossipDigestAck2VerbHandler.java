@@ -43,7 +43,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
     	long start, end; 
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
-        Klogger.logger.info(to + " doVerb ack2");
+//        Klogger.logger.info(to + " doVerb ack2");
         int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 1024;
         if (logger.isTraceEnabled())
         {
@@ -148,10 +148,10 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             }
         }
         
-        for (InetAddress receivingAddress : updatedNodes) {
-            EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
-            Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-        }
+//        for (InetAddress receivingAddress : updatedNodes) {
+//            EndpointState ep = Gossiper.instance.getEndpointStateForEndpoint(receivingAddress);
+//            Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+//        }
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = Gossiper.instance.syncReceivedTime.get(syncId);
         Gossiper.instance.syncReceivedTime.remove(syncId);
@@ -165,14 +165,14 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         Gossiper.instance.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
-        if (allBoot != 0 || allNormal != 0) {
-            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
-        }
-        if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
-                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " numApply " + numApply + " ; transmission " + transmissionTime);
-        }
-        Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
+//        if (allBoot != 0 || allNormal != 0) {
+//            Klogger.logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
+//        }
+//        if (bootstrapCount != 0 || normalCount != 0) {
+//            Klogger.logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                    + currentVersion + " ; transmission " + transmissionTime);
+//        }
+//        Klogger.logger.info("Ack2Handler for " + from + " notifyFD took {} ms, applyState took {} ms", notifyFD, applyState);
     }
 }

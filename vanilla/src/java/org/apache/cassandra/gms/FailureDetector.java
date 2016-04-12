@@ -329,8 +329,8 @@ class ArrivalWindow
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         arrivalIntervals2.add(interArrivalTime);
         tLast = value;
-        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " t_silence of " + address + 
-                " is " + interArrivalTime + " mean " + mean());
+//        Klogger.logger.info(FBUtilities.getBroadcastAddress() + " t_silence of " + address + 
+//                " is " + interArrivalTime + " mean " + mean());
     }
 
     public double mean()
@@ -364,7 +364,7 @@ class ArrivalWindow
         //double phi2 = (size2 > 0) ? PHI_FACTOR * t / mean2 : 0.0;
         //double sd2 = (size2 > 0) ? arrivalIntervals2.sd() : 0.0;
         if (!maxObservedPhi.containsKey(address) || maxObservedPhi.get(address) < phi) {
-            Klogger.logger.info("PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
+//            Klogger.logger.info("PHI for " + address + " : " + phi + " " + t + " " + mean + " " + size);
             maxObservedPhi.put(address, phi);
         }
         //if (!maxObservedPhi2.containsKey(address) || maxObservedPhi2.get(address) < phi2 || observedNodes.contains(address)) {

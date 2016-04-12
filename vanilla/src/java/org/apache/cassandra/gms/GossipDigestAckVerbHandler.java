@@ -45,7 +45,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         long receiveTime = System.currentTimeMillis();
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
-        Klogger.logger.info(to + " doVerb ack");
+//        Klogger.logger.info(to + " doVerb ack");
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
         if (!Gossiper.instance.isEnabled())
@@ -113,10 +113,10 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             }
             
             
-            for (InetAddress receivingAddress : updatedNodes) {
-                EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
-                Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
-            }
+//            for (InetAddress receivingAddress : updatedNodes) {
+//                EndpointState ep = Gossiper.instance.endpointStateMap.get(receivingAddress);
+//                Klogger.logger.info(to + " is hop " + ep.hopNum + " for " + receivingAddress + " with version " + ep.getHeartBeatState().getHeartBeatVersion() + " from " + from);
+//            }
         }
 
         Gossiper.instance.checkSeedContact(from);
@@ -164,9 +164,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (bootstrapCount != 0 || normalCount != 0) {
-            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " numApply " + numApply + " ; transmission " + transmissionTime);
+//            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+//                    + currentVersion + " ; transmission " + transmissionTime);
         }
     }
 }
