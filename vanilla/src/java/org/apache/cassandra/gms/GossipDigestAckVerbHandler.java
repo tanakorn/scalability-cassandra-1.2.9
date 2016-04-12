@@ -125,15 +125,9 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);
         long ackHandlerTime = System.currentTimeMillis() - receiveTime;
         if (bootstrapCount != 0 || normalCount != 0) {
-<<<<<<< HEAD
-            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-                    + currentVersion + " numApply " + numApply + " ; transmission " + transmissionTime);
-=======
 //            Klogger.logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
 //                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
 //                    + currentVersion + " ; transmission " + transmissionTime);
->>>>>>> 1000-node-nolog
         }
     }
 }
