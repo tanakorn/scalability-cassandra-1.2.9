@@ -112,6 +112,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     // have we ever in our lifetime reached a seed?
     private boolean seedContacted = false;
+    
+    public static long previousTime = 0;
+    public static long totalTime = 0;
+    public static int count = 0;
 
     private class GossipTask implements Runnable
     {
@@ -121,6 +125,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
         public void run()
         {
+            long start = System.currentTimeMillis();
+            if (previousTime != 0) {
+                long interval = start - previousTime;
+                interval = interval < 1000 ? 1000 : interval;
+                totalTime += (interval - 1000);
+                count++;
+            }
+            previousTime = start;
             try
             {
                 //wait on messaging service to start listening
@@ -227,8 +239,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                             memberNode++;
                         }
                     }
-                    Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    double sendLateness = Gossiper.count == 0 ? 0.0 : ((double) Gossiper.totalTime) / Gossiper.count / 10;
+                    Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode +
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode +
+                            " ; send_lateness " + sendLateness);
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
