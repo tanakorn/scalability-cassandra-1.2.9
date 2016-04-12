@@ -16,7 +16,7 @@ fi
 
 mkdir -p $operating_dir/pid
 
-base_jvm_opts="-Dcassandra.log.dir=$operating_dir/log"
+base_jvm_opts="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -Dcassandra.log.dir=$operating_dir/log"
 if [ $property_file ]; then
   base_jvm_opts="$base_jvm_opts -Dbids.properties=$property_file"
 fi
@@ -25,6 +25,7 @@ export CASSANDRA_HOME=$cassandra_home
 #  export CLASSPATH=$jar:$CLASSPATH
 #done
 i=1
+mkdir $operating_dir/log
 while [ $i -le $num_node ]; do
   if [ $id_offset ]; then
     id=`expr \( $id_offset - 1 \) \* $num_node + $i`
@@ -32,7 +33,7 @@ while [ $i -le $num_node ]; do
     id=$i
   fi
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
-  export JVM_OPTS="$base_jvm_opts -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000"
+  export JVM_OPTS="$base_jvm_opts -Xloggc:$operating_dir/log/gc.${i} -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000 -Dnumnodes=$num_node"
   if [ $observed_nodes ]; then
     export JVM_OPTS="$JVM_OPTS -Dobserved.nodes=$observed_nodes"
   fi
