@@ -125,6 +125,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
             if (sleepTime > 0) {
                 try {
                     Thread.sleep(sleepTime);
+                    logger.info("sleep " + sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

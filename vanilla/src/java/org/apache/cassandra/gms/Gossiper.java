@@ -36,6 +36,7 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.FBUtilities;
 
@@ -113,14 +114,27 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     // have we ever in our lifetime reached a seed?
     private boolean seedContacted = false;
 
+    public static long previousTime = 0;
+    public static long totalTime = 0;
+    public static int count = 0;
+
+
     private class GossipTask implements Runnable
     {
         public final int numTokens = DatabaseDescriptor.getNumTokens();
         
         int round = 0;
-
+        
         public void run()
         {
+            long start = System.currentTimeMillis();
+            if (previousTime != 0) {
+                long interval = start - previousTime;
+                interval = interval < 1000 ? 1000 : interval;
+                totalTime += (interval - 1000);
+                count++;
+            }
+            previousTime = start;
             try
             {
                 //wait on messaging service to start listening
@@ -223,8 +237,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                             deadNode++;
                         }
                     }
+                    long avgProcLateness = CassandraDaemon.numProc == 0 ? 0 : CassandraDaemon.totalProcLateness / CassandraDaemon.numProc;
+                    double percentLateness = CassandraDaemon.totalExpectedSleep == 0 ? 0 : ((double) CassandraDaemon.totalRealSleep) / (double) CassandraDaemon.totalExpectedSleep;
+                    percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
+                    double sendLateness = Gossiper.count == 0 ? 0.0 : ((double) Gossiper.totalTime) / Gossiper.count / 10;
                     Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode + 
+                            " ; proc_lateness " + avgProcLateness + " " + CassandraDaemon.maxProcLateness + " " + percentLateness +
+                            " ; send_lateness " + sendLateness);
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
