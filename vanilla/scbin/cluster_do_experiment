@@ -8,7 +8,7 @@ cd $cwd
 
 . $scriptdir/readconfig
 
-for n in 30 34; do
+for n in 44 48 52; do
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
   echo "cassandra_log_dir=/users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n" >> scdeploy.conf.$n
@@ -17,16 +17,20 @@ for n in 30 34; do
   cpupid=$!
   ./mem > /tmp/mem.$n &
   mempid=$!
+  ./jps > /tmp/jps.$n &
+  jpspid=$!
   sleep 1
   $operating_dir/allnode_start
   sleep 300
   pkill java
   kill $cpupid
   kill $mempid
+  kill $jpspid
   rm -r /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n
   mkdir /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n
   cp /tmp/cpu.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/cpu
   cp /tmp/mem.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/mem
+  cp /tmp/jps.$n /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/jps
   cp -r $operating_dir/log /users/tanakorn/scale/cass-6127/result/ca-6127/colo/n$n/log
 done
 
