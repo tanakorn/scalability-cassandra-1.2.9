@@ -1,0 +1,7 @@
+#!/bin/sh
+
+while true; do
+  count=`pgrep java | wc -l`
+  echo Java $count
+  sleep 1
+done
