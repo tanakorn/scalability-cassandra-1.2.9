@@ -564,6 +564,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     private void joinTokenRing(int delay) throws ConfigurationException
     {
         logger.info("Starting up server gossip");
+        Klogger.logger.info((System.currentTimeMillis() / 1000) + " Starting up server gossip");
         joined = true;
 
         // Seed the host ID-to-endpoint map with our own ID.
