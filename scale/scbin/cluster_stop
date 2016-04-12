@@ -20,8 +20,9 @@ all_ip=`awk '{print $2}' $machinelist`
 
 for ip in $all_ip; do
   if [ $ip = $my_ip ]; then
+    pkill sleep
     pkill java
   else
-    ssh $ip "pkill java" &
+    ssh $ip "pkill sleep ; pkill java" &
   fi
 done

@@ -106,7 +106,7 @@ public class IncomingTcpConnection extends Thread
         DataInputStream in = new DataInputStream(socket.getInputStream());
         int maxVersion = in.readInt();
         from = CompactEndpointSerializationHelper.deserialize(in);
-        Klogger.logger.info("Receiving connection from " + from);
+//        Klogger.logger.info("Receiving connection from " + from);
         boolean compressed = MessagingService.getBits(header, 2, 1) == 1;
 
         if (compressed)

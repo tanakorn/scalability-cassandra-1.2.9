@@ -72,6 +72,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private static final Logger logger = LoggerFactory.getLogger(Gossiper.class);
     public static final Gossiper instance = new Gossiper();
     
+    public int accDown = 0;
+    
     public static final long aVeryLongTime = 259200 * 1000; // 3 days
     private long FatClientTimeout;
     private final Random random = new Random();
@@ -588,7 +590,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-        Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
+//        Klogger.logger.info("Send sync:" + System.currentTimeMillis() + " ; to " + to);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
@@ -696,7 +698,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 }
             }
         }
-        Klogger.logger.info(sb.toString());
+//        Klogger.logger.info(sb.toString());
 
         if (!justRemovedEndpoints.isEmpty())
         {
@@ -879,7 +881,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         liveEndpoints.remove(addr);
         unreachableEndpoints.put(addr, System.currentTimeMillis());
         logger.info("InetAddress {} is now DOWN", addr);
-        Klogger.logger.info("InetAddress {} is now DOWN", addr);
+//        Klogger.logger.info("InetAddress {} is now DOWN", addr);
+        accDown++;
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
             subscriber.onDead(addr, localState);
         if (logger.isTraceEnabled())

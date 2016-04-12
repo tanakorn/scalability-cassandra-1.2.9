@@ -1,0 +1,33 @@
+#!/bin/sh
+
+os=`uname`
+if [ ! $os = Linux ]; then
+  echo Multi-machine remote run supports only Linux
+  exit 1
+fi
+
+cwd=`pwd`
+scriptdir=`dirname $0`
+cd $scriptdir
+scriptdir=`pwd`
+cd $cwd
+
+. $scriptdir/readconfig
+
+all_ip=`awk '{print $2}' $machinelist`
+
+logdir=${cassandra_log_dir}
+mkdir -p $logdir
+rm -r $logdir/*
+n=96
+for node in $all_ip; do
+  if [ $n -eq 256 ]; then
+    n=255
+  fi
+  ssh $node "cd $scriptdir; ./sim_do_experiment $scriptdir/scdeploy.conf.$n" &
+  n=`expr $n + 32`
+  if [ $n -gt 256 ]; then
+    break
+  fi
+done
+

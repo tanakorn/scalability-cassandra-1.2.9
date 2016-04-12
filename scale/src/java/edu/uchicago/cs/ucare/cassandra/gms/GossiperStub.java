@@ -69,6 +69,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     public final Map<String, Long> syncReceivedTime = new ConcurrentHashMap<String, Long>();
     public final Map<String, Integer> ackNewVersionNormal = new ConcurrentHashMap<String, Integer>();
     public final Map<String, Integer> ackNewVersionBoot = new ConcurrentHashMap<String, Integer>();
+    
+    public int flapping;
 
     String clusterId;
 	String dataCenter;
@@ -140,6 +142,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         if (seeds != null) {
             this.seeds.addAll(seeds);
         }
+        flapping = 0;
 	}
 	
 	public void prepareInitialState() {
@@ -270,6 +273,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
        MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, 
                emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        message.setTo(to);
+       message.createdTime = System.currentTimeMillis();
        return message;
    }
 	
@@ -359,15 +363,15 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         long now = System.currentTimeMillis();
 
         Set<InetAddress> eps = endpointStateMap.keySet();
-        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
+//        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
         for ( InetAddress endpoint : eps ) {
             if (endpoint.equals(broadcastAddress)) {
                 continue;
             }
 
             double phi = failureDetector.interpret(endpoint);
-            sb.append(phi);
-            sb.append(',');
+//            sb.append(phi);
+//            sb.append(',');
             EndpointState epState = endpointStateMap.get(endpoint);
             if ( epState != null ) {
                 // check for dead state removal
@@ -378,7 +382,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                 }
             }
         }
-        logger.info(sb.toString());
+//        logger.info(sb.toString());
 
         if (!justRemovedEndpoints.isEmpty()) {
             for (Entry<InetAddress, Long> entry : justRemovedEndpoints.entrySet()) {
@@ -426,7 +430,8 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     private void markDead(InetAddress addr, EndpointState localState, double phi) {
-        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
+//        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
+        flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
         unreachableEndpoints.put(addr, System.currentTimeMillis());
