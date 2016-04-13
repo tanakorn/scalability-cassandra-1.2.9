@@ -134,10 +134,10 @@ launch_service()
     # to close stdout/stderr, but it's up to us not to background.
     if [ "x$foreground" != "x" ]; then
         cassandra_parms="$cassandra_parms -Dcassandra-foreground=yes"
-        exec $NUMACTL "$JAVA" $JVM_OPTS $cassandra_parms -cp "$CLASSPATH" $props "$class" "$BOOTFILE" "$NORMALFILE"
+        exec $NUMACTL time "$JAVA" $JVM_OPTS $cassandra_parms -cp "$CLASSPATH" $props "$class" "$BOOTFILE" "$NORMALFILE" 2> $operating_dir/log/time.$NODE_ID
     # Startup CassandraDaemon, background it, and write the pid.
     else
-        exec $NUMACTL "$JAVA" $JVM_OPTS $cassandra_parms -cp "$CLASSPATH" $props "$class" "$BOOTFILE" "$NORMALFILE" <&- &
+        exec $NUMACTL time "$JAVA" $JVM_OPTS $cassandra_parms -cp "$CLASSPATH" $props "$class" "$BOOTFILE" "$NORMALFILE" <&- 2> $operating_dir/log/time.$NODE_ID &
         [ ! -z "$pidpath" ] && printf "%d" $! > "$pidpath"
         true
     fi
