@@ -580,7 +580,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         if (DatabaseDescriptor.isReplacing())
             appStates.put(ApplicationState.STATUS, valueFactory.hibernate(true));
         appStates.put(ApplicationState.RELEASE_VERSION, valueFactory.releaseVersion());
-        Gossiper.instance.register(this);
+        //Gossiper.instance.register(this);
         Gossiper.instance.register(migrationManager);
         Gossiper.instance.start(SystemTable.incrementAndGetGeneration(), appStates); // needed for node-ring gathering.
         // gossip snitch infos (local DC and rack)
