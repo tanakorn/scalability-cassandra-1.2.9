@@ -40,7 +40,7 @@ while [ $i -le $num_node ]; do
   export NODE_ID=$i
   export BOOTFILE=$operating_dir/nome_boot.dat 
   export NORMALFILE=$operating_dir/nome_normal.dat
-  $operating_dir/bin/cassandra -p $operating_dir/pid/n${i}.pid
+  $operating_dir/bin/cassandra -p $operating_dir/pid/n${i}.pid &
 #  sleep `expr 5 + $i`
 #  if [ $i -ne 1 ]; then
 #    sleep 4
