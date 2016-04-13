@@ -113,11 +113,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     // have we ever in our lifetime reached a seed?
     private boolean seedContacted = false;
-
+    
     public static long previousTime = 0;
     public static long totalTime = 0;
     public static int count = 0;
-
 
     private class GossipTask implements Runnable
     {
