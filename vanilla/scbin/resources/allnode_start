@@ -32,6 +32,7 @@ while [ $i -le $num_node ]; do
   else
     id=$i
   fi
+  export operating_dir
   export CASSANDRA_CONF=$operating_dir/cassconf/conf$i
   export JVM_OPTS="$base_jvm_opts -Xloggc:$operating_dir/log/gc.${i} -Dlog4j.file.id=$i -Dcassandra.id=$id -Dcassandra.ring_delay_ms=5000 -Dnumnodes=$num_node"
   if [ $observed_nodes ]; then
