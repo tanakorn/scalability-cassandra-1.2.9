@@ -312,7 +312,7 @@ public final class MessagingService implements MessagingServiceMBean
         return MSHandle.instance;
     }
 
-    public MessagingService()
+    private MessagingService()
     {
         for (Verb verb : DROPPABLE_VERBS)
         {
@@ -353,15 +353,15 @@ public final class MessagingService implements MessagingServiceMBean
 
         callbacks = new ExpiringMap<String, CallbackInfo>(DatabaseDescriptor.getMinRpcTimeout(), timeoutReporter);
 
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//        try
-//        {
-//            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
-//        }
-//        catch (Exception e)
-//        {
-//            throw new RuntimeException(e);
-//        }
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

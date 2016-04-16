@@ -85,18 +85,18 @@ public class CacheService implements CacheServiceMBean
     public final AutoSavingCache<KeyCacheKey, RowIndexEntry> keyCache;
     public final AutoSavingCache<RowCacheKey, IRowCacheEntry> rowCache;
 
-    public CacheService()
+    private CacheService()
     {
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//
-//        try
-//        {
-//            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
-//        }
-//        catch (Exception e)
-//        {
-//            throw new RuntimeException(e);
-//        }
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
 
         keyCache = initKeyCache();
         rowCache = initRowCache();

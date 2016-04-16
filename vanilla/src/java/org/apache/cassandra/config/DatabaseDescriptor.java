@@ -29,7 +29,6 @@ import java.util.*;
 import com.google.common.primitives.Longs;
 
 import edu.uchicago.cs.ucare.util.Klogger;
-import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -919,7 +918,6 @@ public class DatabaseDescriptor
 
     public static String[] getAllDataFileLocations()
     {
-        StackTracePrinter.print();
         return conf.data_file_directories;
     }
 
