@@ -41,8 +41,8 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEn
 
     public LoadBroadcaster()
     {
-        Gossiper.instance.register(this);
-//        Gossiper.registerStatic(this);
+//        Gossiper.instance.register(this);
+        Gossiper.registerStatic(this);
     }
 
     public void onChange(InetAddress endpoint, ApplicationState state, VersionedValue value)

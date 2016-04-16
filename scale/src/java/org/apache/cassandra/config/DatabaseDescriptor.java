@@ -516,6 +516,397 @@ public class DatabaseDescriptor
             System.exit(1);
         }
     }
+    
+    public static void loadYaml(Config config)
+    {
+        if (config != null) {
+            return;
+        }
+        try
+        {
+            URL url = getStorageConfigURL();
+            logger.info("Loading settings from " + url);
+            InputStream input;
+            try
+            {
+                input = url.openStream();
+            }
+            catch (IOException e)
+            {
+                // getStorageConfigURL should have ruled this out
+                throw new AssertionError(e);
+            }
+            org.yaml.snakeyaml.constructor.Constructor constructor = new org.yaml.snakeyaml.constructor.Constructor(Config.class);
+            TypeDescription seedDesc = new TypeDescription(SeedProviderDef.class);
+            seedDesc.putMapPropertyType("parameters", String.class, String.class);
+            constructor.addTypeDescription(seedDesc);
+            Yaml yaml = new Yaml(new Loader(constructor));
+            config = (Config)yaml.load(input);
+
+            logger.info("Data files directories: " + Arrays.toString(config.data_file_directories));
+            logger.info("Commit log directory: " + config.commitlog_directory);
+
+            if (config.commitlog_sync == null)
+            {
+                throw new ConfigurationException("Missing required directive CommitLogSync");
+            }
+
+            if (config.commitlog_sync == Config.CommitLogSync.batch)
+            {
+                if (config.commitlog_sync_batch_window_in_ms == null)
+                {
+                    throw new ConfigurationException("Missing value for commitlog_sync_batch_window_in_ms: Double expected.");
+                }
+                else if (config.commitlog_sync_period_in_ms != null)
+                {
+                    throw new ConfigurationException("Batch sync specified, but commitlog_sync_period_in_ms found. Only specify commitlog_sync_batch_window_in_ms when using batch sync");
+                }
+                logger.debug("Syncing log with a batch window of " + config.commitlog_sync_batch_window_in_ms);
+            }
+            else
+            {
+                if (config.commitlog_sync_period_in_ms == null)
+                {
+                    throw new ConfigurationException("Missing value for commitlog_sync_period_in_ms: Integer expected");
+                }
+                else if (config.commitlog_sync_batch_window_in_ms != null)
+                {
+                    throw new ConfigurationException("commitlog_sync_period_in_ms specified, but commitlog_sync_batch_window_in_ms found.  Only specify commitlog_sync_period_in_ms when using periodic sync.");
+                }
+                logger.debug("Syncing log with a period of " + config.commitlog_sync_period_in_ms);
+            }
+
+            if (config.commitlog_total_space_in_mb == null)
+                config.commitlog_total_space_in_mb = System.getProperty("os.arch").contains("64") ? 1024 : 32;
+
+            /* evaluate the DiskAccessMode Config directive, which also affects indexAccessMode selection */
+            if (config.disk_access_mode == Config.DiskAccessMode.auto)
+            {
+                config.disk_access_mode = System.getProperty("os.arch").contains("64") ? Config.DiskAccessMode.mmap : Config.DiskAccessMode.standard;
+                indexAccessMode = config.disk_access_mode;
+                logger.info("DiskAccessMode 'auto' determined to be " + config.disk_access_mode + ", indexAccessMode is " + indexAccessMode );
+            }
+            else if (config.disk_access_mode == Config.DiskAccessMode.mmap_index_only)
+            {
+                config.disk_access_mode = Config.DiskAccessMode.standard;
+                indexAccessMode = Config.DiskAccessMode.mmap;
+                logger.info("DiskAccessMode is " + config.disk_access_mode + ", indexAccessMode is " + indexAccessMode );
+            }
+            else
+            {
+                indexAccessMode = config.disk_access_mode;
+                logger.info("DiskAccessMode is " + config.disk_access_mode + ", indexAccessMode is " + indexAccessMode );
+            }
+
+            logger.info("disk_failure_policy is " + config.disk_failure_policy);
+
+            /* Authentication and authorization backend, implementing IAuthenticator and IAuthorizer */
+            if (config.authenticator != null)
+                authenticator = FBUtilities.newAuthenticator(config.authenticator);
+
+            if (config.authority != null)
+            {
+                logger.warn("Please rename 'authority' to 'authorizer' in cassandra.yaml");
+                if (!config.authority.equals("org.apache.cassandra.auth.AllowAllAuthority"))
+                    throw new ConfigurationException("IAuthority interface has been deprecated,"
+                                                     + " please implement IAuthorizer instead.");
+            }
+
+            if (config.authorizer != null)
+                authorizer = FBUtilities.newAuthorizer(config.authorizer);
+
+            if (authenticator instanceof AllowAllAuthenticator && !(authorizer instanceof AllowAllAuthorizer))
+                throw new ConfigurationException("AllowAllAuthenticator can't be used with " +  config.authorizer);
+
+            if (config.internode_authenticator != null)
+                internodeAuthenticator = FBUtilities.construct(config.internode_authenticator, "internode_authenticator");
+            else
+                internodeAuthenticator = new AllowAllInternodeAuthenticator();
+
+            authenticator.validateConfiguration();
+            authorizer.validateConfiguration();
+            internodeAuthenticator.validateConfiguration();
+
+            /* Hashing strategy */
+            if (config.partitioner == null)
+            {
+                throw new ConfigurationException("Missing directive: partitioner");
+            }
+
+            try
+            {
+                partitioner = FBUtilities.newPartitioner(System.getProperty("cassandra.partitioner", config.partitioner));
+            }
+            catch (Exception e)
+            {
+                throw new ConfigurationException("Invalid partitioner class " + config.partitioner);
+            }
+            paritionerName = partitioner.getClass().getCanonicalName();
+
+            /* phi convict threshold for FailureDetector */
+            if (config.phi_convict_threshold < 5 || config.phi_convict_threshold > 16)
+            {
+                throw new ConfigurationException("phi_convict_threshold must be between 5 and 16");
+            }
+
+            /* Thread per pool */
+            if (config.concurrent_reads != null && config.concurrent_reads < 2)
+            {
+                throw new ConfigurationException("concurrent_reads must be at least 2");
+            }
+
+            if (config.concurrent_writes != null && config.concurrent_writes < 2)
+            {
+                throw new ConfigurationException("concurrent_writes must be at least 2");
+            }
+
+            if (config.concurrent_replicates != null && config.concurrent_replicates < 2)
+            {
+                throw new ConfigurationException("concurrent_replicates must be at least 2");
+            }
+
+            if (config.memtable_total_space_in_mb == null)
+                config.memtable_total_space_in_mb = (int) (Runtime.getRuntime().maxMemory() / (3 * 1048576));
+            if (config.memtable_total_space_in_mb <= 0)
+                throw new ConfigurationException("memtable_total_space_in_mb must be positive");
+            logger.info("Global memtable threshold is enabled at {}MB", config.memtable_total_space_in_mb);
+
+            /* Memtable flush writer threads */
+            if (config.memtable_flush_writers != null && config.memtable_flush_writers < 1)
+            {
+                throw new ConfigurationException("memtable_flush_writers must be at least 1");
+            }
+            else if (config.memtable_flush_writers == null)
+            {
+                config.memtable_flush_writers = config.data_file_directories.length;
+            }
+
+            /* Local IP or hostname to bind services to */
+            if (config.listen_address != null)
+            {
+                try
+                {
+                    listenAddress = InetAddress.getByName(config.listen_address);
+                }
+                catch (UnknownHostException e)
+                {
+                    throw new ConfigurationException("Unknown listen_address '" + config.listen_address + "'");
+                }
+            }
+
+            /* Gossip Address to broadcast */
+            if (config.broadcast_address != null)
+            {
+                if (config.broadcast_address.equals("0.0.0.0"))
+                {
+                    throw new ConfigurationException("broadcast_address cannot be 0.0.0.0!");
+                }
+
+                try
+                {
+                    broadcastAddress = InetAddress.getByName(config.broadcast_address);
+                }
+                catch (UnknownHostException e)
+                {
+                    throw new ConfigurationException("Unknown broadcast_address '" + config.broadcast_address + "'");
+                }
+            }
+
+            /* Local IP or hostname to bind RPC server to */
+            if (config.rpc_address != null)
+            {
+                try
+                {
+                    rpcAddress = InetAddress.getByName(config.rpc_address);
+                }
+                catch (UnknownHostException e)
+                {
+                    throw new ConfigurationException("Unknown host in rpc_address " + config.rpc_address);
+                }
+            }
+            else
+            {
+                rpcAddress = FBUtilities.getLocalAddress();
+            }
+
+            if (config.thrift_framed_transport_size_in_mb <= 0)
+                throw new ConfigurationException("thrift_framed_transport_size_in_mb must be positive");
+
+            /* end point snitch */
+            if (config.endpoint_snitch == null)
+            {
+                throw new ConfigurationException("Missing endpoint_snitch directive");
+            }
+            snitch = createEndpointSnitch(config.endpoint_snitch);
+            EndpointSnitchInfo.create();
+
+            localDC = snitch.getDatacenter(FBUtilities.getBroadcastAddress());
+            localComparator = new Comparator<InetAddress>()
+            {
+                public int compare(InetAddress endpoint1, InetAddress endpoint2)
+                {
+                    boolean local1 = localDC.equals(snitch.getDatacenter(endpoint1));
+                    boolean local2 = localDC.equals(snitch.getDatacenter(endpoint2));
+                    if (local1 && !local2)
+                        return -1;
+                    if (local2 && !local1)
+                        return 1;
+                    return 0;
+                }
+            };
+
+            /* Request Scheduler setup */
+            requestSchedulerOptions = config.request_scheduler_options;
+            if (config.request_scheduler != null)
+            {
+                try
+                {
+                    if (requestSchedulerOptions == null)
+                    {
+                        requestSchedulerOptions = new RequestSchedulerOptions();
+                    }
+                    Class<?> cls = Class.forName(config.request_scheduler);
+                    requestScheduler = (IRequestScheduler) cls.getConstructor(RequestSchedulerOptions.class).newInstance(requestSchedulerOptions);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    throw new ConfigurationException("Invalid Request Scheduler class " + config.request_scheduler);
+                }
+                catch (Exception e)
+                {
+                    throw new ConfigurationException("Unable to instantiate request scheduler", e);
+                }
+            }
+            else
+            {
+                requestScheduler = new NoScheduler();
+            }
+
+            if (config.request_scheduler_id == RequestSchedulerId.keyspace)
+            {
+                requestSchedulerId = config.request_scheduler_id;
+            }
+            else
+            {
+                // Default to Keyspace
+                requestSchedulerId = RequestSchedulerId.keyspace;
+            }
+
+            if (logger.isDebugEnabled() && config.auto_bootstrap != null)
+            {
+                logger.debug("setting auto_bootstrap to " + config.auto_bootstrap);
+            }
+
+            logger.info((config.multithreaded_compaction ? "" : "Not ") + "using multi-threaded compaction");
+
+            if (config.in_memory_compaction_limit_in_mb != null && config.in_memory_compaction_limit_in_mb <= 0)
+            {
+                throw new ConfigurationException("in_memory_compaction_limit_in_mb must be a positive integer");
+            }
+
+            if (config.concurrent_compactors == null)
+                config.concurrent_compactors = FBUtilities.getAvailableProcessors();
+
+            if (config.concurrent_compactors <= 0)
+                throw new ConfigurationException("concurrent_compactors should be strictly greater than 0");
+
+            /* data file and commit log directories. they get created later, when they're needed. */
+            if (config.commitlog_directory != null && config.data_file_directories != null && config.saved_caches_directory != null)
+            {
+                for (String datadir : config.data_file_directories)
+                {
+                    if (datadir.equals(config.commitlog_directory))
+                        throw new ConfigurationException("commitlog_directory must not be the same as any data_file_directories");
+                    if (datadir.equals(config.saved_caches_directory))
+                        throw new ConfigurationException("saved_caches_directory must not be the same as any data_file_directories");
+                }
+
+                if (config.commitlog_directory.equals(config.saved_caches_directory))
+                    throw new ConfigurationException("saved_caches_directory must not be the same as the commitlog_directory");
+            }
+            else
+            {
+                if (config.commitlog_directory == null)
+                    throw new ConfigurationException("commitlog_directory missing");
+                if (config.data_file_directories == null)
+                    throw new ConfigurationException("data_file_directories missing; at least one data directory must be specified");
+                if (config.saved_caches_directory == null)
+                    throw new ConfigurationException("saved_caches_directory missing");
+            }
+
+            if (config.initial_token != null)
+                for (String token : tokensFromString(config.initial_token))
+                    partitioner.getTokenFactory().validate(token);
+
+            try
+            {
+                // if key_cache_size_in_mb option was set to "auto" then size of the cache should be "min(5% of Heap (in MB), 100MB)
+                keyCacheSizeInMB = (config.key_cache_size_in_mb == null)
+                                    ? Math.min(Math.max(1, (int) (Runtime.getRuntime().totalMemory() * 0.05 / 1024 / 1024)), 100)
+                                    : config.key_cache_size_in_mb;
+
+                if (keyCacheSizeInMB < 0)
+                    throw new NumberFormatException(); // to escape duplicating error message
+            }
+            catch (NumberFormatException e)
+            {
+                throw new ConfigurationException("key_cache_size_in_mb option was set incorrectly to '"
+                                                 + config.key_cache_size_in_mb + "', supported values are <integer> >= 0.");
+            }
+
+            rowCacheProvider = FBUtilities.newCacheProvider(config.row_cache_provider);
+
+            if(config.encryption_options != null)
+            {
+                logger.warn("Please rename encryption_options as server_encryption_options in the yaml");
+                //operate under the assumption that server_encryption_options is not set in yaml rather than both
+                config.server_encryption_options = config.encryption_options;
+            }
+
+            // Hardcoded system tables
+            List<KSMetaData> systemKeyspaces = Arrays.asList(KSMetaData.systemKeyspace(), KSMetaData.traceKeyspace());
+            assert systemKeyspaces.size() == Schema.systemKeyspaceNames.size();
+            for (KSMetaData ksmd : systemKeyspaces)
+            {
+                // install the definition
+                for (CFMetaData cfm : ksmd.cfMetaData().values())
+                    Schema.instance.load(cfm);
+                Schema.instance.setTableDefinition(ksmd);
+            }
+
+            /* Load the seeds for node contact points */
+            if (config.seed_provider == null)
+            {
+                throw new ConfigurationException("seeds configuration is missing; a minimum of one seed is required.");
+            }
+            try
+            {
+                Class<?> seedProviderClass = Class.forName(config.seed_provider.class_name);
+                seedProvider = (SeedProvider)seedProviderClass.getConstructor(Map.class).newInstance(config.seed_provider.parameters);
+            }
+            // there are about 5 checked exceptions that could be thrown here.
+            catch (Exception e)
+            {
+                logger.error("Fatal configuration error", e);
+                System.err.println(e.getMessage() + "\nFatal configuration error; unable to start server.  See log for stacktrace.");
+                System.exit(1);
+            }
+            if (seedProvider.getSeeds().size() == 0)
+                throw new ConfigurationException("The seed provider lists no seeds.");
+        }
+        catch (ConfigurationException e)
+        {
+            logger.error("Fatal configuration error", e);
+            System.err.println(e.getMessage() + "\nFatal configuration error; unable to start server.  See log for stacktrace.");
+            System.exit(1);
+        }
+        catch (YAMLException e)
+        {
+            logger.error("Fatal configuration error error", e);
+            System.err.println(e.getMessage() + "\nInvalid yaml; unable to start server.  See log for stacktrace.");
+            System.exit(1);
+        }
+    }
 
     private static IEndpointSnitch createEndpointSnitch(String snitchClassName) throws ConfigurationException
     {
