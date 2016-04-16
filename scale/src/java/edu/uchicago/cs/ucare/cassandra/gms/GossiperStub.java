@@ -20,6 +20,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.cassandra.config.Schema;
+import org.apache.cassandra.db.BatchlogManager;
+import org.apache.cassandra.db.HintedHandOffManager;
+import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.cassandra.dht.BootStrapper;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Token;
@@ -38,7 +41,9 @@ import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.AntiEntropyService;
 import org.apache.cassandra.service.CacheService;
+import org.apache.cassandra.service.LoadBroadcaster;
 import org.apache.cassandra.service.StorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +103,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     public StorageService storageService = new StorageService();
     public Schema schemaObject = new Schema();
     public CacheService cacheService = new CacheService();
+    public LoadBroadcaster loadBroadcaster = new LoadBroadcaster();
+    public HintedHandOffManager hintedHandOff = new HintedHandOffManager();
+    public BatchlogManager batchlog = new BatchlogManager();
+    public CompactionManager compact = new CompactionManager();
+    public AntiEntropyService antiEntropy = new AntiEntropyService();
 	
 	boolean hasContactedSeed;
 	

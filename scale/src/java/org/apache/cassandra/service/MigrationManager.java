@@ -64,7 +64,7 @@ public class MigrationManager implements IEndpointStateChangeSubscriber, IScaleE
 
     private final List<IMigrationListener> listeners = new CopyOnWriteArrayList<IMigrationListener>();
 
-    private MigrationManager() {}
+    public MigrationManager() {}
 
     public void register(IMigrationListener listener)
     {

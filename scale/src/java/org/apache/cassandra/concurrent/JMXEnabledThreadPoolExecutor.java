@@ -79,14 +79,14 @@ public class JMXEnabledThreadPoolExecutor extends DebuggableThreadPoolExecutor i
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         mbeanName = "org.apache.cassandra." + jmxPath + ":type=" + threadFactory.id;
 
-        try
-        {
-            mbs.registerMBean(this, new ObjectName(mbeanName));
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+//        try
+//        {
+//            mbs.registerMBean(this, new ObjectName(mbeanName));
+//        }
+//        catch (Exception e)
+//        {
+//            throw new RuntimeException(e);
+//        }
     }
 
     public JMXEnabledThreadPoolExecutor(Stage stage)

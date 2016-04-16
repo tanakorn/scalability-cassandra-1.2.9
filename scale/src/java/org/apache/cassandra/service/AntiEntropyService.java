@@ -112,7 +112,7 @@ public class AntiEntropyService
     /**
      * Protected constructor. Use AntiEntropyService.instance.
      */
-    protected AntiEntropyService()
+    public AntiEntropyService()
     {
         sessions = new ConcurrentHashMap<String, RepairSession>();
     }
