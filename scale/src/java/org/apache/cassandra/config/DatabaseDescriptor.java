@@ -27,9 +27,11 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import com.google.common.primitives.Longs;
+
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.auth.*;
 import org.apache.cassandra.cache.IRowCacheProvider;
 import org.apache.cassandra.config.Config.RequestSchedulerId;
@@ -916,6 +918,7 @@ public class DatabaseDescriptor
 
     public static String[] getAllDataFileLocations()
     {
+        StackTracePrinter.print();
         return conf.data_file_directories;
     }
 

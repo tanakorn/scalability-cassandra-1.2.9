@@ -114,16 +114,19 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     /**
      * This pool is used for periodic short (sub-second) tasks.
      */
-     public static final DebuggableScheduledThreadPoolExecutor scheduledTasks = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");
+    public static final DebuggableScheduledThreadPoolExecutor scheduledTasks = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");
+    public final DebuggableScheduledThreadPoolExecutor scheduledTasks2 = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");
 
     /**
      * This pool is used by tasks that can have longer execution times, and usually are non periodic.
      */
     public static final DebuggableScheduledThreadPoolExecutor tasks = new DebuggableScheduledThreadPoolExecutor("NonPeriodicTasks");
+    public final DebuggableScheduledThreadPoolExecutor tasks2 = new DebuggableScheduledThreadPoolExecutor("NonPeriodicTasks");
     /**
      * tasks that do not need to be waited for on shutdown/drain
      */
     public static final DebuggableScheduledThreadPoolExecutor optionalTasks = new DebuggableScheduledThreadPoolExecutor("OptionalTasks");
+    public final DebuggableScheduledThreadPoolExecutor optionalTasks2 = new DebuggableScheduledThreadPoolExecutor("OptionalTasks");
     static
     {
         tasks.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -199,7 +202,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     private final List<IEndpointLifecycleSubscriber> lifecycleSubscribers = new CopyOnWriteArrayList<IEndpointLifecycleSubscriber>();
     private static final List<IEndpointLifecycleSubscriber> lifecycleSubscribersStatic = new CopyOnWriteArrayList<IEndpointLifecycleSubscriber>();
 
-    private final ObjectName jmxObjectName;
+//    private final ObjectName jmxObjectName;
 
     public void finishBootstrapping()
     {
@@ -219,50 +222,55 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         setMode(Mode.NORMAL, false);
     }
 
+    public MessagingService ms = new MessagingService();
     public StorageService()
     {
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        try
-        {
-            jmxObjectName = new ObjectName("org.apache.cassandra.db:type=StorageService");
-            mbs.registerMBean(this, jmxObjectName);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+//        try
+//        {
+//            jmxObjectName = new ObjectName("org.apache.cassandra.db:type=StorageService");
+//            mbs.registerMBean(this, jmxObjectName);
+//        }
+//        catch (Exception e)
+//        {
+//            throw new RuntimeException(e);
+//        }
 
         /* register the verb handlers */
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.MUTATION, new RowMutationVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.READ_REPAIR, new ReadRepairVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.READ, new ReadVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.RANGE_SLICE, new RangeSliceVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.INDEX_SCAN, new IndexScanVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.COUNTER_MUTATION, new CounterMutationVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.TRUNCATE, new TruncateVerbHandler());
+//        scheduledTasks2 = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");
+//        tasks2 = new DebuggableScheduledThreadPoolExecutor("NonPeriodicTasks");
+//        optionalTasks2 = new DebuggableScheduledThreadPoolExecutor("OptionalTasks");
+        tasks2.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        ms.registerVerbHandlers(MessagingService.Verb.MUTATION, new RowMutationVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.READ_REPAIR, new ReadRepairVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.READ, new ReadVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.RANGE_SLICE, new RangeSliceVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.INDEX_SCAN, new IndexScanVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.COUNTER_MUTATION, new CounterMutationVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TRUNCATE, new TruncateVerbHandler());
 
         // see BootStrapper for a summary of how the bootstrap verbs interact
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.BOOTSTRAP_TOKEN, new BootStrapper.BootstrapTokenVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.STREAM_REQUEST, new StreamRequestVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.STREAM_REPLY, new StreamReplyVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.REPLICATION_FINISHED, new ReplicationFinishedVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.REQUEST_RESPONSE, new ResponseVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.INTERNAL_RESPONSE, new ResponseVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.TREE_REQUEST, new TreeRequestVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.TREE_RESPONSE, new AntiEntropyService.TreeResponseVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_REQUEST, new StreamingRepairTask.StreamingRepairRequest());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_RESPONSE, new StreamingRepairTask.StreamingRepairResponse());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_SHUTDOWN, new GossipShutdownVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.BOOTSTRAP_TOKEN, new BootStrapper.BootstrapTokenVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAM_REQUEST, new StreamRequestVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAM_REPLY, new StreamReplyVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.REPLICATION_FINISHED, new ReplicationFinishedVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.REQUEST_RESPONSE, new ResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.INTERNAL_RESPONSE, new ResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TREE_REQUEST, new TreeRequestVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TREE_RESPONSE, new AntiEntropyService.TreeResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_REQUEST, new StreamingRepairTask.StreamingRepairRequest());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_RESPONSE, new StreamingRepairTask.StreamingRepairResponse());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_SHUTDOWN, new GossipShutdownVerbHandler());
 
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_SYN, new SimulatedGossipDigestSynVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK, new SimulatedGossipDigestAckVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK2, new SimulatedGossipDigestAck2VerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_SYN, new SimulatedGossipDigestSynVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK, new SimulatedGossipDigestAckVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK2, new SimulatedGossipDigestAck2VerbHandler());
 
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.DEFINITIONS_UPDATE, new DefinitionsUpdateVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.SCHEMA_CHECK, new SchemaCheckVerbHandler());
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.MIGRATION_REQUEST, new MigrationRequestVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.DEFINITIONS_UPDATE, new DefinitionsUpdateVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.SCHEMA_CHECK, new SchemaCheckVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.MIGRATION_REQUEST, new MigrationRequestVerbHandler());
 
-        MessagingService.instance().registerVerbHandlers(MessagingService.Verb.SNAPSHOT, new SnapshotVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.SNAPSHOT, new SnapshotVerbHandler());
 
         // spin up the streaming service so it is available for jmx tools.
         if (StreamingService.instance == null)
@@ -2785,9 +2793,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
      */
     public void sendNotification(String type, String message, Object userObject)
     {
-        Notification jmxNotification = new Notification(type, jmxObjectName, notificationSerialNumber.incrementAndGet(), message);
-        jmxNotification.setUserData(userObject);
-        sendNotification(jmxNotification);
+//        Notification jmxNotification = new Notification(type, jmxObjectName, notificationSerialNumber.incrementAndGet(), message);
+//        jmxNotification.setUserData(userObject);
+//        sendNotification(jmxNotification);
     }
     public int forceRepairAsync(final String keyspace, final boolean isSequential, final boolean isLocal, final boolean primaryRange, final String... columnFamilies)
     {
