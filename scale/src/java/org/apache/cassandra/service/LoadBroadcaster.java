@@ -39,7 +39,7 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEn
 
     private ConcurrentMap<InetAddress, Double> loadInfo = new ConcurrentHashMap<InetAddress, java.lang.Double>();
 
-    private LoadBroadcaster()
+    public LoadBroadcaster()
     {
         Gossiper.instance.register(this);
 //        Gossiper.registerStatic(this);

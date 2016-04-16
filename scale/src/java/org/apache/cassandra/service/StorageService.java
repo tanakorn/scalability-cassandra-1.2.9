@@ -190,7 +190,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     private static enum Mode { NORMAL, CLIENT, JOINING, LEAVING, DECOMMISSIONED, MOVING, DRAINING, DRAINED, RELOCATING }
     private Mode operationMode;
 
-    private final MigrationManager migrationManager = MigrationManager.instance;
+    private final MigrationManager migrationManager = new MigrationManager();
 
     /* Used for tracking drain progress */
     private volatile int totalCFs, remainingCFs;
