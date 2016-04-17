@@ -524,12 +524,12 @@ public class WholeClusterSimulator {
                             " ; send lateness " + interval + 
                             " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 }
-                for (GossiperStub stub : stubGroup) {
-                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-                    if (queue.size() > 100) {
-                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-                    }
-                }
+//                for (GossiperStub stub : stubGroup) {
+//                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+//                    if (queue.size() > 100) {
+//                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+//                    }
+//                }
                 List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
                 TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
                 if (tmpLatenessList.size() != 0) {
