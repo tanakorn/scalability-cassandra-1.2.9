@@ -513,16 +513,15 @@ public class WholeClusterSimulator {
                 double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
                 percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
 //                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
+                long networkLateness = AckProcessor.processCount == 0 ? 0 : AckProcessor.networkQueuedTime / AckProcessor.processCount;
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval +
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
                 } else {
                     logger.info("stable status no " + flapping + 
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval + 
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
                 }
 //                for (GossiperStub stub : stubGroup) {
 //                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
