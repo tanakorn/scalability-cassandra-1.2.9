@@ -100,14 +100,14 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     Map<InetAddress, Long> expireTimeEndpointMap;
     Set<InetAddress> seeds;
     
-//    public StorageService storageService = new StorageService();
-//    public Schema schemaObject = new Schema();
-//    public CacheService cacheService = new CacheService();
-//    public LoadBroadcaster loadBroadcaster = new LoadBroadcaster();
-//    public HintedHandOffManager hintedHandOff = new HintedHandOffManager();
-//    public BatchlogManager batchlog = new BatchlogManager();
-//    public CompactionManager compact = new CompactionManager();
-//    public AntiEntropyService antiEntropy = new AntiEntropyService();
+    public StorageService storageService = new StorageService();
+    public Schema schemaObject = new Schema();
+    public CacheService cacheService = new CacheService();
+    public LoadBroadcaster loadBroadcaster = new LoadBroadcaster();
+    public HintedHandOffManager hintedHandOff = new HintedHandOffManager();
+    public BatchlogManager batchlog = new BatchlogManager();
+    public CompactionManager compact = new CompactionManager();
+    public AntiEntropyService antiEntropy = new AntiEntropyService();
 	
 	boolean hasContactedSeed;
 	

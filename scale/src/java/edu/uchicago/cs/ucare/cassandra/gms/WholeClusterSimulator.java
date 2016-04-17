@@ -460,9 +460,9 @@ public class WholeClusterSimulator {
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;
 //                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-//                GossiperStub stub = stubGroup.getStub(address);
-//                stub.storageService.ms.getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+//                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                GossiperStub stub = stubGroup.getStub(address);
+                stub.storageService.ms.getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
