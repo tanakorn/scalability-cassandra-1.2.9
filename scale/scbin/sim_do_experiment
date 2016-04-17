@@ -4,21 +4,26 @@ scriptdir=`dirname $0`
 . $scriptdir/readconfig
 cd $scriptdir
 
-logdir=${cassandra_log_dir}
-mkdir -p $logdir
-rm -r $logdir/*
-for n in 512; do
+for n in 60; do
+  logdir=${cassandra_log_dir}/n${n}
+  rm -r $logdir/*
+  mkdir -p $logdir
   cp scdeploy.conf.exp scdeploy.conf.$n
   echo "num_node=$n" >> scdeploy.conf.$n
   rm -r /tmp/n${n}
   mkdir /tmp/n${n}
   #./onemachine_dir_setup scdeploy.conf.$n
   rm /tmp/cass_scale/scale.log
-  ./simulation scdeploy.conf.$n $t
+  export NODES=$n
   ./cpu > /tmp/cpu.${n} &
-  sleep 300
+  ./mem > /tmp/mem.$n &
+  ./jps > /tmp/jps.$n &
+  ./simulation scdeploy.conf.$n $t
+  sleep 120
   pkill java
   pkill cpu
+  pkill mem
+  pkill jps
   cp /tmp/cass_scale/scale.log* /tmp/n${n}
   i=1
   while [ $i -le $n ]; do
@@ -27,7 +32,9 @@ for n in 512; do
     echo $i 127.0.${a}.${b} >> /tmp/n${n}/machinelist
     i=`expr $i + 1`
   done
-  cp -r /tmp/n${n} $logdir/n${n}
-  cp /tmp/cpu.${n} $logdir/n${n}/cpu
-  cp /tmp/gc $logdir/n${n}/gc
+  cp -r /tmp/n${n}/* $logdir
+  cp /tmp/cpu.${n} $logdir/cpu
+  cp /tmp/mem.${n} $logdir/mem
+  cp /tmp/jps.${n} $logdir/jps
+  cp /tmp/gc $logdir/gc
 done
