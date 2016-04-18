@@ -1,0 +1,7 @@
+#!/bin/sh
+
+while true; do
+  count=`ps -eLf | grep java | grep -v grep | wc -l`
+  echo Thread $count
+  sleep 1
+done
