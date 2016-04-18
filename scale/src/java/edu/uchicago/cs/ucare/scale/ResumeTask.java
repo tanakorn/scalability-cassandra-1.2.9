@@ -46,6 +46,9 @@ public abstract class ResumeTask implements Runnable {
         
         WholeClusterSimulator.overallRealSleep += realSleepTime;
         WholeClusterSimulator.overallExpectedSleep += sleepTime;
+        
+        WholeClusterSimulator.overallLateness += lateness;
+        WholeClusterSimulator.overallCount++;
 //        System.out.println(realSleepTime + " " + sleepTime);
         resumeCount += 1;
         if (maxLateness < lateness) {
