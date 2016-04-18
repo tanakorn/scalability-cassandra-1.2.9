@@ -479,6 +479,7 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             while (true) {
+                long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                 boolean isStable = true;
                 GossiperStub firstBadNode = null;
                 int badNumMemberNode = -1;
@@ -520,8 +521,8 @@ public class WholeClusterSimulator {
                 if (isStable) {
                     logger.info("stable status yes " + flapping + 
                             " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
-                            " ; send lateness " + interval + " ; overall lateness " + overallAverageLateness + " " + overallPercentLateness,
-                            " ; network lateness " + avgNetworkQueuedTime);
+                            " ; send lateness " + interval + " ; overall lateness " + overallAverageLateness + " " + overallPercentLateness +
+                            " ; network lateness " + avgNetworkQueuedTime + " ; memory " + usedMemory);
                 } else {
 //                    logger.info("stable status no " + flapping + " " 
 //                            + firstBadNode.getInetAddress() + " " + badNumMemberNode 
@@ -529,8 +530,8 @@ public class WholeClusterSimulator {
 //                            + " " + ResumeTask.maxLateness());
                     logger.info("stable status no " + flapping + " " +
                             " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
-                            " ; send lateness " + interval +  " ; overall lateness " + overallAverageLateness + " " + overallPercentLateness,
-                            " ; network lateness " + avgNetworkQueuedTime);
+                            " ; send lateness " + interval +  " ; overall lateness " + overallAverageLateness + " " + overallPercentLateness +
+                            " ; network lateness " + avgNetworkQueuedTime + " ; memory " + usedMemory);
                 }
                 StringBuilder sb = new StringBuilder("max_phi_in_observer ");
                 for (double phi : maxPhiInObserver) {
