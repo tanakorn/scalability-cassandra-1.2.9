@@ -70,6 +70,9 @@ public class WholeClusterSimulator {
     public static double[] maxPhiOfObservee;
     
     public static List<Double> percentSendLatenessList = Collections.synchronizedList(new LinkedList<Double>());
+    
+    public static long overallExpectedSleep = 0;
+    public static long overallRealSleep = 0;
 
     public static final Set<InetAddress> observedNodes;
     static {
@@ -315,6 +318,8 @@ public class WholeClusterSimulator {
                 long interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
                 totalIntLength += (interval * stubs.size());
+                overallExpectedSleep += (stubs.size() * 1000);
+                overallRealSleep += (stubs.size() * interval);
                 sentCount += stubs.size();
                 percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
             }
@@ -485,10 +490,11 @@ public class WholeClusterSimulator {
                 percentLateness = (percentLateness - 1) * 100;
                 long avgNetworkQueuedTime = MessageProcessor.processCount == 0 ? 0 : MessageProcessor.networkQueuedTime / MessageProcessor.processCount;
 //                System.out.println(ResumeTask.totalRealSleepTime + " " + ResumeTask.totalExpectedSleepTime);
+                double overallPercentLateness = overallExpectedSleep == 0 ? 0 : ((double) overallRealSleep) / (double) overallExpectedSleep;
                 if (isStable) {
                     logger.info("stable status yes " + flapping + 
                             " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
-                            " ; send lateness " + interval +
+                            " ; send lateness " + interval + " ; overall lateness " + overallPercentLateness,
                             " ; network lateness " + avgNetworkQueuedTime);
                 } else {
 //                    logger.info("stable status no " + flapping + " " 
@@ -497,7 +503,7 @@ public class WholeClusterSimulator {
 //                            + " " + ResumeTask.maxLateness());
                     logger.info("stable status no " + flapping + " " +
                             " ; proc lateness " + ResumeTask.averageLateness() + " " + ResumeTask.maxLateness() + " " + percentLateness +
-                            " ; send lateness " + interval + 
+                            " ; send lateness " + interval +  " ; overall lateness " + overallPercentLateness,
                             " ; network lateness " + avgNetworkQueuedTime);
                 }
                 StringBuilder sb = new StringBuilder("max_phi_in_observer ");

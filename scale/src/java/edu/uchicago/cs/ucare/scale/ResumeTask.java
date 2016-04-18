@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 public abstract class ResumeTask implements Runnable {
     
     private static long totalLateness = 0;
@@ -35,12 +37,15 @@ public abstract class ResumeTask implements Runnable {
         totalLateness += lateness;
         long realSleepTime = sleepTime + lateness;
         if (sleepTime != 0) {
-            percentLatenessList.add(((((double) realSleepTime) / (double) sleepTime) - 1) * 100);
+            percentLatenessList.add((((double) lateness) / (double) sleepTime) * 100);
         } else {
             percentLatenessList.add(0.0);
         }
         totalRealSleepTime += realSleepTime;
         totalExpectedSleepTime += sleepTime;
+        
+        WholeClusterSimulator.overallRealSleep += realSleepTime;
+        WholeClusterSimulator.overallExpectedSleep += sleepTime;
 //        System.out.println(realSleepTime + " " + sleepTime);
         resumeCount += 1;
         if (maxLateness < lateness) {
