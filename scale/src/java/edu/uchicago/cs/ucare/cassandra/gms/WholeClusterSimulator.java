@@ -479,6 +479,10 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             while (true) {
+                double usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                usedMemory = usedMemory / 1024;
+                usedMemory = usedMemory / 1024;
+                usedMemory = usedMemory / 1024;
                 boolean isStable = true;
                 for (GossiperStub stub : stubGroup) {
 //                    String thisAddress = stub.getInetAddress().toString();
@@ -517,11 +521,11 @@ public class WholeClusterSimulator {
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness + " ; memory " + usedMemory);
                 } else {
                     logger.info("stable status no " + flapping + 
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness + " ; memory " + usedMemory);
                 }
 //                for (GossiperStub stub : stubGroup) {
 //                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
