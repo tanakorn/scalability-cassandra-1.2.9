@@ -4,7 +4,7 @@ scriptdir=`dirname $0`
 . $scriptdir/readconfig
 cd $scriptdir
 
-for n in 384; do
+for n in 60 128 256 512; do
   logdir=${cassandra_log_dir}/n${n}
   rm -r $logdir/*
   mkdir -p $logdir
@@ -18,12 +18,14 @@ for n in 384; do
   ./cpu > /tmp/cpu.${n} &
   ./mem > /tmp/mem.$n &
   ./jps > /tmp/jps.$n &
+  ./thread > /tmp/thread.$n &
   ./simulation scdeploy.conf.$n $t
   sleep 120
   pkill java
   pkill cpu
   pkill mem
   pkill jps
+  pkill thread
   cp /tmp/cass_scale/scale.log* /tmp/n${n}
   i=1
   while [ $i -le $n ]; do
@@ -36,5 +38,6 @@ for n in 384; do
   cp /tmp/cpu.${n} $logdir/cpu
   cp /tmp/mem.${n} $logdir/mem
   cp /tmp/jps.${n} $logdir/jps
+  cp /tmp/thread.${n} $logdir/thread
   cp /tmp/gc $logdir/gc
 done
