@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.scale;
 
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,11 +19,13 @@ public abstract class ResumeTask implements Runnable {
     protected final long expectedExecutionTime;
     protected long sleepTime;
     private long lateness;
+    public InetAddress address;
     
     public static List<Long> latenessList = Collections.synchronizedList(new LinkedList<Long>());
     public static List<Double> percentLatenessList = Collections.synchronizedList(new LinkedList<Double>());
     
-    public ResumeTask(long expectedExecutionTime, long sleepTime) {
+    public ResumeTask(InetAddress address, long expectedExecutionTime, long sleepTime) {
+        this.address = address;
         this.expectedExecutionTime = expectedExecutionTime;
         this.sleepTime = sleepTime;
         lateness = -1;

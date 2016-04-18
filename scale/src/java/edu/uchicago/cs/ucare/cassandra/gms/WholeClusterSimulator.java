@@ -63,7 +63,8 @@ public class WholeClusterSimulator {
     
     public static Map<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>>();
     public static ExecutorService msgProcessors; 
-    public static ScheduledExecutorService resumeProcessors;
+    public static ScheduledExecutorService[] resumeProcessors;
+    public static Map<InetAddress, ScheduledExecutorService> resumeMap;
     public static Map<InetAddress, AtomicBoolean> isProcessing;
     
     public static double[] maxPhiInObserver;
@@ -218,7 +219,18 @@ public class WholeClusterSimulator {
         int numProcessors = Integer.parseInt(args[4]);
         msgProcessors = Executors.newFixedThreadPool(numProcessors);
         int numResumers = Integer.parseInt(args[5]);
-        resumeProcessors = Executors.newScheduledThreadPool(numResumers);
+//        resumeProcessors = Executors.newScheduledThreadPool(numResumers);
+        resumeMap = new HashMap<InetAddress, ScheduledExecutorService>();
+        int numResumeGroup = 3;
+        resumeProcessors = new ScheduledExecutorService[numResumeGroup];
+        for (int i = 0; i < resumeProcessors.length; ++i) {
+            resumeProcessors[i] = Executors.newScheduledThreadPool(numResumers / numResumeGroup); 
+        }
+        ii = 0;
+        for (GossiperStub stub : stubGroup) {
+            resumeMap.put(stub.getInetAddress(), resumeProcessors[ii]);
+            ii = (ii + 1) % numResumeGroup;
+        }
         Thread msgProber = new Thread(new MessageProber());
         msgProber.start();
         Thread seedThread = new Thread(new Runnable() {
@@ -621,7 +633,8 @@ public class WholeClusterSimulator {
     
     public static void submitResumeTask(ResumeTask task) {
         long expectedTime = task.getExpectedExecutionTime();
-        resumeProcessors.schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+//        resumeProcessors.schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        resumeMap.get(task.address).schedule(task, expectedTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
     }
 
 }

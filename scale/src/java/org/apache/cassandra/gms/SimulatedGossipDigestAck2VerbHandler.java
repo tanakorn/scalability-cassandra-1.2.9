@@ -170,7 +170,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 
         public SimulatedGDA2ResumeTask(long expectedExecutionTime, long sleepTime, 
                 long receiveTime, Object[] result, MessageIn<GossipDigestAck2> message) {
-            super(expectedExecutionTime, sleepTime);
+            super(message.to, expectedExecutionTime, sleepTime);
             this.receiveTime = receiveTime;
             this.result = result;
             this.message = message;

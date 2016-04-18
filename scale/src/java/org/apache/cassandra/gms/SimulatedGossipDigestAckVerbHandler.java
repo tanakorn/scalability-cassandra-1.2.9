@@ -231,7 +231,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         private MessageIn<GossipDigestAck> message;
 
         public SimulatedGDAResumeTask(long expectedExecutionTime, long sleepTime, long receiveTime, Object[] result, MessageIn<GossipDigestAck> message) {
-            super(expectedExecutionTime, sleepTime);
+            super(message.to, expectedExecutionTime, sleepTime);
             this.receiveTime = receiveTime;
             this.result = result;
             this.message = message;
