@@ -62,7 +62,7 @@ public class WholeClusterSimulator {
     public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords;
     
     public static Map<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, ConcurrentLinkedQueue<MessageIn<?>>>();
-    public static ExecutorService msgProcessors; 
+//    public static ExecutorService msgProcessors; 
     public static ScheduledExecutorService[] resumeProcessors;
     public static Map<InetAddress, ScheduledExecutorService> resumeMap;
     public static Map<InetAddress, AtomicBoolean> isProcessing;
@@ -216,12 +216,12 @@ public class WholeClusterSimulator {
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
         }
-        int numProcessors = Integer.parseInt(args[4]);
-        msgProcessors = Executors.newFixedThreadPool(numProcessors);
+        int numResumeGroup = Integer.parseInt(args[4]);
+//        msgProcessors = Executors.newFixedThreadPool(numProcessors);
         int numResumers = Integer.parseInt(args[5]);
 //        resumeProcessors = Executors.newScheduledThreadPool(numResumers);
         resumeMap = new HashMap<InetAddress, ScheduledExecutorService>();
-        int numResumeGroup = 3;
+//        int numResumeGroup = 3;
         resumeProcessors = new ScheduledExecutorService[numResumeGroup];
         for (int i = 0; i < resumeProcessors.length; ++i) {
             resumeProcessors[i] = Executors.newScheduledThreadPool(numResumers / numResumeGroup); 
@@ -463,7 +463,8 @@ public class WholeClusterSimulator {
 //                    logger.info("Checking queue for " + address + " ; " + msgQueue.size() + " " + isProcessing.get(address).get());
                     if (!msgQueue.isEmpty() && isProcessing.get(address).compareAndSet(false, true)) {
                         MessageIn<?> msg = msgQueue.poll();
-                        msgProcessors.execute(new MessageProcessor(msg));
+//                        msgProcessors.execute(new MessageProcessor(msg));
+                        resumeMap.get(address).execute(new MessageProcessor(msg));
                     } else {
 //                        logger.info("There is not a message for " + address + " " + msgQueue.size() + " " + isProcessing.get(address).get());
                     }
