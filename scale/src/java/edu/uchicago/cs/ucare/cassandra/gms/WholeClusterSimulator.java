@@ -332,20 +332,20 @@ public class WholeClusterSimulator {
             if (previousTime != 0) {
                 long interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
-//                totalIntLength += interval;
-//                overallExpectedSleep += (1000);
-//                overallRealSleep += (interval);
-//                sentCount += 1;
-//                percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
-//                overallLateness += ((interval - 1000));
-//                overallCount += 1;
-                totalIntLength += (interval * stubs.size());
-                overallExpectedSleep += (stubs.size() * 1000);
-                overallRealSleep += (stubs.size() * interval);
-                sentCount += stubs.size();
+                totalIntLength += interval;
+                overallExpectedSleep += (1000);
+                overallRealSleep += (interval);
+                sentCount += 1;
                 percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
-                overallLateness += ((interval - 1000) * stubs.size());
-                overallCount += stubs.size();
+                overallLateness += ((interval - 1000));
+                overallCount += 1;
+//                totalIntLength += (interval * stubs.size());
+//                overallExpectedSleep += (stubs.size() * 1000);
+//                overallRealSleep += (stubs.size() * interval);
+//                sentCount += stubs.size();
+//                percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
+//                overallLateness += ((interval - 1000) * stubs.size());
+//                overallCount += stubs.size();
             }
             previousTime = start;
             for (GossiperStub performer : stubs) {
@@ -479,7 +479,10 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             while (true) {
-                long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                double usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                usedMemory /= 1024;
+                usedMemory /= 1024;
+                usedMemory /= 1024;
                 boolean isStable = true;
                 GossiperStub firstBadNode = null;
                 int badNumMemberNode = -1;
