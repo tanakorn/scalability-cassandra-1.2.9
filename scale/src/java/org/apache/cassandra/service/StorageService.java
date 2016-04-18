@@ -219,7 +219,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         setMode(Mode.NORMAL, false);
     }
 
-    MessagingService ms;
+    public MessagingService ms;
     public StorageService()
     {
         ms = new MessagingService();
