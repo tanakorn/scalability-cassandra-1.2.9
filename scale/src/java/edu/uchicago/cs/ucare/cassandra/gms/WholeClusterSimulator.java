@@ -213,8 +213,13 @@ public class WholeClusterSimulator {
         msgProcessors = Executors.newFixedThreadPool(numProcessors);
         int numResumers = Integer.parseInt(args[5]);
         resumeProcessors = Executors.newScheduledThreadPool(numResumers);
-        Thread msgProber = new Thread(new MessageProber());
-        msgProber.start();
+        Thread[] msgProbers = new Thread[numGossiper];
+        for (int i = 0; i < numGossiper; ++i) {
+            msgProbers[i] = new Thread(new MessageProber(subStub[i]));
+            msgProbers[i].start();
+        }
+//        Thread msgProber = new Thread(new MessageProber());
+//        msgProber.start();
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -426,10 +431,18 @@ public class WholeClusterSimulator {
     
     public static class MessageProber implements Runnable {
 
+        List<GossiperStub> stubs;
+        
+        public MessageProber(List<GossiperStub> stubs) {
+            this.stubs = stubs;
+        }
+
         @Override
         public void run() {
             while (true) {
-                for (InetAddress address : msgQueues.keySet()) {
+//                for (InetAddress address : msgQueues.keySet()) {
+                for (GossiperStub stub : stubs) {
+                    InetAddress address = stub.getInetAddress();
                     ConcurrentLinkedQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
 //                    logger.info("Checking queue for " + address + " ; " + msgQueue.size() + " " + isProcessing.get(address).get());
                     if (!msgQueue.isEmpty() && isProcessing.get(address).compareAndSet(false, true)) {
