@@ -417,7 +417,9 @@ public class WholeClusterSimulator {
             long networkQueuedTime = currentTime - msg.createdTime;
             MessageProcessor.networkQueuedTime += networkQueuedTime;
             MessageProcessor.processCount += 1;
-            MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
+            GossiperStub stub = stubGroup.getStub(msg.getTo());
+            stub.storageService.ms.getVerbHandler(msg.verb).doVerb(msg, "");
+//            MessagingService.instance().getVerbHandler(msg.verb).doVerb(msg, "");
         }
         
     }
