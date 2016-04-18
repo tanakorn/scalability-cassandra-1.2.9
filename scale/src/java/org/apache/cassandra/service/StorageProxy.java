@@ -79,11 +79,23 @@ public class StorageProxy implements StorageProxyMBean
     private static final WritePerformer counterWritePerformer;
     private static final WritePerformer counterWriteOnCoordinatorPerformer;
 
+    final WritePerformer standardWritePerformer2;
+    final WritePerformer counterWritePerformer2;
+    final WritePerformer counterWriteOnCoordinatorPerformer2;
+
     public static final StorageProxy instance = new StorageProxy();
 
     private static volatile int maxHintsInProgress = 1024 * FBUtilities.getAvailableProcessors();
     private static final AtomicInteger totalHintsInProgress = new AtomicInteger();
+    private final AtomicInteger totalHintsInProgress2 = new AtomicInteger();
     private static final Map<InetAddress, AtomicInteger> hintsInProgress = new MapMaker().concurrencyLevel(1).makeComputingMap(new Function<InetAddress, AtomicInteger>()
+    {
+        public AtomicInteger apply(InetAddress inetAddress)
+        {
+            return new AtomicInteger(0);
+        }
+    });
+    private final Map<InetAddress, AtomicInteger> hintsInProgress2 = new MapMaker().concurrencyLevel(1).makeComputingMap(new Function<InetAddress, AtomicInteger>()
     {
         public AtomicInteger apply(InetAddress inetAddress)
         {
@@ -95,7 +107,52 @@ public class StorageProxy implements StorageProxyMBean
     private static final ClientRequestMetrics rangeMetrics = new ClientRequestMetrics("RangeSlice");
     private static final ClientRequestMetrics writeMetrics = new ClientRequestMetrics("Write");
 
-    private StorageProxy() {}
+    final AtomicLong totalHints2 = new AtomicLong();
+    final ClientRequestMetrics readMetrics2 = new ClientRequestMetrics("Read");
+    final ClientRequestMetrics rangeMetrics2 = new ClientRequestMetrics("RangeSlice");
+    final ClientRequestMetrics writeMetrics2 = new ClientRequestMetrics("Write");
+
+    public StorageProxy() {
+        standardWritePerformer2 = new WritePerformer()
+        {
+            public void apply(IMutation mutation,
+                              Iterable<InetAddress> targets,
+                              AbstractWriteResponseHandler responseHandler,
+                              String localDataCenter,
+                              ConsistencyLevel consistency_level)
+            throws IOException, OverloadedException
+            {
+                assert mutation instanceof RowMutation;
+                sendToHintedEndpoints((RowMutation) mutation, targets, responseHandler, localDataCenter, consistency_level);
+            }
+        };
+        counterWritePerformer2  = new WritePerformer()
+        {
+            public void apply(IMutation mutation,
+                              Iterable<InetAddress> targets,
+                              AbstractWriteResponseHandler responseHandler,
+                              String localDataCenter,
+                              ConsistencyLevel consistency_level)
+            throws IOException
+            {
+                Runnable runnable = counterWriteTask(mutation, targets, responseHandler, localDataCenter, consistency_level);
+                runnable.run();
+            }
+        };
+        counterWriteOnCoordinatorPerformer2  = new WritePerformer()
+        {
+            public void apply(IMutation mutation,
+                              Iterable<InetAddress> targets,
+                              AbstractWriteResponseHandler responseHandler,
+                              String localDataCenter,
+                              ConsistencyLevel consistency_level)
+            throws IOException
+            {
+                Runnable runnable = counterWriteTask(mutation, targets, responseHandler, localDataCenter, consistency_level);
+                StageManager.getStage(Stage.MUTATION).execute(runnable);
+            }
+        };
+    }
 
     static
     {

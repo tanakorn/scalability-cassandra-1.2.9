@@ -44,7 +44,10 @@ import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.AntiEntropyService;
 import org.apache.cassandra.service.CacheService;
 import org.apache.cassandra.service.LoadBroadcaster;
+import org.apache.cassandra.service.PBSPredictor;
+import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.service.StorageService;
+import org.apache.cassandra.streaming.StreamingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +111,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     public BatchlogManager batchlog = new BatchlogManager();
     public CompactionManager compact = new CompactionManager();
     public AntiEntropyService antiEntropy = new AntiEntropyService();
+    public StreamingService streaming = new StreamingService();
+    public PBSPredictor pbsPredictor = new PBSPredictor();
+    public StorageProxy storageProxy = new StorageProxy();
 	
 	boolean hasContactedSeed;
 	

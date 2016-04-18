@@ -101,6 +101,7 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
     private volatile boolean hintedHandOffPaused = false;
 
     static final CompositeType comparator = CompositeType.getInstance(Arrays.<AbstractType<?>>asList(UUIDType.instance, Int32Type.instance));
+    final CompositeType comparator2 = CompositeType.getInstance(Arrays.<AbstractType<?>>asList(UUIDType.instance, Int32Type.instance));
 
     private final NonBlockingHashSet<InetAddress> queuedDeliveries = new NonBlockingHashSet<InetAddress>();
 

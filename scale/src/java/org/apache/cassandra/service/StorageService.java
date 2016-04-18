@@ -140,6 +140,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     public static final StorageService instance = new StorageService();
 
     private static final StorageMetrics metrics = new StorageMetrics();
+    private final StorageMetrics metrics2 = new StorageMetrics();
 
     public static IPartitioner getPartitioner()
     {

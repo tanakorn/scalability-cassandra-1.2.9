@@ -89,7 +89,7 @@ public class AntiEntropyService
     public static final AntiEntropyService instance = new AntiEntropyService();
 
     private static final ThreadPoolExecutor executor;
-    private final ThreadPoolExecutor executor2;
+    final ThreadPoolExecutor executor2;
     static
     {
         executor = new JMXConfigurableThreadPoolExecutor(4,

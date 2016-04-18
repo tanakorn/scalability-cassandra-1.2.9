@@ -205,7 +205,7 @@ public class PBSPredictor implements PBSPredictorMBean
         return instance;
     }
 
-    private PBSPredictor()
+    public PBSPredictor()
     {
         init();
     }
@@ -241,15 +241,15 @@ public class PBSPredictor implements PBSPredictorMBean
         {
             random = new Random();
 
-            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            try
-            {
-                mbs.registerMBean(this, new ObjectName(PBSPredictor.MBEAN_NAME));
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException(e);
-            }
+//            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+//            try
+//            {
+//                mbs.registerMBean(this, new ObjectName(PBSPredictor.MBEAN_NAME));
+//            }
+//            catch (Exception e)
+//            {
+//                throw new RuntimeException(e);
+//            }
             initialized = true;
         }
     }
