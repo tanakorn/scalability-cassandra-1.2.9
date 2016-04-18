@@ -312,7 +312,7 @@ public final class MessagingService implements MessagingServiceMBean
         return MSHandle.instance;
     }
 
-    private MessagingService()
+    public MessagingService()
     {
         for (Verb verb : DROPPABLE_VERBS)
         {
@@ -357,6 +357,58 @@ public final class MessagingService implements MessagingServiceMBean
         try
         {
             mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public MessagingService(String address)
+    {
+        for (Verb verb : DROPPABLE_VERBS)
+        {
+            droppedMessages.put(verb, new DroppedMessageMetrics(verb));
+            lastDroppedInternal.put(verb, 0);
+        }
+
+        listenGate = new SimpleCondition();
+        verbHandlers = new EnumMap<Verb, IVerbHandler>(Verb.class);
+        Runnable logDropped = new Runnable()
+        {
+            public void run()
+            {
+                logDroppedMessages();
+            }
+        };
+        StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
+
+        Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, ?> timeoutReporter = new Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, Object>()
+        {
+            public Object apply(Pair<String, ExpiringMap.CacheableObject<CallbackInfo>> pair)
+            {
+                CallbackInfo expiredCallbackInfo = pair.right.value;
+                maybeAddLatency(expiredCallbackInfo.callback, expiredCallbackInfo.target, pair.right.timeout);
+                ConnectionMetrics.totalTimeouts.mark();
+                getConnectionPool(expiredCallbackInfo.target).incrementTimeout();
+
+                if (expiredCallbackInfo.shouldHint())
+                {
+                    assert expiredCallbackInfo.sentMessage != null;
+                    RowMutation rm = (RowMutation) expiredCallbackInfo.sentMessage.payload;
+                    return StorageProxy.submitHint(rm, expiredCallbackInfo.target, null, null);
+                }
+
+                return null;
+            }
+        };
+
+        callbacks = new ExpiringMap<String, CallbackInfo>(DatabaseDescriptor.getMinRpcTimeout(), timeoutReporter);
+
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME + address));
         }
         catch (Exception e)
         {

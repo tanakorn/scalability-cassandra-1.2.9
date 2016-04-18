@@ -32,12 +32,25 @@ public class StreamingService implements StreamingServiceMBean
     public static final String MBEAN_OBJECT_NAME = "org.apache.cassandra.net:type=StreamingService";
     public static final StreamingService instance = new StreamingService();
 
-    private StreamingService()
+    public StreamingService()
     {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try
         {
             mbs.registerMBean(this, new ObjectName(MBEAN_OBJECT_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public StreamingService(String address)
+    {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_OBJECT_NAME + address));
         }
         catch (Exception e)
         {

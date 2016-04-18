@@ -20,6 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.apache.cassandra.config.Schema;
+import org.apache.cassandra.db.BatchlogManager;
+import org.apache.cassandra.db.HintedHandOffManager;
+import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.cassandra.dht.BootStrapper;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.dht.Token;
@@ -38,7 +42,13 @@ import org.apache.cassandra.locator.TokenMetadata;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.AntiEntropyService;
+import org.apache.cassandra.service.CacheService;
+import org.apache.cassandra.service.LoadBroadcaster;
+import org.apache.cassandra.service.PBSPredictor;
+import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.service.StorageService;
+import org.apache.cassandra.streaming.StreamingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +108,18 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	
 	int id = -1;
 	
+    public StorageService storageService;
+    public Schema schemaObject;
+    public CacheService cacheService;
+    public LoadBroadcaster loadBroadcaster;
+    public HintedHandOffManager hintedHandOff;
+    public BatchlogManager batchlog;
+    public CompactionManager compact;
+    public AntiEntropyService antiEntropy;
+    public StreamingService streaming;
+    public PBSPredictor pbsPredictor;
+    public StorageProxy storageProxy;
+	
 	private static final Random random = new Random();
 	public static InetAddress getRandomAddress(Collection<InetAddress> addressCollection) {
 	    if (addressCollection.isEmpty()) {
@@ -146,6 +168,20 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             this.seeds.addAll(seeds);
         }
         flapping = 0;
+        
+        String addressStr = broadcastAddress.toString();
+        
+        storageService = new StorageService(addressStr);
+        schemaObject = new Schema();
+        cacheService = new CacheService(addressStr);
+        loadBroadcaster = new LoadBroadcaster();
+        hintedHandOff = new HintedHandOffManager();
+        batchlog = new BatchlogManager();
+        compact = new CompactionManager();
+        antiEntropy = new AntiEntropyService();
+        streaming = new StreamingService(addressStr);
+        pbsPredictor = new PBSPredictor(addressStr);
+        storageProxy = new StorageProxy();
 	}
 	
 	public void prepareInitialState() {

@@ -95,7 +95,7 @@ public class StorageProxy implements StorageProxyMBean
     private static final ClientRequestMetrics rangeMetrics = new ClientRequestMetrics("RangeSlice");
     private static final ClientRequestMetrics writeMetrics = new ClientRequestMetrics("Write");
 
-    private StorageProxy() {}
+    public StorageProxy() {}
 
     static
     {
