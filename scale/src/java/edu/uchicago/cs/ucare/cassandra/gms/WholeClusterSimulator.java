@@ -213,9 +213,19 @@ public class WholeClusterSimulator {
         msgProcessors = Executors.newFixedThreadPool(numProcessors);
         int numResumers = Integer.parseInt(args[5]);
         resumeProcessors = Executors.newScheduledThreadPool(numResumers);
-        Thread[] msgProbers = new Thread[numGossiper];
-        for (int i = 0; i < numGossiper; ++i) {
-            msgProbers[i] = new Thread(new MessageProber(subStub[i]));
+        int numProber = Integer.parseInt(args[6]);
+        LinkedList<GossiperStub>[] subStub2 = new LinkedList[numProber];
+        for (int i = 0; i < numProber; ++i) {
+            subStub2[i] = new LinkedList<GossiperStub>();
+        }
+        ii = 0;
+        for (GossiperStub stub : stubGroup) {
+            subStub2[ii].add(stub);
+            ii = (ii + 1) % numProber;
+        }
+        Thread[] msgProbers = new Thread[numProber];
+        for (int i = 0; i < numProber; ++i) {
+            msgProbers[i] = new Thread(new MessageProber(subStub2[i]));
             msgProbers[i].start();
         }
 //        Thread msgProber = new Thread(new MessageProber());
