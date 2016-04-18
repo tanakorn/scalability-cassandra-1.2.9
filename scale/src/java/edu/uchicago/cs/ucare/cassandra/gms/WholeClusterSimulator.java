@@ -134,9 +134,9 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 6) {
+        if (args.length < 7) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_gossipers> <num_processors> <num_resumer>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_gossipers> <num_processors> <num_resumer> <num_prober>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
@@ -461,6 +461,12 @@ public class WholeClusterSimulator {
                     } else {
 //                        logger.info("There is not a message for " + address + " " + msgQueue.size() + " " + isProcessing.get(address).get());
                     }
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
             }
         }
