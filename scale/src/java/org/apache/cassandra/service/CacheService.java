@@ -87,16 +87,33 @@ public class CacheService implements CacheServiceMBean
 
     public CacheService()
     {
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//
-//        try
-//        {
-//            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
-//        }
-//        catch (Exception e)
-//        {
-//            throw new RuntimeException(e);
-//        }
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        keyCache = initKeyCache();
+        rowCache = initRowCache();
+    }
+    
+    public CacheService(String address)
+    {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME + address));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
 
         keyCache = initKeyCache();
         rowCache = initRowCache();

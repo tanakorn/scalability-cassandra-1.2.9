@@ -34,15 +34,28 @@ public class StreamingService implements StreamingServiceMBean
 
     public StreamingService()
     {
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//        try
-//        {
-//            mbs.registerMBean(this, new ObjectName(MBEAN_OBJECT_NAME));
-//        }
-//        catch (Exception e)
-//        {
-//            throw new RuntimeException(e);
-//        }
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_OBJECT_NAME));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public StreamingService(String address)
+    {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_OBJECT_NAME + address));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getStatus()

@@ -203,7 +203,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     private final List<IEndpointLifecycleSubscriber> lifecycleSubscribers = new CopyOnWriteArrayList<IEndpointLifecycleSubscriber>();
     private static final List<IEndpointLifecycleSubscriber> lifecycleSubscribersStatic = new CopyOnWriteArrayList<IEndpointLifecycleSubscriber>();
 
-//    private final ObjectName jmxObjectName;
+    private final ObjectName jmxObjectName;
 
     public void finishBootstrapping()
     {
@@ -226,16 +226,70 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     public MessagingService ms = new MessagingService();
     public StorageService()
     {
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//        try
-//        {
-//            jmxObjectName = new ObjectName("org.apache.cassandra.db:type=StorageService");
-//            mbs.registerMBean(this, jmxObjectName);
-//        }
-//        catch (Exception e)
-//        {
-//            throw new RuntimeException(e);
-//        }
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            jmxObjectName = new ObjectName("org.apache.cassandra.db:type=StorageService");
+            mbs.registerMBean(this, jmxObjectName);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        /* register the verb handlers */
+//        scheduledTasks2 = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");
+//        tasks2 = new DebuggableScheduledThreadPoolExecutor("NonPeriodicTasks");
+//        optionalTasks2 = new DebuggableScheduledThreadPoolExecutor("OptionalTasks");
+        tasks2.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        ms.registerVerbHandlers(MessagingService.Verb.MUTATION, new RowMutationVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.READ_REPAIR, new ReadRepairVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.READ, new ReadVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.RANGE_SLICE, new RangeSliceVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.INDEX_SCAN, new IndexScanVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.COUNTER_MUTATION, new CounterMutationVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TRUNCATE, new TruncateVerbHandler());
+
+        // see BootStrapper for a summary of how the bootstrap verbs interact
+        ms.registerVerbHandlers(MessagingService.Verb.BOOTSTRAP_TOKEN, new BootStrapper.BootstrapTokenVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAM_REQUEST, new StreamRequestVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAM_REPLY, new StreamReplyVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.REPLICATION_FINISHED, new ReplicationFinishedVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.REQUEST_RESPONSE, new ResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.INTERNAL_RESPONSE, new ResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TREE_REQUEST, new TreeRequestVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.TREE_RESPONSE, new AntiEntropyService.TreeResponseVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_REQUEST, new StreamingRepairTask.StreamingRepairRequest());
+        ms.registerVerbHandlers(MessagingService.Verb.STREAMING_REPAIR_RESPONSE, new StreamingRepairTask.StreamingRepairResponse());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_SHUTDOWN, new GossipShutdownVerbHandler());
+
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_SYN, new SimulatedGossipDigestSynVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK, new SimulatedGossipDigestAckVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.GOSSIP_DIGEST_ACK2, new SimulatedGossipDigestAck2VerbHandler());
+
+        ms.registerVerbHandlers(MessagingService.Verb.DEFINITIONS_UPDATE, new DefinitionsUpdateVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.SCHEMA_CHECK, new SchemaCheckVerbHandler());
+        ms.registerVerbHandlers(MessagingService.Verb.MIGRATION_REQUEST, new MigrationRequestVerbHandler());
+
+        ms.registerVerbHandlers(MessagingService.Verb.SNAPSHOT, new SnapshotVerbHandler());
+
+        // spin up the streaming service so it is available for jmx tools.
+        if (StreamingService.instance == null)
+            throw new RuntimeException("Streaming service is unavailable.");
+    }
+    
+    public StorageService(String address)
+    {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            jmxObjectName = new ObjectName("org.apache.cassandra.db:type=StorageService" + address);
+            mbs.registerMBean(this, jmxObjectName);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
 
         /* register the verb handlers */
 //        scheduledTasks2 = new DebuggableScheduledThreadPoolExecutor("ScheduledTasks");

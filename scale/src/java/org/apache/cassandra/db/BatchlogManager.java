@@ -69,9 +69,8 @@ public class BatchlogManager implements BatchlogManagerMBean
 
     private final AtomicLong totalBatchesReplayed = new AtomicLong();
     private final AtomicBoolean isReplaying = new AtomicBoolean();
-
-    public void start()
-    {
+    
+    public BatchlogManager() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try
         {
@@ -81,7 +80,22 @@ public class BatchlogManager implements BatchlogManagerMBean
         {
             throw new RuntimeException(e);
         }
+    }
+    
+    public BatchlogManager(String address) {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try
+        {
+            mbs.registerMBean(this, new ObjectName(MBEAN_NAME + address));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public void start()
+    {
         Runnable runnable = new WrappedRunnable()
         {
             public void runMayThrow() throws ExecutionException, InterruptedException

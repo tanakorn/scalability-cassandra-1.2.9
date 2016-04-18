@@ -103,17 +103,17 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     Map<InetAddress, Long> expireTimeEndpointMap;
     Set<InetAddress> seeds;
     
-    public StorageService storageService = new StorageService();
-    public Schema schemaObject = new Schema();
-    public CacheService cacheService = new CacheService();
-    public LoadBroadcaster loadBroadcaster = new LoadBroadcaster();
-    public HintedHandOffManager hintedHandOff = new HintedHandOffManager();
-    public BatchlogManager batchlog = new BatchlogManager();
-    public CompactionManager compact = new CompactionManager();
-    public AntiEntropyService antiEntropy = new AntiEntropyService();
-    public StreamingService streaming = new StreamingService();
-    public PBSPredictor pbsPredictor = new PBSPredictor();
-    public StorageProxy storageProxy = new StorageProxy();
+    public StorageService storageService;
+    public Schema schemaObject;
+    public CacheService cacheService;
+    public LoadBroadcaster loadBroadcaster;
+    public HintedHandOffManager hintedHandOff;
+    public BatchlogManager batchlog;
+    public CompactionManager compact;
+    public AntiEntropyService antiEntropy;
+    public StreamingService streaming;
+    public PBSPredictor pbsPredictor;
+    public StorageProxy storageProxy;
 	
 	boolean hasContactedSeed;
 	
@@ -165,6 +165,19 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             this.seeds.addAll(seeds);
         }
         flapping = 0;
+
+        String addressStr = broadcastAddress.toString();
+        storageService = new StorageService(addressStr);
+        schemaObject = new Schema();
+        cacheService = new CacheService(addressStr);
+        loadBroadcaster = new LoadBroadcaster();
+        hintedHandOff = new HintedHandOffManager();
+        batchlog = new BatchlogManager(addressStr);
+        compact = new CompactionManager();
+        antiEntropy = new AntiEntropyService();
+        streaming = new StreamingService(addressStr);
+        pbsPredictor = new PBSPredictor(addressStr);
+        storageProxy = new StorageProxy();
 	}
 	
 	public void prepareInitialState() {

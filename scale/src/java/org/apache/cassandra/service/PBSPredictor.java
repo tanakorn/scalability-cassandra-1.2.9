@@ -209,6 +209,11 @@ public class PBSPredictor implements PBSPredictorMBean
     {
         init();
     }
+    
+    public PBSPredictor(String address)
+    {
+        init(address);
+    }
 
     public void enableConsistencyPredictionLogging()
     {
@@ -241,15 +246,34 @@ public class PBSPredictor implements PBSPredictorMBean
         {
             random = new Random();
 
-//            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//            try
-//            {
-//                mbs.registerMBean(this, new ObjectName(PBSPredictor.MBEAN_NAME));
-//            }
-//            catch (Exception e)
-//            {
-//                throw new RuntimeException(e);
-//            }
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            try
+            {
+                mbs.registerMBean(this, new ObjectName(PBSPredictor.MBEAN_NAME));
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
+            initialized = true;
+        }
+    }
+    
+    public void init(String address)
+    {
+        if (!initialized)
+        {
+            random = new Random();
+
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            try
+            {
+                mbs.registerMBean(this, new ObjectName(PBSPredictor.MBEAN_NAME + address));
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
             initialized = true;
         }
     }
