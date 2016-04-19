@@ -50,8 +50,11 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
                 logger.trace("Ignoring GossipDigestSynMessage because gossip is disabled");
             return;
         }
-
         GossipDigestSyn gDigestMessage = message.payload;
+        long transmission = receiveTime - gDigestMessage.createdTime;
+        Gossiper.networkTime += transmission;
+        Gossiper.receivedCount++;
+
         /* If the message is from a different cluster throw it away. */
         if (!gDigestMessage.clusterId.equals(DatabaseDescriptor.getClusterName()))
         {

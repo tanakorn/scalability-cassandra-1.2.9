@@ -56,6 +56,8 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         }
 
         long transmissionTime = receiveTime - message.payload.getCreatedTime();
+        Gossiper.networkTime += transmissionTime;
+        Gossiper.receivedCount++;
         Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
         Map<InetAddress, Integer> newerVersion = new HashMap<InetAddress, Integer>();
         for (InetAddress observedNode : remoteEpStateMap.keySet()) {

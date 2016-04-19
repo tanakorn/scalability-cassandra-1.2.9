@@ -40,6 +40,7 @@ public class GossipDigestSyn
     final String partioner;
     final List<GossipDigest> gDigests;
     final int msgId;
+    public long createdTime;
 
     public GossipDigestSyn(String clusterId, String partioner, List<GossipDigest> gDigests)
     {
@@ -143,6 +144,7 @@ class GossipDigestSynSerializer implements IVersionedSerializer<GossipDigestSyn>
             dos.writeUTF(gDigestSynMessage.partioner);
         GossipDigestSerializationHelper.serialize(gDigestSynMessage.gDigests, dos, version);
         dos.writeInt(gDigestSynMessage.msgId);
+        dos.writeLong(gDigestSynMessage.createdTime);
     }
 
     public GossipDigestSyn deserialize(DataInput dis, int version) throws IOException
@@ -153,7 +155,10 @@ class GossipDigestSynSerializer implements IVersionedSerializer<GossipDigestSyn>
             partioner = dis.readUTF();
         List<GossipDigest> gDigests = GossipDigestSerializationHelper.deserialize(dis, version);
         int msgId = dis.readInt();
-        return new GossipDigestSyn(clusterId, partioner, gDigests, msgId);
+        long createdTime = dis.readLong();
+        GossipDigestSyn gds = new GossipDigestSyn(clusterId, partioner, gDigests, msgId);
+        gds.createdTime = createdTime;
+        return gds;
     }
 
     public long serializedSize(GossipDigestSyn syn, int version)
