@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import re, time
+
+prog = re.compile('^cpu[0-9]')
+
+prevTotal = [ 0 ] * 16
+prevIdle = [ 0 ] * 16
+while True:
+  procStat = open('/proc/stat')
+  report = ''
+  for line in procStat:
+    if prog.match(line):
+      tokens = line.strip().split()
+      coreId = int(tokens[0][3:])
+      total = 0
+      for token in tokens[1:5]:
+        total += int(token)
+      idle = int(tokens[4])
+
+      diffIdle = idle - prevIdle[coreId]
+      diffTotal = total - prevTotal[coreId]
+      diffPercent = (diffTotal - diffIdle) * 100 / diffTotal 
+      #print 'cpu' + str(coreId), diffPercent
+      report += str(diffPercent) + ' '
+      prevIdle[coreId] = idle
+      prevTotal[coreId] = total
+  procStat.close()
+  print report
+  time.sleep(1)
+

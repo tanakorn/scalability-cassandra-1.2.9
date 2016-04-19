@@ -1,0 +1,10 @@
+#!/bin/sh
+
+prev_used=0
+while true; do
+  used=`df -t tmpfs | grep cassandra | awk '{print $3}' | sed 's/K$//'`
+  diff=`expr $used - $prev_used`
+  echo IO $diff
+  prev_used=$used
+  sleep 1
+done
