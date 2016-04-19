@@ -1610,7 +1610,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         // Order Matters, TM.updateHostID() should be called before TM.updateNormalToken(), (see CASSANDRA-4300).
 //        if (Gossiper.instance.usesHostId(endpoint))
 //            tokenMetadata.updateHostId(Gossiper.instance.getHostId(endpoint), endpoint);
-        if (Gossiper.instance.usesHostIdStatic(stub, endpoint))
+        if (Gossiper.usesHostIdStatic(stub, endpoint))
             tokenMetadata.updateHostId(Gossiper.getHostIdStatic(stub, endpoint), endpoint);
 
         Set<Token> tokensToUpdateInMetadata = new HashSet<Token>();
@@ -1618,7 +1618,10 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
 //        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
+//        long et = System.currentTimeMillis();
         Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
+//        et = System.currentTimeMillis() - et;
+//        System.out.println(et);
 
         for (final Token token : tokens)
         {
@@ -1706,10 +1709,12 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
         for (InetAddress ep : endpointsToRemove)
             removeEndpointStatic(stub, ep);
-        if (!tokensToUpdateInSystemTable.isEmpty())
+        if (!tokensToUpdateInSystemTable.isEmpty()) {
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-        if (!localTokensToRemove.isEmpty())
+        }
+        if (!localTokensToRemove.isEmpty()) {
             SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
+        }
 
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
         {
