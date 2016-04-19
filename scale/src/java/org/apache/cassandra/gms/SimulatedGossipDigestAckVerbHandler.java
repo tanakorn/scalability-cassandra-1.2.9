@@ -78,49 +78,50 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            Gossiper.instance.applyStateLocally(epStateMap);
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
-            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
-            try {
-                realUpdate = (int) result[9];
-                int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
-                long sleepTime = 0;
-                if (realUpdate != 0) {
-                    int floorNormalVersion = (realUpdate / 4) * 4;
-                    int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
-                    long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
-                    long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
-                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-                    long realSleep = System.currentTimeMillis();
-                    if (sleepTime > 0) {
-                        Thread.sleep(sleepTime);
-                    }
-                    realSleep = System.currentTimeMillis() - realSleep;
-                    long lateness = realSleep - sleepTime;
-                    lateness = lateness < 0 ? 0 : lateness;
-                    WholeClusterSimulator.totalRealSleep += realSleep;
-                    WholeClusterSimulator.totalExpectedSleep += sleepTime;
-                    WholeClusterSimulator.totalProcLateness += lateness;
-                    WholeClusterSimulator.numProc++;
-                    WholeClusterSimulator.procLatenessList.add(lateness);
-                    if (sleepTime != 0) {
-                        WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
-                    } else {
-                        WholeClusterSimulator.percentProcLatenessList.add(0.0);
-                    }
-                    if (lateness > WholeClusterSimulator.maxProcLateness) {
-                        WholeClusterSimulator.maxProcLateness = lateness;
-                    }
-//                    logger.info("Processing lateness " + lateness);
-                }
+            result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+//            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
+//            try {
+//                realUpdate = (int) result[9];
+//                int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
+//                long sleepTime = 0;
+//                if (realUpdate != 0) {
+//                    int floorNormalVersion = (realUpdate / 4) * 4;
+//                    int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
+//                    long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
+//                    long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
+//                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+//                    long realSleep = System.currentTimeMillis();
+//                    if (sleepTime > 0) {
+//                        Thread.sleep(sleepTime);
+//                    }
+//                    realSleep = System.currentTimeMillis() - realSleep;
+//                    long lateness = realSleep - sleepTime;
+//                    lateness = lateness < 0 ? 0 : lateness;
+//                    WholeClusterSimulator.totalRealSleep += realSleep;
+//                    WholeClusterSimulator.totalExpectedSleep += sleepTime;
+//                    WholeClusterSimulator.totalProcLateness += lateness;
+//                    WholeClusterSimulator.numProc++;
+//                    WholeClusterSimulator.procLatenessList.add(lateness);
+//                    if (sleepTime != 0) {
+//                        WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
+//                    } else {
+//                        WholeClusterSimulator.percentProcLatenessList.add(0.0);
+//                    }
+//                    if (lateness > WholeClusterSimulator.maxProcLateness) {
+//                        WholeClusterSimulator.maxProcLateness = lateness;
+//                    }
+////                    logger.info("Processing lateness " + lateness);
+//                }
 //                long realSleep = System.currentTimeMillis();
 //                Thread.sleep(sleepTime);
 //                realSleep = System.currentTimeMillis() - realSleep;
 //                long lateness = realSleep - sleepTime;
 //                lateness = lateness < 0 ? 0 : lateness;
 //                logger.info("Processing lateness " + lateness);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+//            } catch (InterruptedException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
 //            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
 //            if (mockExecTime >= 0) {
 //                try {
@@ -135,7 +136,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            }
             
         }
-        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+//        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
 //        if (result != null) {
 //            for (int i = 0; i < result.length; ++i) {
 //                if (!result[i].equals(result2[i])) {

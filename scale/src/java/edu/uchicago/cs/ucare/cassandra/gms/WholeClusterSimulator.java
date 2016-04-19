@@ -27,10 +27,12 @@ import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +182,7 @@ public class WholeClusterSimulator {
             normalGossipExecRecords.get(currentVersion).put(newVersion, execTime);
         }
         buffReader.close();
-//        Gossiper.registerStatic(StorageService.instance);
+        Gossiper.registerStatic(StorageService.instance);
 //        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
