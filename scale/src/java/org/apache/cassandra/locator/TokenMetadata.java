@@ -977,8 +977,9 @@ public class TokenMetadata
         try
         {
             Multimap<InetAddress, Token> cloned = HashMultimap.create();
-            for (Map.Entry<Token, InetAddress> entry : tokenToEndpointMap.entrySet())
+            for (Map.Entry<Token, InetAddress> entry : tokenToEndpointMap.entrySet()) {
                 cloned.put(entry.getValue(), entry.getKey());
+            }
             return cloned;
         }
         finally
