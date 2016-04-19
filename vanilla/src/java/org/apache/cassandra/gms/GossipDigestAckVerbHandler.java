@@ -60,6 +60,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
         long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();
         Map<InetAddress, EndpointState> epStateMap = gDigestAckMessage.getEndpointStateMap();
+        Gossiper.networkTime += transmissionTime;
+        Gossiper.receivedCount++;
         
         int bootstrapCount = 0;
         int normalCount = 0;

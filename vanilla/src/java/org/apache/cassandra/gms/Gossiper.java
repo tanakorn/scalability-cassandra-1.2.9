@@ -117,6 +117,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     public static long previousTime = 0;
     public static long totalTime = 0;
     public static int count = 0;
+    
+    public static long networkTime = 0;
+    public static int receivedCount = 0;
 
     private class GossipTask implements Runnable
     {
@@ -163,6 +166,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     GossipDigestSyn digestSynMessage = new GossipDigestSyn(DatabaseDescriptor.getClusterName(),
                                                                            DatabaseDescriptor.getPartitionerName(),
                                                                            gDigests);
+                    digestSynMessage.createdTime = System.currentTimeMillis();
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                                         digestSynMessage,
                                                                                                         GossipDigestSyn.serializer);
@@ -240,10 +244,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     double percentLateness = CassandraDaemon.totalExpectedSleep == 0 ? 0 : ((double) CassandraDaemon.totalRealSleep) / (double) CassandraDaemon.totalExpectedSleep;
                     percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
                     double sendLateness = Gossiper.count == 0 ? 0.0 : ((double) Gossiper.totalTime) / Gossiper.count / 10;
+                    long networkQueueTime = Gossiper.receivedCount == 0 ? 0 : Gossiper.networkTime / Gossiper.receivedCount;
                     Klogger.logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
                             ", member nodes = " + memberNode + ", dead nodes = " + deadNode + 
                             " ; proc_lateness " + avgProcLateness + " " + CassandraDaemon.maxProcLateness + " " + percentLateness +
-                            " ; send_lateness " + sendLateness);
+                            " ; send_lateness " + sendLateness + " ; network " + networkQueueTime);
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) {
