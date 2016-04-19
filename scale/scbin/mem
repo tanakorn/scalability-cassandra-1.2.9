@@ -1,0 +1,8 @@
+#!/bin/bash
+
+SLEEP_INTERVAL=1
+
+while true; do
+  free -m | awk '/Mem/ { printf("%.2f\n", $3) }'
+  sleep $SLEEP_INTERVAL
+done
