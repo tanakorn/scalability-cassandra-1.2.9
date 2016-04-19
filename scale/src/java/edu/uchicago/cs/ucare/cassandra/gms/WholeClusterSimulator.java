@@ -198,7 +198,7 @@ public class WholeClusterSimulator {
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
-                .setNumTokens(1024).setSeeds(seeds).setAddressList(addressList)
+                .setNumTokens(32).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
