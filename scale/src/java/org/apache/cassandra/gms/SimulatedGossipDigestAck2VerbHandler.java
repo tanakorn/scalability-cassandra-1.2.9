@@ -192,7 +192,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            logger.info("Processing lateness " + to + " " + System.currentTimeMillis() + " " + expectedExecutionTime + " " + lateness);
             GossiperStub receiverStub = WholeClusterSimulator.stubGroup.getStub(to);
             Map<InetAddress, EndpointState> remoteEpStateMap = message.payload.getEndpointStateMap();
-            Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+            Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
             String syncId = from + "_" + message.payload.syncId;
 //            long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
             receiverStub.syncReceivedTime.remove(syncId);
