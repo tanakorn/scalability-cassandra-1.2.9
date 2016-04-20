@@ -67,10 +67,11 @@ public class Memtable
      * called, all data up to the given context has been persisted to SSTables.
      */
     private static final ExecutorService flushWriter
-            = new JMXEnabledThreadPoolExecutor(DatabaseDescriptor.getFlushWriters(),
-                                               StageManager.KEEPALIVE,
-                                               TimeUnit.SECONDS,
-                                               new LinkedBlockingQueue<Runnable>(DatabaseDescriptor.getFlushQueueSize()),
+//            = new JMXEnabledThreadPoolExecutor(DatabaseDescriptor.getFlushWriters(),
+            = new JMXEnabledThreadPoolExecutor(16,
+                                               StageManager.KEEPALIVE, TimeUnit.SECONDS,
+//                                               new LinkedBlockingQueue<Runnable>(DatabaseDescriptor.getFlushQueueSize()),
+                                               new LinkedBlockingQueue<Runnable>(),
                                                new NamedThreadFactory("FlushWriter"),
                                                "internal");
 
@@ -85,7 +86,7 @@ public class Memtable
     // outstanding/running meterings to a maximum of one per CFS using this set; the executor's queue is unbounded but
     // will implicitly be bounded by the number of CFS:s.
     private static final Set<ColumnFamilyStore> meteringInProgress = new NonBlockingHashSet<ColumnFamilyStore>();
-    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(1,
+    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(16,
                                                                                           1,
                                                                                           Integer.MAX_VALUE,
                                                                                           TimeUnit.MILLISECONDS,
@@ -285,6 +286,7 @@ public class Memtable
 
     public void flushAndSignal(final CountDownLatch latch, final Future<ReplayPosition> context)
     {
+        System.out.println(DatabaseDescriptor.getFlushWriters());
         flushWriter.execute(new FlushRunnable(latch, context));
     }
 

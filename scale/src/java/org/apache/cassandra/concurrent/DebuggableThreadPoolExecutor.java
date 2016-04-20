@@ -88,7 +88,7 @@ public class DebuggableThreadPoolExecutor extends ThreadPoolExecutor implements 
 
     public DebuggableThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory)
     {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        super(16, 16, keepAliveTime, unit, workQueue, threadFactory);
         allowCoreThreadTimeOut(true);
 
         // block task submissions until queue has room.
@@ -109,7 +109,7 @@ public class DebuggableThreadPoolExecutor extends ThreadPoolExecutor implements 
      */
     public static DebuggableThreadPoolExecutor createWithFixedPoolSize(String threadPoolName, int size)
     {
-        return createWithMaximumPoolSize(threadPoolName, size, Integer.MAX_VALUE, TimeUnit.SECONDS);
+        return createWithMaximumPoolSize(threadPoolName, 16, Integer.MAX_VALUE, TimeUnit.SECONDS);
     }
 
     /**

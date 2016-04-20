@@ -71,7 +71,7 @@ public class JMXEnabledThreadPoolExecutor extends DebuggableThreadPoolExecutor i
                                         NamedThreadFactory threadFactory,
                                         String jmxPath)
     {
-        super(corePoolSize, maxPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        super(16, 16, keepAliveTime, unit, workQueue, threadFactory);
         super.prestartAllCoreThreads();
 
         metrics = new ThreadPoolMetrics(this, jmxPath, threadFactory.id);

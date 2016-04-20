@@ -602,7 +602,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
          * contexts (commitlog position) were read, even though the flush executor
          * is multithreaded.
          */
-        Table.switchLock.writeLock().lock();
+//        Table.switchLock.writeLock().lock();
         try
         {
             final Future<ReplayPosition> ctx = writeCommitLog ? CommitLog.instance.getContext() : Futures.immediateFuture(ReplayPosition.NONE);
@@ -671,7 +671,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
         }
         finally
         {
-            Table.switchLock.writeLock().unlock();
+//            Table.switchLock.writeLock().unlock();
         }
     }
 
@@ -697,7 +697,6 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 }
             });
         }
-
         return switchMemtable(true, false);
     }
 
