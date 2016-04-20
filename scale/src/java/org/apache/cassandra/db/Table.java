@@ -100,8 +100,7 @@ public class Table
         {
             // instantiate the Table.  we could use putIfAbsent but it's important to making sure it is only done once
             // per keyspace, so we synchronize and re-check before doing it.
-            synchronized (Table.class)
-            {
+            synchronized (Table.class) {
                 tableInstance = schema.getTableInstance(table);
                 if (tableInstance == null)
                 {

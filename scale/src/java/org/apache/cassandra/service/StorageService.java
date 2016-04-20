@@ -1707,9 +1707,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
 
         tokenMetadata.updateNormalTokens(tokensToUpdateInMetadata, endpoint);
-        for (InetAddress ep : endpointsToRemove)
+        for (InetAddress ep : endpointsToRemove) {
             removeEndpointStatic(stub, ep);
+        }
         if (!tokensToUpdateInSystemTable.isEmpty()) {
+//            System.out.println("hello 2");
             SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
         }
         if (!localTokensToRemove.isEmpty()) {
@@ -1914,6 +1916,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     private static void removeEndpointStatic(GossiperStub stub, InetAddress endpoint)
     {
         Gossiper.instance.removeEndpoint(endpoint);
+        stub.removeEndpoint(endpoint);
 //        if (!isClientMode)
 //            SystemTable.removeEndpoint(endpoint);
         // Added by Korn for scale check isClientMode always be false
