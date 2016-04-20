@@ -1329,8 +1329,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
 //                FailureDetector.instance.report(ep);
-//                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
-                double[] updatedInfo = { 0.0, 0.0 };
+                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+//                double[] updatedInfo = { 0.0, 0.0 };
                 updatedNodeInfo.put(ep, updatedInfo);
                 handleMajorStateChangeStatic(stub, ep, remoteState.copy());
                 newNode++;
@@ -1423,7 +1423,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
 //                FailureDetector.instance.report(ep);
-                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+//                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+                double[] updatedInfo = { 0.0, 0.0 };
                 updatedNodeInfo.put(ep, updatedInfo);
 //                handleMajorStateChangeStatic(stub, ep, remoteState.copy());
                 newNode++;
