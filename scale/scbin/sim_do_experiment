@@ -4,7 +4,7 @@ scriptdir=`dirname $0`
 . $scriptdir/readconfig
 cd $scriptdir
 
-for n in 60 128 256 512; do
+for n in 512; do
   logdir=${cassandra_log_dir}/n${n}
   rm -r $logdir/*
   mkdir -p $logdir
