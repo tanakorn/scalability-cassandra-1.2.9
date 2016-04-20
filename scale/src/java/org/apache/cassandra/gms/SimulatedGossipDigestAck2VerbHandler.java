@@ -81,9 +81,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDA2ResumeTask(wakeupTime, receiveTime, result, message), 
 //                sleepTime, TimeUnit.MILLISECONDS);
         if (sleepTime > 0) {
-            WholeClusterSimulator.submitResumeTask(new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message));
+            WholeClusterSimulator.submitResumeTask(new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message, updatedNodeInfo));
         } else {
-            new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message).run();
+            new SimulatedGDA2ResumeTask(wakeupTime, sleepTime, receiveTime, result, message, updatedNodeInfo).run();
         }
 
 //        ResumeTask.totalRealSleep += sleepTime;
@@ -167,13 +167,16 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         private long receiveTime;
         private Object[] result;
         private MessageIn<GossipDigestAck2> message;
+        private Map<InetAddress, double[]> updatedNodeInfo;
 
         public SimulatedGDA2ResumeTask(long expectedExecutionTime, long sleepTime, 
-                long receiveTime, Object[] result, MessageIn<GossipDigestAck2> message) {
+                long receiveTime, Object[] result, MessageIn<GossipDigestAck2> message, 
+                Map<InetAddress, double[]> updatedNodeInfo) {
             super(message.to, expectedExecutionTime, sleepTime);
             this.receiveTime = receiveTime;
             this.result = result;
             this.message = message;
+            this.updatedNodeInfo = updatedNodeInfo;
         }
 
         @Override
@@ -201,11 +204,42 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             receiverStub.ackNewVersionBoot.remove(ackId);
 //            int sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
             receiverStub.ackNewVersionNormal.remove(ackId);
-//            int allBoot = sendingBoot + bootstrapCount;
-//            int allNormal = sendingNormal + normalCount;
-//            if (allBoot != 0 || allNormal != 0) {
-//                logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
-//            }
+            Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+            if (!updatedNodes.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" hop ");
+                for (InetAddress receivingAddress : updatedNodes) {
+                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+                    sb.append(ep.hopNum);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+            }
+            if (!updatedNodeInfo.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" t_silence ");
+                for (InetAddress address : updatedNodeInfo.keySet()) {
+                    double[] updatedInfo = updatedNodeInfo.get(address); 
+                    sb.append(updatedInfo[0]);
+                    sb.append(":");
+                    sb.append(updatedInfo[1]);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+            }
+            updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
+            if (!updatedNodeInfo.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" t_silence ");
+                for (InetAddress address : updatedNodeInfo.keySet()) {
+                    double[] updatedInfo = updatedNodeInfo.get(address); 
+                    sb.append(updatedInfo[0]);
+                    sb.append(":");
+                    sb.append(updatedInfo[1]);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+            }
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             GossipDigestAck2 gDigestAck2Message = message.payload;
             long transmissionTime = receiveTime - message.createdTime;

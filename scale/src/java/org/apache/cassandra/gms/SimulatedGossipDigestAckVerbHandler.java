@@ -95,9 +95,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            WholeClusterSimulator.resumeTimer.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime);
 //            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(wakeupTime, receiveTime, result, message), sleepTime, TimeUnit.MILLISECONDS);
             if (sleepTime > 0) {
-                WholeClusterSimulator.submitResumeTask(new SimulatedGDAResumeTask(wakeupTime, sleepTime, receiveTime, result, message));
+                WholeClusterSimulator.submitResumeTask(new SimulatedGDAResumeTask(wakeupTime, sleepTime, receiveTime, result, message, updatedNodeInfo));
             } else {
-                new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message).run();
+                new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message, updatedNodeInfo).run();
             }
 //            ResumeTask.totalRealSleep += sleepTime;
 //            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
@@ -116,7 +116,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         } else {
 //            WholeClusterSimulator.resumeProcessors.schedule(new SimulatedGDAResumeTask(System.currentTimeMillis(), receiveTime, result, message), 0, TimeUnit.MILLISECONDS);
 //            WholeClusterSimulator.resumeProcessors.execute(new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message));
-            new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message).run();
+            new SimulatedGDAResumeTask(System.currentTimeMillis(), 0, receiveTime, result, message, updatedNodeInfo).run();
         }
 
 //        Gossiper.instance.checkSeedContact(from);
@@ -229,12 +229,15 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         private long receiveTime;
         private Object[] result;
         private MessageIn<GossipDigestAck> message;
+        private Map<InetAddress, double[]> updatedNodeInfo;
 
-        public SimulatedGDAResumeTask(long expectedExecutionTime, long sleepTime, long receiveTime, Object[] result, MessageIn<GossipDigestAck> message) {
+        public SimulatedGDAResumeTask(long expectedExecutionTime, long sleepTime, long receiveTime, Object[] result, 
+                MessageIn<GossipDigestAck> message, Map<InetAddress, double[]> updatedNodeInfo) {
             super(message.to, expectedExecutionTime, sleepTime);
             this.receiveTime = receiveTime;
             this.result = result;
             this.message = message;
+            this.updatedNodeInfo = updatedNodeInfo;
         }
 
         @Override
@@ -282,6 +285,42 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 int bootstrapCount = (int) result[5];
                 int normalCount = (int) result[6];
                 int realUpdate = (int) result[9];
+                Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
+                if (!updatedNodes.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(to.toString());
+                    sb.append(" hop ");
+                    for (InetAddress receivingAddress : updatedNodes) {
+                        EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+                        sb.append(ep.hopNum);
+                        sb.append(",");
+                    }
+                    logger.info(sb.toString());
+                }
+                if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(to.toString());
+                    sb.append(" t_silence ");
+                    for (InetAddress address : updatedNodeInfo.keySet()) {
+                        double[] updatedInfo = updatedNodeInfo.get(address); 
+                        sb.append(updatedInfo[0]);
+                        sb.append(":");
+                        sb.append(updatedInfo[1]);
+                        sb.append(",");
+                    }
+                    logger.info(sb.toString());
+                }
+                updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
+                if (!updatedNodeInfo.isEmpty()) {
+                    StringBuilder sb = new StringBuilder(to.toString());
+                    sb.append(" t_silence ");
+                    for (InetAddress address : updatedNodeInfo.keySet()) {
+                        double[] updatedInfo = updatedNodeInfo.get(address); 
+                        sb.append(updatedInfo[0]);
+                        sb.append(":");
+                        sb.append(updatedInfo[1]);
+                        sb.append(",");
+                    }
+                    logger.info(sb.toString());
+                }
                 if (bootstrapCount != 0 || normalCount != 0) {
                     logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms " + sleepTime + " ms ; apply boot " + bootstrapCount 
                             + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
