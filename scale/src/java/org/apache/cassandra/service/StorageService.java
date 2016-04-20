@@ -123,7 +123,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     /**
      * tasks that do not need to be waited for on shutdown/drain
      */
-    public static final DebuggableScheduledThreadPoolExecutor optionalTasks = new DebuggableScheduledThreadPoolExecutor("OptionalTasks");
+    public static final DebuggableScheduledThreadPoolExecutor optionalTasks = new DebuggableScheduledThreadPoolExecutor(16, "OptionalTasks", Thread.NORM_PRIORITY);
     static
     {
         tasks.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);

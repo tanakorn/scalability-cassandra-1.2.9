@@ -30,6 +30,7 @@ import org.apache.cassandra.gms.GossipDigest;
 import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.gms.HeartBeatState;
+import org.apache.cassandra.gms.IEndpointStateChangeSubscriber;
 import org.apache.cassandra.gms.IFailureDetectionEventListener;
 import org.apache.cassandra.gms.VersionedValue;
 import org.apache.cassandra.gms.VersionedValue.VersionedValueFactory;
@@ -460,6 +461,20 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     @Override
     public String toString() {
         return broadcastAddress.toString();
+    }
+    
+    public void removeEndpoint(InetAddress endpoint)
+    {
+        if(seeds.contains(endpoint))
+        {
+            seeds.remove(endpoint);
+        }
+
+        liveEndpoints.remove(endpoint);
+        unreachableEndpoints.remove(endpoint);
+        // do not remove endpointState until the quarantine expires
+        failureDetector.remove(endpoint);
+        quarantineEndpoint(endpoint);
     }
 
 }
