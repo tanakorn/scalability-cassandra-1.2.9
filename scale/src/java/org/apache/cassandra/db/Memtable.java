@@ -286,7 +286,6 @@ public class Memtable
 
     public void flushAndSignal(final CountDownLatch latch, final Future<ReplayPosition> context)
     {
-        System.out.println(DatabaseDescriptor.getFlushWriters());
         flushWriter.execute(new FlushRunnable(latch, context));
     }
 
