@@ -450,11 +450,6 @@ public class WholeClusterSimulator {
 //                        logger.info("There is not a message for " + address + " " + msgQueue.size() + " " + isProcessing.get(address).get());
                     }
                 }
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
         }
         
