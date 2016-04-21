@@ -315,10 +315,14 @@ public class SystemTable
 
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
+        final long e = System.currentTimeMillis();
         forceBlockingFlush(PEERS_CF);
+        long s = System.currentTimeMillis() - e;
+//        System.out.println(s);
+        logger.info("WT " + s);
     }
 
-    public static synchronized void updatePeerInfo(InetAddress ep, String columnName, String value)
+    public static void updatePeerInfo(InetAddress ep, String columnName, String value)
     {
         if (ep.equals(FBUtilities.getBroadcastAddress()))
             return;
