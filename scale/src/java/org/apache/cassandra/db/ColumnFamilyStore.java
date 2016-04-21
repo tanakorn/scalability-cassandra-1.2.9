@@ -625,13 +625,19 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 // it from the memtable pending flush right away.
                 if (memtable.isClean())
                 {
+//                    System.out.println("a");
                     cfs.replaceFlushed(memtable, null);
                     latch.countDown();
                 }
                 else
                 {
+//                    System.out.println("b");
                     logger.info("Enqueuing flush of {}", memtable);
+                    long e = System.currentTimeMillis();
                     memtable.flushAndSignal(latch, ctx);
+                    long s = System.currentTimeMillis() - e;
+//                    System.out.println(s);
+//                    logger.info("ww 1 " + s);
                 }
             }
 
@@ -649,7 +655,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                     long e = System.currentTimeMillis();
                     latch.await();
                     long s = System.currentTimeMillis() - e;
-                    logger.info("ww 1 " + s);
+//                    logger.info("ww 1 " + s);
                     e = System.currentTimeMillis();
 
                     if (!icc.isEmpty())
@@ -664,7 +670,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                         }
                     }
                     s = System.currentTimeMillis() - e;
-                    logger.info("ww 2 " + s);
+//                    logger.info("ww 2 " + s);
 
                     e = System.currentTimeMillis();
                     if (writeCommitLog)
@@ -674,7 +680,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                         CommitLog.instance.discardCompletedSegments(metadata.cfId, ctx.get());
                     }
                     s = System.currentTimeMillis() - e;
-                    logger.info("ww 3 " + s);
+//                    logger.info("ww 3 " + s);
                 }
             });
         }

@@ -425,7 +425,7 @@ public class SystemTable
             e = System.currentTimeMillis();
             FBUtilities.waitOnFuture(future);
             s = System.currentTimeMillis() - e;
-            logger.info("WW 4 " + s);
+//            logger.info("WW 4 " + s);
         }
     }
 

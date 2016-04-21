@@ -68,8 +68,7 @@ public class Memtable
      */
     private static final ExecutorService flushWriter
 //            = new JMXEnabledThreadPoolExecutor(DatabaseDescriptor.getFlushWriters(),
-            = new JMXEnabledThreadPoolExecutor(16,
-                                               StageManager.KEEPALIVE, TimeUnit.SECONDS,
+            = new JMXEnabledThreadPoolExecutor(16, StageManager.KEEPALIVE, TimeUnit.SECONDS,
 //                                               new LinkedBlockingQueue<Runnable>(DatabaseDescriptor.getFlushQueueSize()),
                                                new LinkedBlockingQueue<Runnable>(),
                                                new NamedThreadFactory("FlushWriter"),
@@ -416,6 +415,8 @@ public class Memtable
         private final CountDownLatch latch;
         private final Future<ReplayPosition> context;
         private final long estimatedSize;
+        
+        private final long createdTime;
 
         FlushRunnable(CountDownLatch latch, Future<ReplayPosition> context)
         {
@@ -433,6 +434,7 @@ public class Memtable
                                     + keySize // keys in data file
                                     + currentSize.get()) // data
                                     * 1.2); // bloom filter and row index overhead
+            createdTime = System.currentTimeMillis();
         }
 
         public long getExpectedWriteSize()
@@ -442,10 +444,22 @@ public class Memtable
 
         protected void runWith(File sstableDirectory) throws Exception
         {
-            assert sstableDirectory != null : "Flush task is not bound to any disk";
+//            long e = System.currentTimeMillis() - createdTime;
+//            System.out.println(e);
 
+            long e = System.currentTimeMillis();
+            assert sstableDirectory != null : "Flush task is not bound to any disk";
+            long s = System.currentTimeMillis() - e;
+            logger.info("ww 1 " + s);
+
+            e = System.currentTimeMillis();
             SSTableReader sstable = writeSortedContents(context, sstableDirectory);
+            s = System.currentTimeMillis() - e;
+            logger.info("ww 2 " + s);
+            e = System.currentTimeMillis();
             cfs.replaceFlushed(Memtable.this, sstable);
+            s = System.currentTimeMillis() - e;
+            logger.info("ww 3 " + s);
             latch.countDown();
         }
 
@@ -454,6 +468,7 @@ public class Memtable
             return cfs.directories;
         }
 
+        // korn find this problem method
         private SSTableReader writeSortedContents(Future<ReplayPosition> context, File sstableDirectory)
         throws ExecutionException, InterruptedException
         {
@@ -466,9 +481,12 @@ public class Memtable
             {
                 // (we can't clear out the map as-we-go to free up memory,
                 //  since the memtable is being used for queries in the "pending flush" category)
+                int i = 0;
                 for (Map.Entry<RowPosition, ColumnFamily> entry : columnFamilies.entrySet())
                 {
+                    i++;
                     ColumnFamily cf = entry.getValue();
+//                    System.out.println(cf);
                     if (cf.isMarkedForDelete())
                     {
                         // When every node is up, there's no reason to write batchlog data out to sstables
@@ -486,7 +504,9 @@ public class Memtable
                         ColumnFamilyStore.removeDeletedColumnsOnly(cf, Integer.MIN_VALUE);
                     }
                     writer.append((DecoratedKey)entry.getKey(), cf);
+                    break;
                 }
+//                System.out.println(i);
 
                 if (writer.getFilePointer() > 0)
                 {
