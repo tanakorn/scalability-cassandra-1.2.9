@@ -510,7 +510,10 @@ public class Memtable
 
                 if (writer.getFilePointer() > 0)
                 {
+//                    long e = System.currentTimeMillis();
                     ssTable = writer.closeAndOpenReader();
+//                    long s = System.currentTimeMillis() - e;
+//                    System.out.println(s);
                     logger.info(String.format("Completed flushing %s (%d bytes) for commitlog position %s",
                                               ssTable.getFilename(), new File(ssTable.getFilename()).length(), context.get()));
                 }
@@ -523,10 +526,10 @@ public class Memtable
                 }
                 return ssTable;
             }
-            catch (Throwable e)
+            catch (Throwable ex)
             {
                 writer.abort();
-                throw Throwables.propagate(e);
+                throw Throwables.propagate(ex);
             }
         }
 

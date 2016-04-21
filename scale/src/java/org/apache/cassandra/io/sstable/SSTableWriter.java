@@ -328,7 +328,10 @@ public class SSTableWriter extends SSTable
         dataFile.close();
         // write sstable statistics
         SSTableMetadata sstableMetadata = sstableMetadataCollector.finalizeMetadata(partitioner.getClass().getCanonicalName());
+                    long e = System.currentTimeMillis();
         writeMetadata(descriptor, sstableMetadata, sstableMetadataCollector.ancestors);
+                    long s = System.currentTimeMillis() - e;
+//                    System.out.println(s);
         maybeWriteDigest();
 
         // save the table of components
@@ -383,14 +386,20 @@ public class SSTableWriter extends SSTable
 
     private static void writeMetadata(Descriptor desc, SSTableMetadata sstableMetadata, Set<Integer> ancestors)
     {
+        long e = System.currentTimeMillis();
         SequentialWriter out = SequentialWriter.open(new File(desc.filenameFor(SSTable.COMPONENT_STATS)), true);
+        long s = System.currentTimeMillis() - e;
+        logger.info("WMD 1 " + s);
         try
         {
+            e = System.currentTimeMillis();
             SSTableMetadata.serializer.serialize(sstableMetadata, ancestors, out.stream);
+            s = System.currentTimeMillis() - e;
+            logger.info("WMD 2 " + s);
         }
-        catch (IOException e)
+        catch (IOException ex)
         {
-            throw new FSWriteError(e, out.getPath());
+            throw new FSWriteError(ex, out.getPath());
         }
         out.close();
     }
