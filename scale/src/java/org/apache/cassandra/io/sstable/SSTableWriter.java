@@ -389,13 +389,13 @@ public class SSTableWriter extends SSTable
         long e = System.currentTimeMillis();
         SequentialWriter out = SequentialWriter.open(new File(desc.filenameFor(SSTable.COMPONENT_STATS)), true);
         long s = System.currentTimeMillis() - e;
-        logger.info("WMD 1 " + s);
+//        logger.info("WMD 1 " + s);
         try
         {
             e = System.currentTimeMillis();
             SSTableMetadata.serializer.serialize(sstableMetadata, ancestors, out.stream);
             s = System.currentTimeMillis() - e;
-            logger.info("WMD 2 " + s);
+//            logger.info("WMD 2 " + s);
         }
         catch (IOException ex)
         {
