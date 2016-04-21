@@ -331,18 +331,31 @@ public class SSTableWriter extends SSTable
                     long e = System.currentTimeMillis();
         writeMetadata(descriptor, sstableMetadata, sstableMetadataCollector.ancestors);
                     long s = System.currentTimeMillis() - e;
-//                    System.out.println(s);
+                    logger.info("caor 1" + s);
+                    e = System.currentTimeMillis();
         maybeWriteDigest();
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 2" + s);
 
         // save the table of components
+                    e = System.currentTimeMillis();
         SSTable.appendTOC(descriptor, components);
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 3" + s);
 
         // remove the 'tmp' marker from all components
+                    e = System.currentTimeMillis();
         final Descriptor newdesc = rename(descriptor, components);
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 4" + s);
 
         // finalize in-memory state for the reader
+                    e = System.currentTimeMillis();
         SegmentedFile ifile = iwriter.builder.complete(newdesc.filenameFor(SSTable.COMPONENT_INDEX));
         SegmentedFile dfile = dbuilder.complete(newdesc.filenameFor(SSTable.COMPONENT_DATA));
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 5" + s);
+                    e = System.currentTimeMillis();
         SSTableReader sstable = SSTableReader.internalOpen(newdesc,
                                                            components,
                                                            metadata,
@@ -353,12 +366,17 @@ public class SSTableWriter extends SSTable
                                                            iwriter.bf,
                                                            maxDataAge,
                                                            sstableMetadata);
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 6" + s);
+                    e = System.currentTimeMillis();
         sstable.first = getMinimalKey(first);
         sstable.last = getMinimalKey(last);
         // try to save the summaries to disk
         SSTableReader.saveSummary(sstable, iwriter.builder, dbuilder);
         iwriter = null;
         dbuilder = null;
+                    s = System.currentTimeMillis() - e;
+                    logger.info("caor 7" + s);
         return sstable;
     }
 

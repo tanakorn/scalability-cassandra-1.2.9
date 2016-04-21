@@ -513,7 +513,7 @@ public class Memtable
                     long e = System.currentTimeMillis();
                     ssTable = writer.closeAndOpenReader();
                     long s = System.currentTimeMillis() - e;
-                    logger.info("caor " + s);
+//                    logger.info("caor " + s);
                     logger.info(String.format("Completed flushing %s (%d bytes) for commitlog position %s",
                                               ssTable.getFilename(), new File(ssTable.getFilename()).length(), context.get()));
                 }
