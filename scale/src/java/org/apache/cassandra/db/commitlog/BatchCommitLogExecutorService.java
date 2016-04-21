@@ -61,10 +61,11 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 //        };
 //        appendingThread = new Thread(runnable, "COMMIT-LOG-WRITER");
 //        appendingThread.start();
-        incompleteTasks = new ArrayList[16];
-        appendingThread = new Thread[16];
-        taskValues = new ArrayList[16];
-        queue = new LinkedBlockingQueue[16];
+        int numThread = 64;
+        incompleteTasks = new ArrayList[numThread];
+        appendingThread = new Thread[numThread];
+        taskValues = new ArrayList[numThread];
+        queue = new LinkedBlockingQueue[numThread];
         for (int i = 0; i < incompleteTasks.length; ++i) {
             queue[i] = new LinkedBlockingQueue<CheaterFutureTask>();
             incompleteTasks[i] =  new ArrayList<CheaterFutureTask>();

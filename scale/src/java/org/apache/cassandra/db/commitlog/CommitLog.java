@@ -207,7 +207,7 @@ public class CommitLog implements CommitLogMBean
             {
 
                     long s = System.currentTimeMillis() - t;
-                    logger.info("DC " + s);
+//                    logger.info("DC " + s);
                 logger.debug("discard completed log segments for {}, column family {}", context, cfId);
 
                 // Go thru the active segment files, which are ordered oldest to newest, marking the
@@ -252,7 +252,10 @@ public class CommitLog implements CommitLogMBean
 
         try
         {
+            long x = System.currentTimeMillis();
             executor.submit(task).get();
+            long y = System.currentTimeMillis() - x;
+//            System.out.println(y);
         }
         catch (InterruptedException e)
         {
