@@ -34,6 +34,8 @@ import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.io.util.Memory;
 import org.apache.cassandra.utils.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds metadata about compressed file
@@ -45,6 +47,8 @@ public class CompressionMetadata
     private final Memory chunkOffsets;
     public final String indexFilePath;
     public final CompressionParameters parameters;
+    
+    private static final Logger logger = LoggerFactory.getLogger(CompressionMetadata.class);
 
     /**
      * Create metadata about given compressed file including uncompressed data length, chunk size
@@ -59,8 +63,12 @@ public class CompressionMetadata
      */
     public static CompressionMetadata create(String dataFilePath)
     {
+                    long e = System.currentTimeMillis();
         Descriptor desc = Descriptor.fromFilename(dataFilePath);
-        return new CompressionMetadata(desc.filenameFor(Component.COMPRESSION_INFO), new File(dataFilePath).length());
+        CompressionMetadata o = new CompressionMetadata(desc.filenameFor(Component.COMPRESSION_INFO), new File(dataFilePath).length());
+                    long s = System.currentTimeMillis() - e;
+                    logger.info("create " + s);
+        return o;
     }
 
     @VisibleForTesting

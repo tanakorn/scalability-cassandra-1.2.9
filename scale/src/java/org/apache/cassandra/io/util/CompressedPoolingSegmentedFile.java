@@ -37,6 +37,7 @@ public class CompressedPoolingSegmentedFile extends PoolingSegmentedFile impleme
             // only one segment in a standard-io file
         }
 
+        // korn problem here
         public SegmentedFile complete(String path)
         {
             return new CompressedPoolingSegmentedFile(path, CompressionMetadata.create(path));

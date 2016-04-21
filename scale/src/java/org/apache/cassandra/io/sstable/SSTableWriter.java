@@ -352,7 +352,9 @@ public class SSTableWriter extends SSTable
         // finalize in-memory state for the reader
                     e = System.currentTimeMillis();
         SegmentedFile ifile = iwriter.builder.complete(newdesc.filenameFor(SSTable.COMPONENT_INDEX));
+        System.out.println("1 " + iwriter.builder.getClass());
         SegmentedFile dfile = dbuilder.complete(newdesc.filenameFor(SSTable.COMPONENT_DATA));
+        System.out.println("2 " + dbuilder.getClass());
                     s = System.currentTimeMillis() - e;
                     logger.info("caor 5 " + s);
                     e = System.currentTimeMillis();
