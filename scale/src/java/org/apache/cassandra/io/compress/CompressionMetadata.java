@@ -63,18 +63,17 @@ public class CompressionMetadata
      */
     public static CompressionMetadata create(String dataFilePath)
     {
-                    long e = System.currentTimeMillis();
         Descriptor desc = Descriptor.fromFilename(dataFilePath);
         CompressionMetadata o = new CompressionMetadata(desc.filenameFor(Component.COMPRESSION_INFO), new File(dataFilePath).length());
-                    long s = System.currentTimeMillis() - e;
-                    logger.info("create " + s);
         return o;
     }
 
     @VisibleForTesting
     CompressionMetadata(String indexFilePath, long compressedLength)
     {
+                    long ex = System.currentTimeMillis();
         this.indexFilePath = indexFilePath;
+        System.out.println(indexFilePath);
 
         DataInputStream stream;
         try
@@ -119,6 +118,8 @@ public class CompressionMetadata
         {
             FileUtils.closeQuietly(stream);
         }
+                    long s = System.currentTimeMillis() - ex;
+                    logger.info("create " + s);
     }
 
     public ICompressor compressor()
