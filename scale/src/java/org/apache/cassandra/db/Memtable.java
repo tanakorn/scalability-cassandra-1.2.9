@@ -86,9 +86,7 @@ public class Memtable
     // outstanding/running meterings to a maximum of one per CFS using this set; the executor's queue is unbounded but
     // will implicitly be bounded by the number of CFS:s.
     private static final Set<ColumnFamilyStore> meteringInProgress = new NonBlockingHashSet<ColumnFamilyStore>();
-    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(16,
-                                                                                          1,
-                                                                                          Integer.MAX_VALUE,
+    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(16, 16, Integer.MAX_VALUE,
                                                                                           TimeUnit.MILLISECONDS,
                                                                                           new LinkedBlockingQueue<Runnable>(),
                                                                                           new NamedThreadFactory("MemoryMeter"))

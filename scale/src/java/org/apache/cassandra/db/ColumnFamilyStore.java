@@ -649,7 +649,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                     long e = System.currentTimeMillis();
                     latch.await();
                     long s = System.currentTimeMillis() - e;
-//                    logger.info("ww 1 " + s);
+                    logger.info("ww 1 " + s);
                     e = System.currentTimeMillis();
 
                     if (!icc.isEmpty())
@@ -664,7 +664,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                         }
                     }
                     s = System.currentTimeMillis() - e;
-//                    logger.info("ww 2 " + s);
+                    logger.info("ww 2 " + s);
 
                     e = System.currentTimeMillis();
                     if (writeCommitLog)
@@ -674,7 +674,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                         CommitLog.instance.discardCompletedSegments(metadata.cfId, ctx.get());
                     }
                     s = System.currentTimeMillis() - e;
-//                    logger.info("ww 3 " + s);
+                    logger.info("ww 3 " + s);
                 }
             });
         }

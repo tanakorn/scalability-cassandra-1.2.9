@@ -320,7 +320,7 @@ public class SystemTable
         forceBlockingFlush(PEERS_CF);
         long s = System.currentTimeMillis() - e;
 //        System.out.println(s);
-        logger.info("WT " + s);
+//        logger.info("WT " + s);
     }
 
     public static void updatePeerInfo(InetAddress ep, String columnName, String value)
@@ -425,7 +425,7 @@ public class SystemTable
             e = System.currentTimeMillis();
             FBUtilities.waitOnFuture(future);
             s = System.currentTimeMillis() - e;
-//            logger.info("WW 4 " + s);
+            logger.info("WW 4 " + s);
         }
     }
 
