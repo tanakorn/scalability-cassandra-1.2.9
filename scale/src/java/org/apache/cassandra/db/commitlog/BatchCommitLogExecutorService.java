@@ -36,7 +36,8 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 
     public BatchCommitLogExecutorService(int queueSize)
     {
-        queue = new LinkedBlockingQueue<CheaterFutureTask>(queueSize);
+//        queue = new LinkedBlockingQueue<CheaterFutureTask>(queueSize);
+        queue = new LinkedBlockingQueue<CheaterFutureTask>();
         Runnable runnable = new WrappedRunnable()
         {
             public void runMayThrow() throws Exception

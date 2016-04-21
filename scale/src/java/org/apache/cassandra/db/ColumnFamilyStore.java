@@ -646,7 +646,12 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             {
                 public void runMayThrow() throws InterruptedException, ExecutionException
                 {
+                    long e = System.currentTimeMillis();
                     latch.await();
+                    long s = System.currentTimeMillis() - e;
+//                    System.out.println("ww 1 " + s);
+//                    logger.info("ww 1 " + s);
+                    e = System.currentTimeMillis();
 
                     if (!icc.isEmpty())
                     {
@@ -659,13 +664,19 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                             index.forceBlockingFlush();
                         }
                     }
+                    s = System.currentTimeMillis() - e;
+//                    logger.info("ww 2 " + s);
 
+                    e = System.currentTimeMillis();
                     if (writeCommitLog)
                     {
                         // if we're not writing to the commit log, we are replaying the log, so marking
                         // the log header with "you can discard anything written before the context" is not valid
                         CommitLog.instance.discardCompletedSegments(metadata.cfId, ctx.get());
                     }
+                    s = System.currentTimeMillis() - e;
+//                    System.out.println("ww 2 " + s);
+//                    logger.info("ww 3 " + s);
                 }
             });
         }

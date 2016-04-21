@@ -24,12 +24,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
 import org.apache.cassandra.config.Schema;
@@ -408,8 +409,24 @@ public class SystemTable
 
     public static void forceBlockingFlush(String cfname)
     {
-        if (!Boolean.getBoolean("cassandra.unsafesystem"))
-            FBUtilities.waitOnFuture(Table.open(Table.SYSTEM_KS).getColumnFamilyStore(cfname).forceFlush());
+        if (!Boolean.getBoolean("cassandra.unsafesystem")) {
+            long e = System.currentTimeMillis();
+            Table table = Table.open(Table.SYSTEM_KS);
+            long s = System.currentTimeMillis() - e;
+//            logger.info("WW 1 " + s);
+            e = System.currentTimeMillis();
+            ColumnFamilyStore columnFamilyStore = table.getColumnFamilyStore(cfname);
+            s = System.currentTimeMillis() - e;
+//            logger.info("WW 2 " + s);
+            e = System.currentTimeMillis();
+            Future<?> future = columnFamilyStore.forceFlush();
+            s = System.currentTimeMillis() - e;
+//            logger.info("WW 3 " + s);
+            e = System.currentTimeMillis();
+            FBUtilities.waitOnFuture(future);
+            s = System.currentTimeMillis() - e;
+//            logger.info("WW 4 " + s);
+        }
     }
 
     /**
