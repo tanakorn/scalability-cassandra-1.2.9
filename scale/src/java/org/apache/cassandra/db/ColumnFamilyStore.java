@@ -649,7 +649,6 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                     long e = System.currentTimeMillis();
                     latch.await();
                     long s = System.currentTimeMillis() - e;
-//                    System.out.println("ww 1 " + s);
 //                    logger.info("ww 1 " + s);
                     e = System.currentTimeMillis();
 
@@ -675,7 +674,6 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                         CommitLog.instance.discardCompletedSegments(metadata.cfId, ctx.get());
                     }
                     s = System.currentTimeMillis() - e;
-//                    System.out.println("ww 2 " + s);
 //                    logger.info("ww 3 " + s);
                 }
             });

@@ -200,10 +200,14 @@ public class CommitLog implements CommitLogMBean
      */
     public void discardCompletedSegments(final UUID cfId, final ReplayPosition context)
     {
+            final long t = System.currentTimeMillis();
         Callable task = new Callable()
         {
             public Object call()
             {
+
+                    long s = System.currentTimeMillis() - t;
+                    logger.info("DC " + s);
                 logger.debug("discard completed log segments for {}, column family {}", context, cfId);
 
                 // Go thru the active segment files, which are ordered oldest to newest, marking the

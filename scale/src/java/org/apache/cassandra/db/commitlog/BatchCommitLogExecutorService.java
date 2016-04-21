@@ -18,15 +18,24 @@
 package org.apache.cassandra.db.commitlog;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.concurrent.*;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.utils.WrappedRunnable;
 
+import edu.uchicago.cs.ucare.util.StackTracePrinter;
+
 class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 {
-    private final BlockingQueue<CheaterFutureTask> queue;
-    private final Thread appendingThread;
+//    private final BlockingQueue<CheaterFutureTask> queue;
+//    private final Thread appendingThread;
+//    private final ArrayList<CheaterFutureTask> incompleteTasks = new ArrayList<CheaterFutureTask>();
+//    private final ArrayList taskValues = new ArrayList(); // TODO not sure how to generify this
+    private BlockingQueue<CheaterFutureTask>[] queue;
+    private Thread[] appendingThread;
+    private ArrayList<CheaterFutureTask>[] incompleteTasks;
+    private ArrayList[] taskValues; // TODO not sure how to generify this
     private volatile boolean run = true;
 
     public BatchCommitLogExecutorService()
@@ -37,33 +46,112 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
     public BatchCommitLogExecutorService(int queueSize)
     {
 //        queue = new LinkedBlockingQueue<CheaterFutureTask>(queueSize);
-        queue = new LinkedBlockingQueue<CheaterFutureTask>();
-        Runnable runnable = new WrappedRunnable()
-        {
-            public void runMayThrow() throws Exception
-            {
-                while (run)
-                {
-                    if (processWithSyncBatch())
-                        completedTaskCount++;
+//        queue = new LinkedBlockingQueue<CheaterFutureTask>();
+//        Runnable runnable = new WrappedRunnable()
+//        {
+//            public void runMayThrow() throws Exception
+//            {
+//                while (run)
+//                {
+//                    if (processWithSyncBatch()) {
+//                        completedTaskCount++;
+//                    }
+//                }
+//            }
+//        };
+//        appendingThread = new Thread(runnable, "COMMIT-LOG-WRITER");
+//        appendingThread.start();
+        incompleteTasks = new ArrayList[16];
+        appendingThread = new Thread[16];
+        taskValues = new ArrayList[16];
+        queue = new LinkedBlockingQueue[16];
+        for (int i = 0; i < incompleteTasks.length; ++i) {
+            queue[i] = new LinkedBlockingQueue<CheaterFutureTask>();
+            incompleteTasks[i] =  new ArrayList<CheaterFutureTask>();
+            taskValues[i] = new ArrayList();
+            appendingThread[i] = new Thread(new Run1(i), "COMMIT-LOG-WRITER" + i);
+            appendingThread[i].start();
+        }
+    }
+    
+    public class Run1 extends WrappedRunnable {
+        
+        int index;
+        
+        public Run1(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public void runMayThrow() throws Exception {
+            while (run) {
+                if (processWithSyncBatch(index)) {
+                    completedTaskCount++;
                 }
             }
-        };
-        appendingThread = new Thread(runnable, "COMMIT-LOG-WRITER");
-        appendingThread.start();
-
+        }
+        
     }
 
     public long getPendingTasks()
     {
-        return queue.size();
+        int total = 0;
+        for (int i = 0; i < queue.length; ++i) {
+            total += queue[i].size();
+        }
+        return total;
+//        return queue.size();
     }
 
-    private final ArrayList<CheaterFutureTask> incompleteTasks = new ArrayList<CheaterFutureTask>();
-    private final ArrayList taskValues = new ArrayList(); // TODO not sure how to generify this
-    private boolean processWithSyncBatch() throws Exception
+//    private final ArrayList taskValues = new ArrayList(); // TODO not sure how to generify this
+//    private boolean processWithSyncBatch() throws Exception
+//    {
+//            final long e = System.currentTimeMillis();
+//        CheaterFutureTask firstTask = queue.poll(100, TimeUnit.MILLISECONDS);
+//        if (firstTask == null)
+//            return false;
+//        if (!(firstTask.getRawCallable() instanceof CommitLog.LogRecordAdder))
+//        {
+//            firstTask.run();
+//            return true;
+//        }
+//
+//        // attempt to do a bunch of LogRecordAdder ops before syncing
+//        // (this is a little clunky since there is no blocking peek method,
+//        //  so we have to break it into firstTask / extra tasks)
+//        incompleteTasks.clear();
+//        taskValues.clear();
+//        long start = System.nanoTime();
+//        long window = (long)(1000000 * DatabaseDescriptor.getCommitLogSyncBatchWindow());
+//
+//        // it doesn't seem worth bothering future-izing the exception
+//        // since if a commitlog op throws, we're probably screwed anyway
+//        incompleteTasks.add(firstTask);
+//        taskValues.add(firstTask.getRawCallable().call());
+//        while (!queue.isEmpty()
+//               && queue.peek().getRawCallable() instanceof CommitLog.LogRecordAdder
+//               && System.nanoTime() - start < window)
+//        {
+//            CheaterFutureTask task = queue.remove();
+//            incompleteTasks.add(task);
+//            taskValues.add(task.getRawCallable().call());
+//        }
+//
+//        // now sync and set the tasks' values (which allows thread calling get() to proceed)
+//        CommitLog.instance.sync();
+//        for (int i = 0; i < incompleteTasks.size(); i++)
+//        {
+//            incompleteTasks.get(i).set(taskValues.get(i));
+//        }
+//                    long s = System.currentTimeMillis() - e;
+////                    System.out.println(s);
+//        return true;
+//    }
+    
+    private boolean processWithSyncBatch(int ii) throws Exception
     {
-        CheaterFutureTask firstTask = queue.poll(100, TimeUnit.MILLISECONDS);
+            final long e = System.currentTimeMillis();
+        CheaterFutureTask firstTask = queue[ii].poll(100, TimeUnit.MILLISECONDS);
         if (firstTask == null)
             return false;
         if (!(firstTask.getRawCallable() instanceof CommitLog.LogRecordAdder))
@@ -75,30 +163,32 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
         // attempt to do a bunch of LogRecordAdder ops before syncing
         // (this is a little clunky since there is no blocking peek method,
         //  so we have to break it into firstTask / extra tasks)
-        incompleteTasks.clear();
-        taskValues.clear();
+        incompleteTasks[ii].clear();
+        taskValues[ii].clear();
         long start = System.nanoTime();
         long window = (long)(1000000 * DatabaseDescriptor.getCommitLogSyncBatchWindow());
 
         // it doesn't seem worth bothering future-izing the exception
         // since if a commitlog op throws, we're probably screwed anyway
-        incompleteTasks.add(firstTask);
-        taskValues.add(firstTask.getRawCallable().call());
-        while (!queue.isEmpty()
-               && queue.peek().getRawCallable() instanceof CommitLog.LogRecordAdder
+        incompleteTasks[ii].add(firstTask);
+        taskValues[ii].add(firstTask.getRawCallable().call());
+        while (!queue[ii].isEmpty()
+               && queue[ii].peek().getRawCallable() instanceof CommitLog.LogRecordAdder
                && System.nanoTime() - start < window)
         {
-            CheaterFutureTask task = queue.remove();
-            incompleteTasks.add(task);
-            taskValues.add(task.getRawCallable().call());
+            CheaterFutureTask task = queue[ii].remove();
+            incompleteTasks[ii].add(task);
+            taskValues[ii].add(task.getRawCallable().call());
         }
 
         // now sync and set the tasks' values (which allows thread calling get() to proceed)
         CommitLog.instance.sync();
-        for (int i = 0; i < incompleteTasks.size(); i++)
+        for (int i = 0; i < incompleteTasks[ii].size(); i++)
         {
-            incompleteTasks.get(i).set(taskValues.get(i));
+            incompleteTasks[ii].get(i).set(taskValues[ii].get(i));
         }
+                    long s = System.currentTimeMillis() - e;
+//                    System.out.println(s);
         return true;
     }
 
@@ -115,11 +205,16 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
         return new CheaterFutureTask(callable);
     }
 
+    int rr = 0;
     public void execute(Runnable command)
     {
         try
         {
-            queue.put((CheaterFutureTask)command);
+//            queue.put((CheaterFutureTask)command);
+            int i = rr;
+//            System.out.println("rr " + i);
+            queue[i].put((CheaterFutureTask)command);
+            rr = (i + 1) % queue.length;
         }
         catch (InterruptedException e)
         {
@@ -149,17 +244,25 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
         {
             public void runMayThrow() throws InterruptedException
             {
-                while (!queue.isEmpty())
-                    Thread.sleep(100);
+                for (int i = 0; i < queue.length; ++i) {
+                    while (!queue[i].isEmpty())
+                        Thread.sleep(100);
+                }
                 run = false;
-                appendingThread.join();
+                for (int i = 0; i < appendingThread.length; ++i) {
+                    appendingThread[i].join();
+                }
+//                appendingThread.join();
             }
         }, "Commitlog Shutdown").start();
     }
 
     public void awaitTermination() throws InterruptedException
     {
-        appendingThread.join();
+                for (int i = 0; i < appendingThread.length; ++i) {
+                    appendingThread[i].join();
+                }
+//        appendingThread.join();
     }
 
     private static class CheaterFutureTask<V> extends FutureTask<V>
