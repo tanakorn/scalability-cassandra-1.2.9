@@ -340,8 +340,8 @@ class ArrivalWindow
         else
             logger.debug("Ignoring interval time of {}", interArrivalTime);
         tLast = value;
-//        logger.info(observer + " t_silence of " + address + 
-//                " is " + interArrivalTime + " mean " + mean());
+        logger.info(observer + " t_silence of " + address + 
+                " is " + interArrivalTime + " mean " + mean());
         return interArrivalTime;
     }
     
