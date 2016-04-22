@@ -632,7 +632,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 else
                 {
 //                    System.out.println("b");
-                    logger.info("Enqueuing flush of {}", memtable);
+//                    logger.info("Enqueuing flush of {}", memtable);
                     long e = System.currentTimeMillis();
                     memtable.flushAndSignal(latch, ctx);
                     long s = System.currentTimeMillis() - e;

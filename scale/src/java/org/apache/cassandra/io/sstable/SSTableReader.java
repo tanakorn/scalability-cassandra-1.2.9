@@ -178,7 +178,7 @@ public class SSTableReader extends SSTable
                                       boolean validate) throws IOException
     {
         long start = System.currentTimeMillis();
-        logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
+//        logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
 
         SSTableMetadata sstableMetadata = openMetadata(descriptor, components, partitioner);
 
