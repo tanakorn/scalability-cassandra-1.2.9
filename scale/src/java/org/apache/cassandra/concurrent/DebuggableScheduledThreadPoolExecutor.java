@@ -37,7 +37,7 @@ public class DebuggableScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
 
     public DebuggableScheduledThreadPoolExecutor(String threadPoolName)
     {
-        this(WholeClusterSimulator.numStubs, threadPoolName, Thread.NORM_PRIORITY);
+        this(1, threadPoolName, Thread.NORM_PRIORITY);
     }
 
     // We need this as well as the wrapper for the benefit of non-repeating tasks
