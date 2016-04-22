@@ -71,9 +71,7 @@ public class CompressionMetadata
     @VisibleForTesting
     CompressionMetadata(String indexFilePath, long compressedLength)
     {
-                    long ex = System.currentTimeMillis();
         this.indexFilePath = indexFilePath;
-        System.out.println(indexFilePath);
 
         DataInputStream stream;
         try
@@ -118,8 +116,6 @@ public class CompressionMetadata
         {
             FileUtils.closeQuietly(stream);
         }
-                    long s = System.currentTimeMillis() - ex;
-                    logger.info("create " + s);
     }
 
     public ICompressor compressor()

@@ -504,7 +504,6 @@ public class Memtable
                         ColumnFamilyStore.removeDeletedColumnsOnly(cf, Integer.MIN_VALUE);
                     }
                     writer.append((DecoratedKey)entry.getKey(), cf);
-                    break;
                 }
 //                System.out.println(i);
 
