@@ -25,9 +25,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Function;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.concurrent.DebuggableScheduledThreadPoolExecutor;
 
 public class ExpiringMap<K, V>
@@ -98,7 +100,11 @@ public class ExpiringMap<K, V>
                 logger.trace("Expired {} entries", n);
             }
         };
-        service.scheduleWithFixedDelay(runnable, defaultExpiration / 2, defaultExpiration / 2, TimeUnit.MILLISECONDS);
+//        service.scheduleWithFixedDelay(runnable, defaultExpiration / 2, defaultExpiration / 2, TimeUnit.MILLISECONDS);
+        for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
+            service.scheduleWithFixedDelay(runnable, defaultExpiration / 2, defaultExpiration / 2, TimeUnit.MILLISECONDS);
+            System.out.println("hell o");
+        }
     }
 
     public void shutdownBlocking()
