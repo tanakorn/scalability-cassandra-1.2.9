@@ -81,9 +81,9 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
 {
     private static final Logger logger = LoggerFactory.getLogger(ColumnFamilyStore.class);
 
-    public static final ExecutorService postFlushExecutor = new JMXEnabledThreadPoolExecutor("MemtablePostFlusher");
-//    public static final ExecutorService postFlushExecutor = 
-//            DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", WholeClusterSimulator.numStubs);
+//    public static final ExecutorService postFlushExecutor = new JMXEnabledThreadPoolExecutor("MemtablePostFlusher");
+    public static final ExecutorService postFlushExecutor = 
+            DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", WholeClusterSimulator.numStubs);
 
     public final Table table;
     public final String columnFamily;
