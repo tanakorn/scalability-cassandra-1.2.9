@@ -947,11 +947,8 @@ public class CompactionManager implements CompactionManagerMBean
 
         protected CompactionExecutor(int minThreads, int maxThreads, String name, BlockingQueue<Runnable> queue)
         {
-            super(minThreads * WholeClusterSimulator.numStubs, 
-                    maxThreads == Integer.MAX_VALUE ? maxThreads : maxThreads * WholeClusterSimulator.numStubs, 
+            super(minThreads * WholeClusterSimulator.numStubs, maxThreads * WholeClusterSimulator.numStubs, 
                     60, TimeUnit.SECONDS, queue, new NamedThreadFactory(name, Thread.MIN_PRIORITY));
-//            System.out.println(minThreads * WholeClusterSimulator.numStubs);
-//            System.out.println(maxThreads * WholeClusterSimulator.numStubs);
             allowCoreThreadTimeOut(true);
         }
 
