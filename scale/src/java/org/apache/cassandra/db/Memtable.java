@@ -450,16 +450,16 @@ public class Memtable
             long e = System.currentTimeMillis();
             assert sstableDirectory != null : "Flush task is not bound to any disk";
             long s = System.currentTimeMillis() - e;
-            logger.info("ww 1 " + s);
+//            logger.info("ww 1 " + s);
 
             e = System.currentTimeMillis();
             SSTableReader sstable = writeSortedContents(context, sstableDirectory);
             s = System.currentTimeMillis() - e;
-            logger.info("ww 2 " + s);
+//            logger.info("ww 2 " + s);
             e = System.currentTimeMillis();
             cfs.replaceFlushed(Memtable.this, sstable);
             s = System.currentTimeMillis() - e;
-            logger.info("ww 3 " + s);
+//            logger.info("ww 3 " + s);
             latch.countDown();
         }
 
