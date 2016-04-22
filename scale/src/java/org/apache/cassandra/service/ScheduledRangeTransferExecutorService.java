@@ -36,11 +36,13 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 public class ScheduledRangeTransferExecutorService
 {
     private static final Logger LOG = LoggerFactory.getLogger(ScheduledRangeTransferExecutorService.class);
     private static final int INTERVAL = 10;
-    private ScheduledExecutorService scheduler;
+    private ScheduledExecutorService[] scheduler;
 
     public void setup()
     {
@@ -50,8 +52,13 @@ public class ScheduledRangeTransferExecutorService
             return;
         }
 
-        scheduler = Executors.newSingleThreadScheduledExecutor(new RangeTransferThreadFactory());
-        scheduler.scheduleWithFixedDelay(new RangeTransfer(), 0, INTERVAL, TimeUnit.SECONDS);
+//        scheduler = Executors.newSingleThreadScheduledExecutor(new RangeTransferThreadFactory());
+//        scheduler.scheduleWithFixedDelay(new RangeTransfer(), 0, INTERVAL, TimeUnit.SECONDS);
+        System.out.println(WholeClusterSimulator.numStubs);
+        scheduler = new ScheduledExecutorService[WholeClusterSimulator.numStubs];
+        for (int i = 0; i < scheduler.length; ++i) {
+            scheduler[i] = Executors.newSingleThreadScheduledExecutor(new RangeTransferThreadFactory());
+        }
         LOG.info("Enabling scheduled transfers of token ranges");
     }
 
@@ -64,7 +71,10 @@ public class ScheduledRangeTransferExecutorService
         }
 
         LOG.info("Shutting down range transfer scheduler");
-        scheduler.shutdownNow();
+        for (int i = 0; i < scheduler.length; ++i) {
+            scheduler[i].shutdownNow();
+        }
+//        scheduler.shutdownNow();
     }
 }
 
