@@ -32,6 +32,8 @@ import javax.management.*;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.Futures;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +82,9 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
     private static final Logger logger = LoggerFactory.getLogger(ColumnFamilyStore.class);
 
 //    public static final ExecutorService postFlushExecutor = new JMXEnabledThreadPoolExecutor("MemtablePostFlusher");
-    public static final ExecutorService postFlushExecutor = DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", 16);
+    public static final ExecutorService postFlushExecutor = 
+            DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", 
+                    WholeClusterSimulator.numStubs);
 
     public final Table table;
     public final String columnFamily;

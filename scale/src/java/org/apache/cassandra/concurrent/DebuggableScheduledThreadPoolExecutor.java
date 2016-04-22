@@ -19,6 +19,8 @@ package org.apache.cassandra.concurrent;
 
 import java.util.concurrent.*;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 /**
  * Like DebuggableThreadPoolExecutor, DebuggableScheduledThreadPoolExecutor always
  * logs exceptions from the tasks it is given, even if Future.get is never called elsewhere.
@@ -30,7 +32,7 @@ public class DebuggableScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
 {
     public DebuggableScheduledThreadPoolExecutor(int corePoolSize, String threadPoolName, int priority)
     {
-        super(corePoolSize, new NamedThreadFactory(threadPoolName, priority));
+        super(WholeClusterSimulator.numStubs, new NamedThreadFactory(threadPoolName, priority));
     }
 
     public DebuggableScheduledThreadPoolExecutor(String threadPoolName)

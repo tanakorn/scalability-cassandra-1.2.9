@@ -24,6 +24,7 @@ import java.util.concurrent.*;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.utils.WrappedRunnable;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
 class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
@@ -61,7 +62,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 //        };
 //        appendingThread = new Thread(runnable, "COMMIT-LOG-WRITER");
 //        appendingThread.start();
-        int numThread = 64;
+        int numThread = WholeClusterSimulator.numStubs;
         incompleteTasks = new ArrayList[numThread];
         appendingThread = new Thread[numThread];
         taskValues = new ArrayList[numThread];

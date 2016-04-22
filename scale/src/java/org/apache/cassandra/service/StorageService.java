@@ -39,6 +39,7 @@ import com.google.common.collect.*;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 import edu.uchicago.cs.ucare.scale.Stub;
 
 import org.apache.cassandra.db.index.SecondaryIndex;
@@ -123,7 +124,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
     /**
      * tasks that do not need to be waited for on shutdown/drain
      */
-    public static final DebuggableScheduledThreadPoolExecutor optionalTasks = new DebuggableScheduledThreadPoolExecutor(16, "OptionalTasks", Thread.NORM_PRIORITY);
+    public static final DebuggableScheduledThreadPoolExecutor optionalTasks = 
+            new DebuggableScheduledThreadPoolExecutor(WholeClusterSimulator.numStubs, 
+                    "OptionalTasks", Thread.NORM_PRIORITY);
     static
     {
         tasks.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);

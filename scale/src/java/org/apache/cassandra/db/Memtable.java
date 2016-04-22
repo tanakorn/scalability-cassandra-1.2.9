@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.apache.cassandra.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -35,7 +37,6 @@ import org.cliffc.high_scale_lib.NonBlockingHashSet;
 import org.github.jamm.MemoryMeter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
 import org.apache.cassandra.concurrent.NamedThreadFactory;
 import org.apache.cassandra.db.columniterator.OnDiskAtomIterator;
@@ -68,7 +69,7 @@ public class Memtable
      */
     private static final ExecutorService flushWriter
 //            = new JMXEnabledThreadPoolExecutor(DatabaseDescriptor.getFlushWriters(),
-            = new JMXEnabledThreadPoolExecutor(16, StageManager.KEEPALIVE, TimeUnit.SECONDS,
+            = new JMXEnabledThreadPoolExecutor(WholeClusterSimulator.numStubs, StageManager.KEEPALIVE, TimeUnit.SECONDS,
 //                                               new LinkedBlockingQueue<Runnable>(DatabaseDescriptor.getFlushQueueSize()),
                                                new LinkedBlockingQueue<Runnable>(),
                                                new NamedThreadFactory("FlushWriter"),
@@ -85,10 +86,9 @@ public class Memtable
     // outstanding/running meterings to a maximum of one per CFS using this set; the executor's queue is unbounded but
     // will implicitly be bounded by the number of CFS:s.
     private static final Set<ColumnFamilyStore> meteringInProgress = new NonBlockingHashSet<ColumnFamilyStore>();
-    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(16, 16, Integer.MAX_VALUE,
-                                                                                          TimeUnit.MILLISECONDS,
-                                                                                          new LinkedBlockingQueue<Runnable>(),
-                                                                                          new NamedThreadFactory("MemoryMeter"))
+    private static final ExecutorService meterExecutor = new DebuggableThreadPoolExecutor(WholeClusterSimulator.numStubs, 
+            WholeClusterSimulator.numStubs, Integer.MAX_VALUE, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
+            new NamedThreadFactory("MemoryMeter"))
     {
         @Override
         protected void afterExecute(Runnable r, Throwable t)

@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -32,9 +33,11 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.RateLimiter;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.cache.AutoSavingCache;
 import org.apache.cassandra.cache.RowCacheKey;
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
@@ -956,7 +959,7 @@ public class CompactionManager implements CompactionManagerMBean
         public CompactionExecutor()
         {
 //            this(Math.max(1, DatabaseDescriptor.getConcurrentCompactors()), "CompactionExecutor");
-            this(32, "CompactionExecutor");
+            this(WholeClusterSimulator.numStubs, "CompactionExecutor");
         }
 
         protected void beforeExecute(Thread t, Runnable r)

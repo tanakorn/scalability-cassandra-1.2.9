@@ -32,6 +32,7 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.cassandra.service.LoadBroadcaster;
 import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -183,7 +184,7 @@ public class WholeClusterSimulator {
         }
         buffReader.close();
         Gossiper.registerStatic(StorageService.instance);
-//        Gossiper.registerStatic(LoadBroadcaster.instance);
+        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
