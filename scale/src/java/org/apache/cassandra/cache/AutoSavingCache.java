@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import org.cliffc.high_scale_lib.NonBlockingHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.Table;
@@ -43,6 +42,8 @@ import org.apache.cassandra.service.CacheService;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.Pair;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K, V>
 {
@@ -94,6 +95,12 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
                                                                            savePeriodInSeconds,
                                                                            savePeriodInSeconds,
                                                                            TimeUnit.SECONDS);
+            for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
+                saveTask = StorageService.optionalTasks.scheduleWithFixedDelay(runnable,
+                                                                               savePeriodInSeconds,
+                                                                               savePeriodInSeconds,
+                                                                               TimeUnit.SECONDS);
+            }
         }
     }
 

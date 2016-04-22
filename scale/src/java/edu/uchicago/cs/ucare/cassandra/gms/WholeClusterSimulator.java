@@ -32,6 +32,7 @@ import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.CassandraDaemon;
+import org.apache.cassandra.service.GCInspector;
 import org.apache.cassandra.service.LoadBroadcaster;
 import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
@@ -286,6 +287,7 @@ public class WholeClusterSimulator {
 //        }
         for (GossiperStub stub : stubGroup) {
             LoadBroadcaster.instance.startBroadcasting(stub);
+            GCInspector.instance.start();
         }
         
         Thread infoPrinter = new Thread(new RingInfoPrinter());

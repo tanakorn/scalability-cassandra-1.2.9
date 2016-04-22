@@ -29,15 +29,18 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import com.google.common.util.concurrent.Futures;
 import com.googlecode.concurrentlinkedhashmap.EntryWeigher;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.github.jamm.MemoryMeter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.cassandra.cache.*;
 import org.apache.cassandra.cache.AutoSavingCache.CacheSerializer;
 import org.apache.cassandra.concurrent.Stage;
@@ -167,7 +170,10 @@ public class CacheService implements CacheServiceMBean
                 DatabaseDescriptor.getRowCacheSavePeriod(),
                     rowCacheKeysToSave == Integer.MAX_VALUE ? "all" : rowCacheKeysToSave);
 
-        rowCache.scheduleSaving(DatabaseDescriptor.getRowCacheSavePeriod(), rowCacheKeysToSave);
+//        rowCache.scheduleSaving(DatabaseDescriptor.getRowCacheSavePeriod(), rowCacheKeysToSave);
+        for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
+            rowCache.scheduleSaving(DatabaseDescriptor.getRowCacheSavePeriod(), rowCacheKeysToSave);
+        }
 
         return rowCache;
     }
