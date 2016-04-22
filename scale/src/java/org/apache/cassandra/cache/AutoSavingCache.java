@@ -91,10 +91,10 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
                     submitWrite(keysToSave);
                 }
             };
-            saveTask = StorageService.optionalTasks.scheduleWithFixedDelay(runnable,
-                                                                           savePeriodInSeconds,
-                                                                           savePeriodInSeconds,
-                                                                           TimeUnit.SECONDS);
+//            saveTask = StorageService.optionalTasks.scheduleWithFixedDelay(runnable,
+//                                                                           savePeriodInSeconds,
+//                                                                           savePeriodInSeconds,
+//                                                                           TimeUnit.SECONDS);
             for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
                 saveTask = StorageService.optionalTasks.scheduleWithFixedDelay(runnable,
                                                                                savePeriodInSeconds,

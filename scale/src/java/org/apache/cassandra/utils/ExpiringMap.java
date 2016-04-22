@@ -103,7 +103,6 @@ public class ExpiringMap<K, V>
 //        service.scheduleWithFixedDelay(runnable, defaultExpiration / 2, defaultExpiration / 2, TimeUnit.MILLISECONDS);
         for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
             service.scheduleWithFixedDelay(runnable, defaultExpiration / 2, defaultExpiration / 2, TimeUnit.MILLISECONDS);
-            System.out.println("hell o");
         }
     }
 
