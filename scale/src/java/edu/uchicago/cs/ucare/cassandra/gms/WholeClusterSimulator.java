@@ -185,6 +185,9 @@ public class WholeClusterSimulator {
         buffReader.close();
         Gossiper.registerStatic(StorageService.instance);
         Gossiper.registerStatic(LoadBroadcaster.instance);
+        for (int i = 0; i < numStubs; ++i) {
+            LoadBroadcaster.instance.startBroadcasting();
+        }
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();

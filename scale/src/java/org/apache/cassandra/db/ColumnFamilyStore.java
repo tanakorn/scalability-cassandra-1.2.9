@@ -83,8 +83,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
 
 //    public static final ExecutorService postFlushExecutor = new JMXEnabledThreadPoolExecutor("MemtablePostFlusher");
     public static final ExecutorService postFlushExecutor = 
-            DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", 
-                    WholeClusterSimulator.numStubs);
+            DebuggableThreadPoolExecutor.createWithFixedPoolSize("MemtablePostFlusher", WholeClusterSimulator.numStubs);
 
     public final Table table;
     public final String columnFamily;

@@ -22,10 +22,13 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.cassandra.metrics.ThreadPoolMetrics;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 /**
  * This is a wrapper class for the <i>ScheduledThreadPoolExecutor</i>. It provides an implementation
@@ -40,17 +43,20 @@ public class JMXEnabledThreadPoolExecutor extends DebuggableThreadPoolExecutor i
 
     public JMXEnabledThreadPoolExecutor(String threadPoolName)
     {
-        this(1, Integer.MAX_VALUE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName), "internal");
+        this(WholeClusterSimulator.numStubs, Integer.MAX_VALUE, TimeUnit.SECONDS, 
+                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName), "internal");
     }
 
     public JMXEnabledThreadPoolExecutor(String threadPoolName, String jmxPath)
     {
-        this(1, Integer.MAX_VALUE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName), jmxPath);
+        this(1, Integer.MAX_VALUE, TimeUnit.SECONDS, 
+                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName), jmxPath);
     }
 
     public JMXEnabledThreadPoolExecutor(String threadPoolName, int priority)
     {
-        this(1, Integer.MAX_VALUE, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName, priority), "internal");
+        this(1, Integer.MAX_VALUE, TimeUnit.SECONDS, 
+                new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory(threadPoolName, priority), "internal");
     }
 
     public JMXEnabledThreadPoolExecutor(int corePoolSize,
@@ -60,6 +66,7 @@ public class JMXEnabledThreadPoolExecutor extends DebuggableThreadPoolExecutor i
             NamedThreadFactory threadFactory,
             String jmxPath)
     {
+//        this(corePoolSize, corePoolSize, keepAliveTime, unit, workQueue, threadFactory, jmxPath);
         this(corePoolSize, corePoolSize, keepAliveTime, unit, workQueue, threadFactory, jmxPath);
     }
 
@@ -71,7 +78,7 @@ public class JMXEnabledThreadPoolExecutor extends DebuggableThreadPoolExecutor i
                                         NamedThreadFactory threadFactory,
                                         String jmxPath)
     {
-        super(32, 64, keepAliveTime, unit, workQueue, threadFactory);
+        super(corePoolSize * WholeClusterSimulator.numStubs, maxPoolSize * WholeClusterSimulator.numStubs, keepAliveTime, unit, workQueue, threadFactory);
         super.prestartAllCoreThreads();
 
         metrics = new ThreadPoolMetrics(this, jmxPath, threadFactory.id);

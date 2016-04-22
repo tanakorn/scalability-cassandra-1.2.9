@@ -32,7 +32,7 @@ public class DebuggableScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
 {
     public DebuggableScheduledThreadPoolExecutor(int corePoolSize, String threadPoolName, int priority)
     {
-        super(WholeClusterSimulator.numStubs, new NamedThreadFactory(threadPoolName, priority));
+        super(WholeClusterSimulator.numStubs * corePoolSize, new NamedThreadFactory(threadPoolName, priority));
     }
 
     public DebuggableScheduledThreadPoolExecutor(String threadPoolName)
