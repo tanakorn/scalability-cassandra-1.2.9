@@ -1616,8 +1616,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         if (logger.isDebugEnabled())
             logger.debug("Node " + endpoint + " state normal, token " + tokens);
 
-        if (tokenMetadata.isMember(endpoint))
-            logger.info("Node " + endpoint + " state jump to normal");
+//        if (tokenMetadata.isMember(endpoint))
+//            logger.info("Node " + endpoint + " state jump to normal");
 
         // Order Matters, TM.updateHostID() should be called before TM.updateNormalToken(), (see CASSANDRA-4300).
 //        if (Gossiper.instance.usesHostId(endpoint))
