@@ -42,6 +42,7 @@ import javax.management.ObjectName;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 import edu.uchicago.cs.ucare.util.StackTracePrinter;
 
@@ -329,7 +330,10 @@ public final class MessagingService implements MessagingServiceMBean
                 logDroppedMessages();
             }
         };
-        StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
+//        StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
+        for (int i = 0; i < WholeClusterSimulator.numStubs; ++i) {
+            StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
+        }
 
         Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, ?> timeoutReporter = new Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, Object>()
         {
