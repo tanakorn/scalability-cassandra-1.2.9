@@ -244,7 +244,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         public void resume() {
             long lateness = getLateness();
 //            logger.info("Processing lateness " + lateness);
-            long triggeredTime = System.currentTimeMillis();
             InetAddress from = message.from;
             InetAddress to = message.to;
 //            logger.info("Processing lateness " + to + " " + expectedExecutionTime + " " + triggeredTime + " " + lateness);
@@ -280,7 +279,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 logger.trace("Sending a GossipDigestAck2Message to {}", from);
             gDigestAck2Message.createdTime = System.currentTimeMillis();
             WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
-            long ackHandlerTime = System.currentTimeMillis() - receiveTime;
             if (result != null) {
                 int bootstrapCount = (int) result[5];
                 int normalCount = (int) result[6];
@@ -321,6 +319,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     }
                     logger.info(sb.toString());
                 }
+                long ackHandlerTime = System.currentTimeMillis() - receiveTime;
                 if (bootstrapCount != 0 || normalCount != 0) {
                     logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms " + sleepTime + " ms ; apply boot " + bootstrapCount 
                             + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 

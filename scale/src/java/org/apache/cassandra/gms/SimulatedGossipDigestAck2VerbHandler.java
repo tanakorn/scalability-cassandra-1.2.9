@@ -182,7 +182,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         @Override
         public void resume() {
             long lateness = getLateness();
-            long triggeredTime = System.currentTimeMillis();
 //            logger.info("Processing lateness " + lateness);
             int bootstrapCount = (int) result[5];
             int normalCount = (int) result[6];
@@ -196,8 +195,6 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             String syncId = from + "_" + message.payload.syncId;
 //            long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
             receiverStub.syncReceivedTime.remove(syncId);
-            long tmpCurrent = System.currentTimeMillis();
-            long ack2HandlerTime = tmpCurrent - receiveTime;
 //            long allHandlerTime = tmpCurrent - syncReceivedTime;
             String ackId = from + "_" + message.payload.ackId;
 //            int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
@@ -243,6 +240,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
             int receiverCurrentVersion = receiverStub.getTokenMetadata().endpointWithTokens.size();
             GossipDigestAck2 gDigestAck2Message = message.payload;
             long transmissionTime = receiveTime - message.createdTime;
+            long ack2HandlerTime = System.currentTimeMillis() - receiveTime;
             if (bootstrapCount != 0 || normalCount != 0) {
                 logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms " + sleepTime + " ms ; apply boot " + bootstrapCount 
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
