@@ -120,5 +120,24 @@ public class LoadBroadcaster implements IEndpointStateChangeSubscriber, IScaleEn
         };
         StorageService.scheduledTasks.scheduleWithFixedDelay(runnable, 2 * Gossiper.intervalInMillis, BROADCAST_INTERVAL, TimeUnit.MILLISECONDS);
     }
+    
+    public void startBroadcasting(final GossiperStub stub)
+    {
+        // send the first broadcast "right away" (i.e., in 2 gossip heartbeats, when we should have someone to talk to);
+        // after that send every BROADCAST_INTERVAL.
+        Runnable runnable = new Runnable()
+        {
+            public void run()
+            {
+                if (logger.isDebugEnabled())
+                    logger.debug("Disseminating load info ...");
+//                Gossiper.instance.addLocalApplicationState(ApplicationState.LOAD,
+//                                                           StorageService.instance.valueFactory.load(StorageService.instance.getLoad()));
+                stub.getEndpointState().addApplicationState(ApplicationState.LOAD, 
+                        stub.versionedValueFactory.load(StorageService.instance.getLoad()));
+            }
+        };
+        StorageService.scheduledTasks.scheduleWithFixedDelay(runnable, 2 * Gossiper.intervalInMillis, BROADCAST_INTERVAL, TimeUnit.MILLISECONDS);
+    }
 }
 
