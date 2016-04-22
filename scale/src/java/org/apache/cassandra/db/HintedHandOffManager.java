@@ -115,15 +115,15 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
 
     public void start()
     {
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        try
-        {
-            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+//        try
+//        {
+//            mbs.registerMBean(this, new ObjectName(MBEAN_NAME));
+//        }
+//        catch (Exception e)
+//        {
+//            throw new RuntimeException(e);
+//        }
         logger.debug("Created HHOM instance, registered MBean.");
 
         Runnable runnable = new Runnable()

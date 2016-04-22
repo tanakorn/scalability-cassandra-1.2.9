@@ -23,6 +23,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.db.BatchlogManager;
+import org.apache.cassandra.db.HintedHandOffManager;
 import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.gms.EndpointState;
@@ -288,11 +290,12 @@ public class WholeClusterSimulator {
         for (GossiperStub stub : stubGroup) {
             LoadBroadcaster.instance.startBroadcasting(stub);
             GCInspector.instance.start();
+            HintedHandOffManager.instance.start();
+            BatchlogManager.instance.start();
         }
         
         Thread infoPrinter = new Thread(new RingInfoPrinter());
         infoPrinter.start();
-
     }
     
     public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
