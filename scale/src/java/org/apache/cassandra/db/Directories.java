@@ -480,7 +480,7 @@ public class Directories
         }
         else if (!dir.mkdirs())
         {
-            throw new FSWriteError(new IOException("Unable to create directory " + dir), dir);
+            //throw new FSWriteError(new IOException("Unable to create directory " + dir), dir);
         }
         return dir;
     }
