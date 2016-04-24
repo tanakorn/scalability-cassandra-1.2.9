@@ -6,16 +6,18 @@ import pyutil
 # The difference between real run and cluster simulation is how to parse log line
 class FalseDetectionCounter(falsedetect.FalseDetectionCounter):
 
-  def analyze(self, logLine, **kwargs):
-    tokens = logLine.split()
-    timestamp = analyze.extractTimestamp(tokens)
-    if not self.startTimestamp or timestamp < self.startTimestamp:
-      self.startTimestamp = timestamp
-    if not self.endTimestamp or timestamp > self.endTimestamp:
-      self.endTimestamp = timestamp
-    if ' convict ' in logLine:
-      observer = pyutil.ip2nid[tokens[7][1:]]
-      observee = pyutil.ip2nid[tokens[9][1:]]
-      self.falseMap[observer][observee].append(timestamp)
-      self.revertFalseMap[observee][observer].append(timestamp)
+  def __init__(self):
+    self.stableLine = None
 
+  def analyze(self, logLine, **kwargs):
+    if ' stable status yes ' in logLine:
+      self.stableLine = logLine
+
+  def analyzedResult(self):
+    numFalse = -1
+    if self.stableLine:
+      numFalse = int(self.stableLine.split()[10])
+
+    return {
+      'num_false' : str(numFalse) + '\n',
+    }

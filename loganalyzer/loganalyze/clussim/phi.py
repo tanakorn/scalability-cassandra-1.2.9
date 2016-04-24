@@ -3,25 +3,16 @@ from ..realrun import phi
 import pyutil
 
 class PhiAnalyzer(phi.PhiAnalyzer):
+
+  def __init__(self):
+    self.maxphiLine = None
   
   def analyze(self, logLine, **kwargs):
-    if ' PHI ' in logLine:
-      tokens = logLine.split()
-      observeeIp = tokens[9][1:]
-      observee = pyutil.ip2nid[observeeIp]
-      observerIp = tokens[11][1:]
-      observer = pyutil.ip2nid[observerIp]
-      phi = float(tokens[13])
-      self.phiMap[observer][observee].append(phi)
-      self.revertPhiMap[observee][observer].append(phi)
-    if ' allphi ' in logLine:
-      tokens = logLine.split()
-      if len(tokens) == 11:
-        allPhi = map(float, tokens[10][:-1].split(','))
-        self.numPhi += len(allPhi)
-        for phi in allPhi:
-          roundPhi = round(phi, 2)
-          if roundPhi not in self.phiCount:
-            self.phiCount[roundPhi] = 0
-          self.phiCount[roundPhi] += 1
+    if 'all maxphi' in logLine:
+      self.maxphiLine = logLine
 
+  def analyzedResult(self):
+    maxphi = self.maxphiLine.split()[9][:-1].split(',')
+    return {
+      'maxphi_of_observees' : '\n'.join(maxphi),
+    }
