@@ -55,6 +55,8 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     private final List<IFailureDetectionEventListener> fdEvntListeners = new CopyOnWriteArrayList<IFailureDetectionEventListener>();
     
     private InetAddress address;
+    
+    public double maxPhi = 0.0;
 
     public FailureDetector()
     {
@@ -224,6 +226,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             {
                 listener.convict(ep, phi);
             }
+        }
+        if (phi > maxPhi) {
+            maxPhi = phi;
         }
         return phi;
     }
