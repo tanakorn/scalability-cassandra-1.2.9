@@ -56,6 +56,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     
     private InetAddress address;
     
+    public final Map<InetAddress, Double> maxObservedPhi = new HashMap<InetAddress, Double>();
     public double maxPhi = 0.0;
 
     public FailureDetector()
@@ -230,6 +231,10 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (phi > maxPhi) {
             maxPhi = phi;
         }
+        if (!maxObservedPhi.containsKey(ep) || maxObservedPhi.get(ep) < phi) {
+//            logger.info("PHI for " + ep + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
+            maxObservedPhi.put(ep, phi);
+        }
         return phi;
     }
 
@@ -296,12 +301,9 @@ class ArrivalWindow
     // rather mark it down quickly instead of adapting
     private final double MAX_INTERVAL_IN_MS = DatabaseDescriptor.getRpcTimeout();
 
-    public final Map<InetAddress, Double> maxObservedPhi;
-
     ArrivalWindow(int size)
     {
         arrivalIntervals = new BoundedStatsDeque(size);
-        maxObservedPhi = new HashMap<InetAddress, Double>();
     }
 
     synchronized double add(double value, InetAddress observer, InetAddress address)
@@ -368,10 +370,6 @@ class ArrivalWindow
         double t = tnow - tLast;
         double mean = mean();
         double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
-        if (!maxObservedPhi.containsKey(testNode) || maxObservedPhi.get(testNode) < phi) {
-//            logger.info("PHI for " + testNode + " by " + observer + " : " + phi + " " + t + " " + mean + " " + size);
-            maxObservedPhi.put(testNode, phi);
-        }
         return (size > 0) ? phi : 0.0;
     }
 

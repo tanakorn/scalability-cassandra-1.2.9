@@ -70,6 +70,8 @@ public class WholeClusterSimulator {
     
     public static List<Double> percentSendLatenessList = Collections.synchronizedList(new LinkedList<Double>());
     
+    public static Map<InetAddress, Double> maxObservedPhi = new HashMap<InetAddress, Double>();
+    
 //    public static double[] normalGossipExecSdRecords;
     
 //    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
@@ -192,6 +194,7 @@ public class WholeClusterSimulator {
         }
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+            maxObservedPhi.put(address, 0.0);
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
@@ -519,7 +522,15 @@ public class WholeClusterSimulator {
                 }
                 StringBuilder sb = new StringBuilder("all maxphi ");
                 for (GossiperStub stub : stubGroup) {
-                    sb.append(stub.failureDetector.maxPhi);
+                    double maxObservedForStub = 0.0;
+                    for (GossiperStub stub2 : stubGroup) {
+                        Double phi = stub2.failureDetector.maxObservedPhi.get(stub.broadcastAddress);
+                        phi = phi == null ? 0.0 : phi;
+                        if (phi > maxObservedForStub) {
+                            maxObservedForStub = phi;
+                        }
+                    }
+                    sb.append(maxObservedForStub);
                     sb.append(",");
                 }
                 logger.info(sb.toString());
