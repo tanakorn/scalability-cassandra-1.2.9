@@ -1422,8 +1422,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             {
                 // this is a new node, report it to the FD in case it is the first time we are seeing it AND it's not alive
 //                FailureDetector.instance.report(ep);
-                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
-                updatedNodeInfo.put(ep, updatedInfo);
+//                double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
+//                updatedNodeInfo.put(ep, updatedInfo);
 //                handleMajorStateChangeStatic(stub, ep, remoteState.copy());
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
