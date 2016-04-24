@@ -46,6 +46,7 @@ import org.cliffc.high_scale_lib.NonBlockingHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.cassandra.concurrent.DebuggableThreadPoolExecutor;
+import org.apache.cassandra.concurrent.JMXEnabledThreadPoolExecutor;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
 import org.apache.cassandra.concurrent.TracingAwareExecutorService;
@@ -279,6 +280,8 @@ public final class MessagingService implements MessagingServiceMBean
 
     private final List<SocketThread> socketThreads = Lists.newArrayList();
     private final SimpleCondition listenGate;
+    
+    private InetAddress thisAddress;
 
     /**
      * Verbs it's okay to drop if the request has been queued longer than the request timeout.  These
@@ -362,6 +365,7 @@ public final class MessagingService implements MessagingServiceMBean
         {
             throw new RuntimeException(e);
         }
+        thisAddress = FBUtilities.getBroadcastAddress();
     }
 
     /**
@@ -717,7 +721,6 @@ public final class MessagingService implements MessagingServiceMBean
     public void receive(MessageIn message, String id, long timestamp)
     {
         TraceState state = Tracing.instance().initializeFromMessage(message);
-        Klogger.logger.debug("Message received from {}", message.from);
         if (state != null)
             state.trace("Message received from {}", message.from);
 
@@ -771,6 +774,10 @@ public final class MessagingService implements MessagingServiceMBean
         }
         Runnable runnable = new MessageDeliveryTask(message, id, timestamp);
         TracingAwareExecutorService stage = StageManager.getStage(message.getMessageType());
+        if (message.getMessageType() == Stage.GOSSIP) {
+            Klogger.logger.info(thisAddress + " received " + message + " ; queue size " + ((JMXEnabledThreadPoolExecutor) stage).getQueue().size());
+        }
+        
         assert stage != null : "No stage for message type " + message.verb;
 
         if (message.verb == Verb.REQUEST_RESPONSE && PBSPredictor.instance().isLoggingEnabled())

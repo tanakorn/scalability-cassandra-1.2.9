@@ -21,6 +21,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -34,11 +35,28 @@ public class GossipDigestAck2
 {
     public static final IVersionedSerializer<GossipDigestAck2> serializer = new GossipDigestAck2Serializer();
 
-    final Map<InetAddress, EndpointState> epStateMap;
+    private static final AtomicInteger idGenerator = new AtomicInteger(0);
 
-    GossipDigestAck2(Map<InetAddress, EndpointState> epStateMap)
+    final Map<InetAddress, EndpointState> epStateMap;
+    final int msgId;
+    final int syncId;
+    final int ackId;
+    long createdTime;
+
+    GossipDigestAck2(Map<InetAddress, EndpointState> epStateMap, int syncId, int ackId)
     {
         this.epStateMap = epStateMap;
+        this.msgId = idGenerator.getAndIncrement();
+        this.syncId = syncId;
+        this.ackId = ackId;
+    }
+
+    GossipDigestAck2(Map<InetAddress, EndpointState> epStateMap, int msgId, int syncId, int ackId)
+    {
+        this.epStateMap = epStateMap;
+        this.msgId = msgId;
+        this.syncId = syncId;
+        this.ackId = ackId;
     }
 
     public Map<InetAddress, EndpointState> getEndpointStateMap()
@@ -71,6 +89,14 @@ public class GossipDigestAck2
             return false;
         return true;
     }
+
+    public long getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(long createdTime) {
+        this.createdTime = createdTime;
+    }
 }
 
 class GossipDigestAck2Serializer implements IVersionedSerializer<GossipDigestAck2>
@@ -84,6 +110,10 @@ class GossipDigestAck2Serializer implements IVersionedSerializer<GossipDigestAck
             CompactEndpointSerializationHelper.serialize(ep, dos);
             EndpointState.serializer.serialize(entry.getValue(), dos, version);
         }
+        dos.writeInt(ack2.msgId);
+        dos.writeInt(ack2.syncId);
+        dos.writeInt(ack2.ackId);
+        dos.writeLong(ack2.createdTime);
     }
 
     public GossipDigestAck2 deserialize(DataInput dis, int version) throws IOException
@@ -97,7 +127,13 @@ class GossipDigestAck2Serializer implements IVersionedSerializer<GossipDigestAck
             EndpointState epState = EndpointState.serializer.deserialize(dis, version);
             epStateMap.put(ep, epState);
         }
-        return new GossipDigestAck2(epStateMap);
+        int msgId = dis.readInt();
+        int syncId = dis.readInt();
+        int ackId = dis.readInt();
+        long createdTime = dis.readLong();
+        GossipDigestAck2 ack2 = new GossipDigestAck2(epStateMap, msgId, syncId, ackId);
+        ack2.setCreatedTime(createdTime);
+        return ack2;
     }
 
     public long serializedSize(GossipDigestAck2 ack2, int version)

@@ -20,6 +20,7 @@ package org.apache.cassandra.gms;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -32,21 +33,37 @@ import org.apache.cassandra.net.MessagingService;
 public class GossipDigestSyn
 {
     public static final IVersionedSerializer<GossipDigestSyn> serializer = new GossipDigestSynSerializer();
+    
+    private static final AtomicInteger idGenerator = new AtomicInteger(0);
 
     final String clusterId;
     final String partioner;
     final List<GossipDigest> gDigests;
+    final int msgId;
 
     public GossipDigestSyn(String clusterId, String partioner, List<GossipDigest> gDigests)
     {
         this.clusterId = clusterId;
         this.partioner = partioner;
         this.gDigests = gDigests;
+        this.msgId = idGenerator.getAndIncrement();
+    }
+    
+    public GossipDigestSyn(String clusterId, String partioner, List<GossipDigest> gDigests, int msgId)
+    {
+        this.clusterId = clusterId;
+        this.partioner = partioner;
+        this.gDigests = gDigests;
+        this.msgId = msgId;
     }
 
     List<GossipDigest> getGossipDigests()
     {
         return gDigests;
+    }
+    
+    public int getMsgId() {
+        return msgId;
     }
 
     @Override
@@ -125,6 +142,7 @@ class GossipDigestSynSerializer implements IVersionedSerializer<GossipDigestSyn>
         if (version >= MessagingService.VERSION_12)
             dos.writeUTF(gDigestSynMessage.partioner);
         GossipDigestSerializationHelper.serialize(gDigestSynMessage.gDigests, dos, version);
+        dos.writeInt(gDigestSynMessage.msgId);
     }
 
     public GossipDigestSyn deserialize(DataInput dis, int version) throws IOException
@@ -134,7 +152,8 @@ class GossipDigestSynSerializer implements IVersionedSerializer<GossipDigestSyn>
         if (version >= MessagingService.VERSION_12)
             partioner = dis.readUTF();
         List<GossipDigest> gDigests = GossipDigestSerializationHelper.deserialize(dis, version);
-        return new GossipDigestSyn(clusterId, partioner, gDigests);
+        int msgId = dis.readInt();
+        return new GossipDigestSyn(clusterId, partioner, gDigests, msgId);
     }
 
     public long serializedSize(GossipDigestSyn syn, int version)
