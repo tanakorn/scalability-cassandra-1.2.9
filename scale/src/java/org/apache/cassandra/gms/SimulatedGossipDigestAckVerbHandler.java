@@ -128,7 +128,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            }
             
         }
-        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+        result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
 //        if (result != null) {
 //            for (int i = 0; i < result.length; ++i) {
 //                if (!result[i].equals(result2[i])) {
