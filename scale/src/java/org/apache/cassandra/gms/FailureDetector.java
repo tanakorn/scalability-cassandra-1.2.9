@@ -369,7 +369,7 @@ class ArrivalWindow
         int size = arrivalIntervals.size();
         double t = tnow - tLast;
         double mean = mean();
-        double phi = (size > 0) ? PHI_FACTOR * t / mean : 0.0;
+        double phi = (size > 40) ? PHI_FACTOR * t / mean : 0.0;
         return (size > 0) ? phi : 0.0;
     }
 
