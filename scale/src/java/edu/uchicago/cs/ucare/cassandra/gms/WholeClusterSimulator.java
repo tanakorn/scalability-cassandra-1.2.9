@@ -72,6 +72,7 @@ public class WholeClusterSimulator {
     
     public static Map<InetAddress, Double> maxObservedPhi = new HashMap<InetAddress, Double>();
     
+    public static Map<InetAddress, Boolean> isStarted = new HashMap<InetAddress, Boolean>();
 //    public static double[] normalGossipExecSdRecords;
     
 //    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
@@ -195,6 +196,7 @@ public class WholeClusterSimulator {
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
             maxObservedPhi.put(address, 0.0);
+            isStarted.put(address, false);
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
@@ -242,6 +244,7 @@ public class WholeClusterSimulator {
                     stub.setNormalStatusState();
                     stub.setSeverityState(0.0);
                     stub.setLoad(10000);
+                    isStarted.put(seed, true);
                 }
             }
         });
@@ -251,33 +254,63 @@ public class WholeClusterSimulator {
             
             @Override
             public void run() {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                Timer setStatus = new Timer();
                 for (InetAddress address : addressList) {
-                    if (!seeds.contains(address)) {
-                        GossiperStub stub = stubGroup.getStub(address);
-                        stub.setupTokenState();
-                        stub.setBootStrappingStatusState();
+                    isStarted.put(address, true);
+                    if (!seeds.contains(addressList)) {
+                        final GossiperStub stub = stubGroup.getStub(address);
+                        setStatus.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                stub.setupTokenState();
+                                stub.setBootStrappingStatusState();
+                            }
+                        }, 5000);
+                        setStatus.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                               stub.updateNormalTokens();
+                               stub.setupTokenState();
+                               stub.setupTokenState();
+                               stub.setNormalStatusState();
+                               stub.setSeverityState(0.0);
+                               stub.setLoad(10000);
+                            }
+                        }, 10000);
+                    }
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                for (InetAddress address : addressList) {
-                    if (!seeds.contains(address)) {
-                        GossiperStub stub = stubGroup.getStub(address);
-                        stub.updateNormalTokens();
-                        stub.setupTokenState();
-                        stub.setNormalStatusState();
-                        stub.setSeverityState(0.0);
-                        stub.setLoad(10000);
-                    }
-                }
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                for (InetAddress address : addressList) {
+//                    if (!seeds.contains(address)) {
+//                        GossiperStub stub = stubGroup.getStub(address);
+//                        stub.setupTokenState();
+//                        stub.setBootStrappingStatusState();
+//                    }
+//                }
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                for (InetAddress address : addressList) {
+//                    if (!seeds.contains(address)) {
+//                        GossiperStub stub = stubGroup.getStub(address);
+//                        stub.updateNormalTokens();
+//                        stub.setupTokenState();
+//                        stub.setNormalStatusState();
+//                        stub.setSeverityState(0.0);
+//                        stub.setLoad(10000);
+//                    }
+//                }
             }
         });
         otherThread.start();
@@ -342,6 +375,9 @@ public class WholeClusterSimulator {
             previousTime = start;
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
+                if (!isStarted.get(performerAddress)) {
+                    continue;
+                }
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
@@ -451,14 +487,21 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+            while (!isStarted.get(address)) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             while (true) {
                 try {
-                MessageIn<?> ackMessage = msgQueue.take();
-                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                    MessageIn<?> ackMessage = msgQueue.take();
+                    long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+                    AckProcessor.networkQueuedTime += networkQueuedTime;
+                    AckProcessor.processCount += 1;
+//                    logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
+                    MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -509,16 +552,15 @@ public class WholeClusterSimulator {
                 double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
                 percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
 //                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
+                long networkLateness = AckProcessor.processCount == 0 ? 0 : (AckProcessor.networkQueuedTime / AckProcessor.processCount);
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval +
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
                 } else {
                     logger.info("stable status no " + flapping + 
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
-                            " ; send lateness " + interval + 
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; send lateness " + interval + " ; network lateness " + networkLateness);
                 }
                 StringBuilder sb = new StringBuilder("all maxphi ");
                 for (GossiperStub stub : stubGroup) {
@@ -534,80 +576,6 @@ public class WholeClusterSimulator {
                     sb.append(",");
                 }
                 logger.info(sb.toString());
-//                for (GossiperStub stub : stubGroup) {
-//                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-//                    if (queue.size() > 100) {
-//                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-//                    }
-//                }
-//                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
-//                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
-//                if (tmpLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpLatenessList.size();
-//                    for (Long l : tmpLatenessList) {
-//                        if (!latenessDist.containsKey(l)) {
-//                            latenessDist.put(l, 0.0);
-//                        }
-//                        latenessDist.put(l, latenessDist.get(l) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Long l : latenessDist.keySet()) {
-//                        double dist = latenessDist.get(l);
-//                        sb.append(l);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("abs_lateness " + sb.toString());
-//                }
-//                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
-//                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
-//                if (tmpPercentLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpPercentLatenessList.size();
-//                    for (Double d : tmpPercentLatenessList) {
-//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-//                        if (!percentLatenessDist.containsKey(roundedD)) {
-//                            percentLatenessDist.put(roundedD, 0.0);
-//                        }
-//                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Double d : percentLatenessDist.keySet()) {
-//                        double dist = percentLatenessDist.get(d);
-//                        sb.append(d);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("perc_lateness " + sb.toString());
-//                }
-//                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
-//                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
-//                if (tmpPercentSendLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpPercentSendLatenessList.size();
-//                    for (Double d : tmpPercentSendLatenessList) {
-//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-//                        if (!percentSendLatenessDist.containsKey(roundedD)) {
-//                            percentSendLatenessDist.put(roundedD, 0.0);
-//                        }
-//                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Double d : percentSendLatenessDist.keySet()) {
-//                        double dist = percentSendLatenessDist.get(d);
-//                        sb.append(d);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("perc_send_lateness " + sb.toString());
-//                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
