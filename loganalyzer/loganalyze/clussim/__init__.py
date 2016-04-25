@@ -5,11 +5,11 @@ modClassMap = {
   'phi' : 'PhiAnalyzer',
   'falsedetect' : 'FalseDetectionCounter',
   'exectime' : 'ExecTimeAnalyzer',
-  'hop' : 'HopCounter',
+  #'hop' : 'HopCounter',
   'tsilence' : 'TSilenceExtractor',
-  'message' : 'MessageCounter',
-  'lateness' : 'LatenessCounter',
-  'stable' : 'StableAnalyzer',
+  #'message' : 'MessageCounter',
+  #'lateness' : 'LatenessCounter',
+  #'stable' : 'StableAnalyzer',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }

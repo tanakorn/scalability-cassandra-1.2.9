@@ -108,9 +108,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            logger.info("Processing lateness " + lateness);
 //        } catch (InterruptedException e) {
             // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+            e.printStackTrace();
+        }
+        result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
 //        for (int i = 0; i < result.length; ++i) {
 //            if (!result[i].equals(result2[i])) {
 //                System.out.println(i + " index is not the same");
