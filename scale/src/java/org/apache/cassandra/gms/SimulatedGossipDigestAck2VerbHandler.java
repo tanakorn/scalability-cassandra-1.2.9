@@ -70,8 +70,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
             long sleepTime = 0;
             if (realUpdate != 0 || bootCount != 0) {
-                int floorNormalVersion = (realUpdate / 4) * 4;
-                int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
+                int floorNormalVersion = (realUpdate / 8) * 8;
+                int ceilingNormalVersion = (realUpdate / 8 + 1) * 8;
                 long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
                 long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
                 if (floorSleepTime != 0) {
