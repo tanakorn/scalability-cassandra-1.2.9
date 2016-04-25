@@ -67,7 +67,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             /* Notify the Failure Detector */
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
-            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
+//            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
             long sleepTime = message.getSleepTime();
             try {
                 Thread.sleep(sleepTime);
@@ -75,7 +75,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                 e.printStackTrace();
             }
         }
-        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+        result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
 
         Gossiper.instance.checkSeedContact(from);
 
