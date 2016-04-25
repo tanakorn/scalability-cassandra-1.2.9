@@ -90,7 +90,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                     long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
                     long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
 //                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-                    sleepTime = ceilingSleepTime;
+                    sleepTime = floorSleepTime;
                     sleepTime += WholeClusterSimulator.bootGossipExecRecords[bootCount];
                     long realSleep = System.currentTimeMillis();
                     if (sleepTime > 0) {

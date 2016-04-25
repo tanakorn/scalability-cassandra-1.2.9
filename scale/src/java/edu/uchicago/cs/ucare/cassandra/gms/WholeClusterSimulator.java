@@ -279,7 +279,7 @@ public class WholeClusterSimulator {
                         }, 10000);
                     }
                     try {
-                        Thread.sleep(25);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -489,7 +489,7 @@ public class WholeClusterSimulator {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (!isStarted.get(address)) {
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(5);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
