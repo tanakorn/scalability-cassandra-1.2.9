@@ -64,16 +64,19 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         Object[] result = Gossiper.determineApplyStateLocallyStatic(receiverStub, remoteEpStateMap);
 //        int tmpNormalCount = (int) result[6];
         try {
+            int bootCount = (int) result[5];
             int realUpdate = (int) result[9];
             int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
 //            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
             long sleepTime = 0;
-            if (realUpdate != 0) {
+            if (realUpdate != 0 || bootCount != 0) {
                 int floorNormalVersion = (realUpdate / 4) * 4;
                 int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
                 long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
                 long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
-                sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+//                sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+                sleepTime = ceilingSleepTime;
+                sleepTime += WholeClusterSimulator.bootGossipExecRecords[bootCount];
                 long realSleep = System.currentTimeMillis();
                 if (sleepTime > 0) {
                     Thread.sleep(sleepTime);

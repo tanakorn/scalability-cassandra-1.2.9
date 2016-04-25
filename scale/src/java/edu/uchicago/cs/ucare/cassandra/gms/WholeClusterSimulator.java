@@ -279,7 +279,7 @@ public class WholeClusterSimulator {
                         }, 10000);
                     }
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(25);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
