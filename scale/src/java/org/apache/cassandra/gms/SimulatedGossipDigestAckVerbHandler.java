@@ -206,16 +206,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[9];
-//            if (!updatedNodes.isEmpty()) {
-//                StringBuilder sb = new StringBuilder(to.toString());
-//                sb.append(" hop ");
-//                for (InetAddress receivingAddress : updatedNodes) {
-//                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-//                    sb.append(ep.hopNum);
-//                    sb.append(",");
-//                }
-//                logger.info(sb.toString());
-//            }
+            if (!updatedNodes.isEmpty()) {
+                StringBuilder sb = new StringBuilder(to.toString());
+                sb.append(" hop ");
+                for (InetAddress receivingAddress : updatedNodes) {
+                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
+                    sb.append(ep.hopNum);
+                    sb.append(",");
+                }
+                logger.info(sb.toString());
+            }
             if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
                 StringBuilder sb = new StringBuilder(to.toString());
                 sb.append(" t_silence ");
