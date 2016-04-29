@@ -376,8 +376,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
             if ( epState != null ) {
                 // check for dead state removal
                 long expireTime = getExpireTimeForEndpoint(endpoint);
-                if (!epState.isAlive() && (now > expireTime)
-                        && (!StorageService.instance.getTokenMetadata().isMember(endpoint))) {
+                if (!epState.isAlive() && (now > expireTime) && (!tokenMetadata.isMember(endpoint))) {
                     evictFromMembership(endpoint);
                 }
             }

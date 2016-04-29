@@ -155,7 +155,7 @@ public class WholeClusterSimulator {
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
         if (args.length < 4) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_gossipers>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
