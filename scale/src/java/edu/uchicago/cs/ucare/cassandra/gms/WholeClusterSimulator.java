@@ -373,6 +373,7 @@ public class WholeClusterSimulator {
                 percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
             }
             previousTime = start;
+            Collections.shuffle(stubs);
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
                 if (!isStarted.get(performerAddress)) {
