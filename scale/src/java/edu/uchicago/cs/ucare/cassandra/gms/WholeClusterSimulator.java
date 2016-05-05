@@ -58,6 +58,7 @@ public class WholeClusterSimulator {
 //    public static double[] normalGossipExecRecords;
     
     public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords;
+    public static Map<Integer, Long> zeroUpdate;
     
     public static long totalProcLateness = 0;
     public static int numProc = 0;
@@ -153,15 +154,16 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 4) {
+        if (args.length < 5) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_gossipers>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <zero_update> <num_gossipers>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[1024];
 //        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
+        zeroUpdate = new HashMap<Integer, Long>();
 //        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
@@ -208,7 +210,15 @@ public class WholeClusterSimulator {
         
 //        int numGossiper = numStubs / 100;
 //        int numGossiper = 2;
-        int numGossiper = Integer.parseInt(args[3]);
+        
+        buffReader = new BufferedReader(new FileReader(args[3]));
+        while ((line = buffReader.readLine()) != null) {
+            String[] tokens = line.split(" ");
+            zeroUpdate.put(Integer.parseInt(tokens[0]), Long.parseLong(tokens[1]));
+        }
+        buffReader.close();
+        
+        int numGossiper = Integer.parseInt(args[4]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
         tasks = new MyGossiperTask[numGossiper];
@@ -345,6 +355,10 @@ public class WholeClusterSimulator {
 //        double gaussian = rand.nextGaussian();
 //        double adjustedExecTime = execTime + sdExecTime * gaussian;
 //        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
+    }
+    
+    public static long getZeroUpdate(int currentVersion) {
+        return zeroUpdate.get(currentVersion);
     }
     
     public static class MyGossiperTask extends TimerTask {
