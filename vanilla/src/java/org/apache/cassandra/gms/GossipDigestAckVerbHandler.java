@@ -54,7 +54,7 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
             return;
         }
 
-        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 32;
         GossipDigestAck gDigestAckMessage = message.payload;
         long transmissionTime = receiveTime - gDigestAckMessage.getCreatedTime();
         List<GossipDigest> gDigestList = gDigestAckMessage.getGossipDigestList();

@@ -43,7 +43,7 @@ public class GossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck
         InetAddress from = message.from;
         InetAddress to = FBUtilities.getBroadcastAddress();
         Klogger.logger.info(to + " doVerb ack2");
-        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 1024;
+        int currentVersion = StorageService.instance.getTokenMetadata().tokenToEndpointMap.size() / 32;
         if (logger.isTraceEnabled())
         {
             logger.trace("Received a GossipDigestAck2Message from {}", from);
