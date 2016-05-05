@@ -246,6 +246,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
                         + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
                         + receiverCurrentVersion + " ; transmission " + transmissionTime);
             }
+            if (normalCount != 0) {
+                logger.info(to + " executes2 gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
+            }
         }
     }
 }
