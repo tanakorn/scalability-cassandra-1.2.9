@@ -51,14 +51,9 @@ public class WholeClusterSimulator {
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
-//    public static LinkedBlockingQueue<MessageIn<GossipDigestSyn>> syncQueue = 
-//            new LinkedBlockingQueue<MessageIn<GossipDigestSyn>>();
-    
     public static long[] bootGossipExecRecords;
-//    public static double[] normalGossipExecRecords;
-    
     public static Map<Integer, Map<Integer, Long>> normalGossipExecRecords;
-    public static Map<Integer, Long> zeroUpdate;
+    public static Map<Integer, Map<Integer, Long>> offlineNormalGossipExecRecords;
     
     public static long totalProcLateness = 0;
     public static int numProc = 0;
@@ -156,14 +151,14 @@ public class WholeClusterSimulator {
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
         if (args.length < 5) {
             System.err.println("Please enter execution_time files");
-            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <zero_update> <num_gossipers>");
+            System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <real_exec> <off_exec> <num_gossipers>");
             System.exit(1);
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[1024];
 //        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
-        zeroUpdate = new HashMap<Integer, Long>();
+        offlineNormalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
 //        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
@@ -179,10 +174,22 @@ public class WholeClusterSimulator {
             int currentVersion = Integer.parseInt(tokens[0]);
             int newVersion = Integer.parseInt(tokens[1]);
             long execTime = (long) Double.parseDouble(tokens[2]);
-            if (!normalGossipExecRecords.containsKey(currentVersion)) {
-                normalGossipExecRecords.put(currentVersion, new HashMap<Integer, Long>());
+            if (!normalGossipExecRecords.containsKey(newVersion)) {
+                normalGossipExecRecords.put(newVersion, new HashMap<Integer, Long>());
             }
-            normalGossipExecRecords.get(currentVersion).put(newVersion, execTime);
+            normalGossipExecRecords.get(newVersion).put(currentVersion, execTime);
+        }
+        buffReader.close();
+        buffReader = new BufferedReader(new FileReader(args[3]));
+        while ((line = buffReader.readLine()) != null) {
+            String[] tokens = line.split(" ");
+            int currentVersion = Integer.parseInt(tokens[0]);
+            int newVersion = Integer.parseInt(tokens[1]);
+            long execTime = (long) Double.parseDouble(tokens[2]);
+            if (!offlineNormalGossipExecRecords.containsKey(newVersion)) {
+                offlineNormalGossipExecRecords.put(newVersion, new HashMap<Integer, Long>());
+            }
+            offlineNormalGossipExecRecords.get(newVersion).put(currentVersion, execTime);
         }
         buffReader.close();
 //        Gossiper.registerStatic(StorageService.instance);
@@ -207,17 +214,6 @@ public class WholeClusterSimulator {
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
-        
-//        int numGossiper = numStubs / 100;
-//        int numGossiper = 2;
-        
-        buffReader = new BufferedReader(new FileReader(args[3]));
-        while ((line = buffReader.readLine()) != null) {
-            String[] tokens = line.split(" ");
-            zeroUpdate.put(Integer.parseInt(tokens[0]), Long.parseLong(tokens[1]));
-        }
-        buffReader.close();
-        
         int numGossiper = Integer.parseInt(args[4]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
@@ -337,28 +333,53 @@ public class WholeClusterSimulator {
     
     static Random rand = new Random();
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
-        if (numNormal > numStubs - currentVersion) {
-            numNormal = numStubs - currentVersion;
-            numNormal = (numNormal / 4) * 4;
-        }
-        if (numNormal == 0) {
+        if (numNormal == 0 && currentVersion < 2) {
             return 0;
         }
-        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
+        for (int i = numNormal; i < numNormal + 4; ++i) {
+            if (normalGossipExecRecords.containsKey(i)) {
+                for (int j = currentVersion; j < currentVersion + 4; ++j) {
+                    if (normalGossipExecRecords.get(i).containsKey(j)) {
+                        return normalGossipExecRecords.get(i).get(j);
+                    }
+                }
+                for (int j = currentVersion - 1; j > currentVersion - 4; --j) {
+                    if (normalGossipExecRecords.get(i).containsKey(j)) {
+                        return normalGossipExecRecords.get(i).get(j);
+                    }
+                }
+            }
+        }
+        for (int i = numNormal - 1; i > numNormal - 4; --i) {
+            if (normalGossipExecRecords.containsKey(i)) {
+                for (int j = currentVersion; j < currentVersion + 4; ++j) {
+                    if (normalGossipExecRecords.get(i).containsKey(j)) {
+                        return normalGossipExecRecords.get(i).get(j);
+                    }
+                }
+                for (int j = currentVersion - 1; j < currentVersion - 4; --j) {
+                    if (normalGossipExecRecords.get(i).containsKey(j)) {
+                        return normalGossipExecRecords.get(i).get(j);
+                    }
+                }
+            }
+        }
+        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
+        int ceilingNormalVersion = (numNormal / 8 + 1) * 8;
+        if (ceilingNormalVersion > numStubs - roundCurrentVersion) {
+            ceilingNormalVersion = numStubs - roundCurrentVersion;
+            ceilingNormalVersion = (ceilingNormalVersion / 4) * 4;
+        }
+        Long result = null;
+        try {
+            result = offlineNormalGossipExecRecords.get(ceilingNormalVersion).get(roundCurrentVersion);
+        } catch (NullPointerException e) {
+            System.out.println(roundCurrentVersion + " " + ceilingNormalVersion);
+        }
         if (result == null) {
-            System.out.println(currentVersion + " " + numNormal);
+            System.out.println(roundCurrentVersion + " " + ceilingNormalVersion);
         }
         return result;
-//        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
-//        return execTimeMilli;
-//        double sdExecTime = normalGossipExecSdRecords[numNormal];
-//        double gaussian = rand.nextGaussian();
-//        double adjustedExecTime = execTime + sdExecTime * gaussian;
-//        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
-    }
-    
-    public static long getZeroUpdate(int currentVersion) {
-        return zeroUpdate.get(currentVersion);
     }
     
     public static class MyGossiperTask extends TimerTask {

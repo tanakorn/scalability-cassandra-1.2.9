@@ -65,45 +65,24 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        int tmpNormalCount = (int) result[6];
         try {
             int bootCount = (int) result[5];
+            int normalCount = (int) result[6];
             int realUpdate = (int) result[9];
             int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
 //            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
             long sleepTime = 0;
-            if (realUpdate != 0 || bootCount != 0) {
-                int floorNormalVersion = (realUpdate / 8) * 8;
-                int ceilingNormalVersion = (realUpdate / 8 + 1) * 8;
-                long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
-                long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
-                if (floorSleepTime != 0) {
-//                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-                    sleepTime = ceilingSleepTime;
-                } else {
-                    sleepTime = floorSleepTime;
-                }
-                sleepTime += WholeClusterSimulator.bootGossipExecRecords[bootCount];
-                long realSleep = System.currentTimeMillis();
-                if (sleepTime > 0) {
-                    Thread.sleep(sleepTime);
-                }
-                realSleep = System.currentTimeMillis() - realSleep;
-                long lateness = realSleep - sleepTime;
-                lateness = lateness < 0 ? 0 : lateness;
-                WholeClusterSimulator.totalRealSleep += realSleep;
-                WholeClusterSimulator.totalExpectedSleep += sleepTime;
-                WholeClusterSimulator.totalProcLateness += lateness;
-                WholeClusterSimulator.numProc++;
-                WholeClusterSimulator.procLatenessList.add(lateness);
-                if (sleepTime != 0) {
-                    WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
-                } else {
-                    WholeClusterSimulator.percentProcLatenessList.add(0.0);
-                }
-                if (lateness > WholeClusterSimulator.maxProcLateness) {
-                    WholeClusterSimulator.maxProcLateness = lateness;
-                }
-            } else {
-                sleepTime = WholeClusterSimulator.getZeroUpdate(receiverCurrentVersion);
-                sleepTime += WholeClusterSimulator.bootGossipExecRecords[bootCount];
+            if (realUpdate != 0) {
+//                int floorNormalVersion = (realUpdate / 8) * 8;
+//                int ceilingNormalVersion = (realUpdate / 8 + 1) * 8;
+//                long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
+//                long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
+//                if (floorSleepTime != 0) {
+////                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
+//                    sleepTime = ceilingSleepTime;
+//                } else {
+//                    sleepTime = floorSleepTime;
+//                }
+//                sleepTime += WholeClusterSimulator.bootGossipExecRecords[bootCount];
+                    sleepTime += WholeClusterSimulator.getExecTimeNormal(receiverCurrentVersion, realUpdate);
                 long realSleep = System.currentTimeMillis();
                 if (sleepTime > 0) {
                     Thread.sleep(sleepTime);
