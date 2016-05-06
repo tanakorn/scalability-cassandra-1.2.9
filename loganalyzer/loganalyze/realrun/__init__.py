@@ -2,13 +2,14 @@ import importlib
 
 # filename : classname
 modClassMap = { 
-  'phi' : 'PhiAnalyzer',
-  'falsedetect' : 'FalseDetectionCounter',
-  'exectime' : 'ExecTimeAnalyzer',
-  'hop' : 'HopCounter',
-  'tsilence' : 'TSilenceExtractor',
-  'message' : 'MessageCounter',
-  'stable' : 'StableAnalyzer',
+  'exectime2' : 'ExecTimeAnalyzer',
+  #'phi' : 'PhiAnalyzer',
+  #'falsedetect' : 'FalseDetectionCounter',
+  #'exectime' : 'ExecTimeAnalyzer',
+  #'hop' : 'HopCounter',
+  #'tsilence' : 'TSilenceExtractor',
+  #'message' : 'MessageCounter',
+  #'stable' : 'StableAnalyzer',
 }
 
 modClassMap = { '%s.%s' % (__name__, i) : modClassMap[i] for i in modClassMap }
