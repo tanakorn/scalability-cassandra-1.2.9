@@ -285,7 +285,7 @@ public class WholeClusterSimulator {
                         }, 10000);
                     }
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(30);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -336,34 +336,35 @@ public class WholeClusterSimulator {
         if (numNormal == 0 && currentVersion < 2) {
             return 0;
         }
-        for (int i = numNormal; i < numNormal + 4; ++i) {
+        for (int i = numNormal; i < numNormal + 8; ++i) {
             if (normalGossipExecRecords.containsKey(i)) {
-                for (int j = currentVersion; j < currentVersion + 4; ++j) {
+                for (int j = currentVersion; j < currentVersion + 8; ++j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
-                for (int j = currentVersion - 1; j > currentVersion - 4; --j) {
+                for (int j = currentVersion - 1; j > currentVersion - 8; --j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
             }
         }
-        for (int i = numNormal - 1; i > numNormal - 4; --i) {
+        for (int i = numNormal - 1; i > numNormal - 8; --i) {
             if (normalGossipExecRecords.containsKey(i)) {
-                for (int j = currentVersion; j < currentVersion + 4; ++j) {
+                for (int j = currentVersion; j < currentVersion + 8; ++j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
-                for (int j = currentVersion - 1; j < currentVersion - 4; --j) {
+                for (int j = currentVersion - 1; j < currentVersion - 8; --j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
             }
         }
+        System.out.println("get from offline " + currentVersion + " " + numNormal);
         int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
         int ceilingNormalVersion = (numNormal / 8 + 1) * 8;
         if (ceilingNormalVersion > numStubs - roundCurrentVersion) {
