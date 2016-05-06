@@ -332,39 +332,30 @@ public class WholeClusterSimulator {
     }
     
     static Random rand = new Random();
+    static int numGetExecTime = 0;
+    static int numMiss = 0;
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
+        numGetExecTime++;
         if (numNormal == 0 && currentVersion < 2) {
             return 0;
         }
-        for (int i = numNormal; i < numNormal + 8; ++i) {
+        for (int i = numNormal; i < numNormal + 16; ++i) {
             if (normalGossipExecRecords.containsKey(i)) {
-                for (int j = currentVersion; j < currentVersion + 8; ++j) {
+                for (int j = currentVersion; j < currentVersion + 16; ++j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
-                for (int j = currentVersion - 1; j > currentVersion - 8; --j) {
+                for (int j = currentVersion - 1; j > currentVersion - 16; --j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
             }
         }
-        for (int i = numNormal - 1; i > numNormal - 8; --i) {
-            if (normalGossipExecRecords.containsKey(i)) {
-                for (int j = currentVersion; j < currentVersion + 8; ++j) {
-                    if (normalGossipExecRecords.get(i).containsKey(j)) {
-                        return normalGossipExecRecords.get(i).get(j);
-                    }
-                }
-                for (int j = currentVersion - 1; j < currentVersion - 8; --j) {
-                    if (normalGossipExecRecords.get(i).containsKey(j)) {
-                        return normalGossipExecRecords.get(i).get(j);
-                    }
-                }
-            }
-        }
-        System.out.println("get from offline " + currentVersion + " " + numNormal);
+        numMiss++;
+        double missRatio = ((double) numMiss) / (double) numGetExecTime;
+        logger.info("exectime miss_ratio {}", missRatio);
         int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
         int ceilingNormalVersion = (numNormal / 8 + 1) * 8;
         if (ceilingNormalVersion > numStubs - roundCurrentVersion) {
