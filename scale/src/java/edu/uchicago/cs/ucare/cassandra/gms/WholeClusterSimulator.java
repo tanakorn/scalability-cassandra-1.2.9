@@ -334,19 +334,30 @@ public class WholeClusterSimulator {
     static Random rand = new Random();
     static int numGetExecTime = 0;
     static int numMiss = 0;
+    
+    static int radius;
+    static {
+        String r = System.getenv("RADIUS");
+        if (r == null) {
+            radius = 16;
+        } else {
+            radius = Integer.parseInt(r);
+        }
+    }
+    
     public static long getExecTimeNormal(int currentVersion, int numNormal) {
         numGetExecTime++;
         if (numNormal == 0 && currentVersion < 2) {
             return 0;
         }
-        for (int i = numNormal; i < numNormal + 16; ++i) {
+        for (int i = numNormal; i < numNormal + radius; ++i) {
             if (normalGossipExecRecords.containsKey(i)) {
-                for (int j = currentVersion; j < currentVersion + 16; ++j) {
+                for (int j = currentVersion; j < currentVersion + radius; ++j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
                 }
-                for (int j = currentVersion - 1; j > currentVersion - 16; --j) {
+                for (int j = currentVersion - 1; j > currentVersion - radius; --j) {
                     if (normalGossipExecRecords.get(i).containsKey(j)) {
                         return normalGossipExecRecords.get(i).get(j);
                     }
@@ -612,6 +623,6 @@ public class WholeClusterSimulator {
             }
         }
 
-}
+    }
     
 }
