@@ -211,10 +211,17 @@ public class WholeClusterSimulator {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
-
+        // ##########################################################################
+        // @Cesar:Print properties
+        // ##########################################################################
+        logger.info("@Cesar: isReplayEnabled=" + WholeClusterSimulator.isReplayEnabled + 
+        			", isSerializationEnabled=" + WholeClusterSimulator.isSerializationEnabled + 
+        			", serializationFilePrefix=" + WholeClusterSimulator.serializationFilePrefix +
+        			", failOnStateNotFound=" + WholeClusterSimulator.failOnStateNotFound);
         // ##########################################################################
         // @Cesar: load round manager messages to replay. This are the sent
         // gossiped messages
+        // ##########################################################################
         if(WholeClusterSimulator.isReplayEnabled){
         	roundManager.loadSentGossipRounds(WholeClusterSimulator.serializationFilePrefix, addressList);
         }
