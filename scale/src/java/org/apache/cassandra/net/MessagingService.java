@@ -23,8 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
+import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -63,8 +65,10 @@ import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestAck;
 import org.apache.cassandra.gms.GossipDigestAck2;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.MessageRecordingUtils;
 import org.apache.cassandra.gms.TokenSerializer;
 import org.apache.cassandra.gms.VersionedValue;
+import org.apache.cassandra.gms.MessageRecordingUtils.SerializedGossipMessage;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.locator.ILatencySubscriber;
@@ -90,6 +94,11 @@ public final class MessagingService implements MessagingServiceMBean
     public static final int VERSION_12  = 6;
     public static final int current_version = VERSION_12;
 
+    // ###############################################################
+    // @Cesar: Utility for messages
+    // ###############################################################
+    private static MessageRecordingUtils recordingUtils = new MessageRecordingUtils();
+    // ###############################################################
     /**
      * we preface every message with this number so the recipient can validate the sender is sane
      */
@@ -362,6 +371,22 @@ public final class MessagingService implements MessagingServiceMBean
         {
             throw new RuntimeException(e);
         }
+        // ###############################################################
+        // @Cesar: also, load messages to replay if necessary
+        // ###############################################################
+        try{
+        	if(recordingUtils.isReplayEnabled()){
+        		recordingUtils.loadInitialSentMessages();
+        		recordingUtils.loadInitialReceivedMessages();
+        	}
+        	else{
+        		logger.info("@Cesar: Replay is not enabled, no need to load inital message list");
+        	}
+        }
+        catch(Exception e){
+        	logger.error("@Cesar: Exception when loading messages! We wont be able to replay", e);
+        }
+        // ###############################################################
     }
 
     /**
@@ -611,6 +636,58 @@ public final class MessagingService implements MessagingServiceMBean
      */
     public void sendOneWay(MessageOut message, String id, InetAddress to)
     {
+    	// ###############################################################
+    	// @Cesar: this is added by me
+    	// ###############################################################
+        if(message.payload instanceof GossipDigestAck2 || 
+           message.payload instanceof GossipDigestAck  ||
+           message.payload instanceof GossipDigestSyn){
+            if(recordingUtils.isRecordingEnabled()){
+                try{
+                    String serializationFileName = recordingUtils.getSentMessageIndexedFileName();
+                    File serialized = new File(serializationFileName);
+                    // @Cesar: create dirs if necessary
+                    if(!serialized.getParentFile().exists()) serialized.getParentFile().mkdirs();
+                    PrintWriter pr = new PrintWriter(serialized);
+                    logger.info("@Cesar: Serialize sent <" + id + ", " + to + ", "+ message +">");
+                    pr.println(MessageRecordingUtils.printSentMessage(id, message, to, serializationFileName));
+                    pr.close();
+                }
+                catch(Exception e){
+                    logger.error("Exception, cannot serialize message", e);
+                }
+            }
+            else if(recordingUtils.isReplayEnabled()){
+                try{
+                    // get the next message
+                    SerializedGossipMessage next = recordingUtils.pollNextSentMessage();
+                    logger.info("@Cesar: Consuming message, <" + recordingUtils.sentSize() + "> remaining");
+                    if(next != null){
+                        logger.info("@Cesar: Message to replace (send) <" + id + ", " + to + ", "+ message +">");
+                        // assign it
+                        message = next.getRetrievedMessageSent();
+                        id = next.getRetrievedId();
+                        to = next.getRetrievedDestinatary();
+                        logger.info("@Cesar: Message to replay (send) <" + id + ", " + to + ", "+ message +">");
+                    }
+                    else{
+                            // next message is null, should we close vm?
+                            boolean shouldWeFailIfNoMoreMessages = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.failOnNoMessagesToReplay", "FALSE"));
+                            if(shouldWeFailIfNoMoreMessages){
+                                logger.info("@Cesar: Failing cause there are no more messages to replay");
+                                System.exit(0);
+                            }
+                            else{
+                                logger.info("@Cesar: Continue with messages, no more to replay here!");
+                            }
+                    }
+                }
+                catch(Exception e){
+                        logger.error("Exception, replay serialized message", e);
+                }
+            }
+        }
+        // ###############################################################
         if (logger.isTraceEnabled())
             logger.trace(FBUtilities.getBroadcastAddress() + " sending " + message.verb + " to " + id + "@" + to);
         if (to.equals(FBUtilities.getBroadcastAddress()))
@@ -716,6 +793,57 @@ public final class MessagingService implements MessagingServiceMBean
 
     public void receive(MessageIn message, String id, long timestamp)
     {
+    	// ###############################################################
+    	// @Cesar: this is added by me
+    	// ###############################################################
+    	if(message.payload instanceof GossipDigestAck2 || 
+      	   message.payload instanceof GossipDigestAck  ||
+      	   message.payload instanceof GossipDigestSyn){
+    		if(recordingUtils.isRecordingEnabled()){
+	    		try{
+	    			// append to file
+	    			String serializationFileName = recordingUtils.getReceivedMessageIndexedFileName();
+	    			File serialized = new File(serializationFileName);
+	    			if(!serialized.getParentFile().exists()) serialized.getParentFile().mkdirs();
+			    	PrintWriter pr = new PrintWriter(serialized);
+			    	logger.info("@Cesar: Serialize received <" + id + ", " + message.from + ", "+ message +">");
+			    	pr.println(MessageRecordingUtils.printReceivedMessage(id, message, serializationFileName));
+			    	pr.close();
+		    	}
+		    	catch(Exception e){
+		    		logger.error("Exception, cannot serialize message", e);
+		    	}
+    		}
+    		else if(recordingUtils.isReplayEnabled()){
+    			try{
+    				// get the next message
+    				SerializedGossipMessage next = recordingUtils.pollNextReceivedMessage();
+    				logger.info("@Cesar: Consuming message, <" + recordingUtils.receivedSize() + "> remaining");
+    				if(next != null){
+    					logger.info("@Cesar: Message to replace (receive) <" + id + ", " + message.from + ", "+ message +">");
+    					// assign it
+        				message = next.getRetrievedMessageReceived();
+        				id = next.getRetrievedId();
+        				logger.info("@Cesar: Message to replay (receive) <" + id + ", " + message.from + ", "+ message +">");
+    				}
+    				else{
+    					// next message is null, should we close vm?
+    					boolean shouldWeFailIfNoMoreMessages = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.failOnNoMessagesToReplay", "FALSE"));
+    					if(shouldWeFailIfNoMoreMessages){
+    						logger.info("@Cesar: Failing cause there are no more messages to replay");
+    						System.exit(0);
+    					}
+    					else{
+    						logger.info("@Cesar: Continue with messages, no more to replay here!");
+    					}
+    				}
+    			}
+    			catch(Exception e){
+    				logger.error("Exception, replay serialized message", e);
+    			}
+    		}
+    	}
+    	// ###############################################################
         TraceState state = Tracing.instance().initializeFromMessage(message);
         if (state != null)
             state.trace("Message received from {}", message.from);
