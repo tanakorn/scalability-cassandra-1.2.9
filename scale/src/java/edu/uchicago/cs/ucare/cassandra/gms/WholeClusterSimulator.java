@@ -370,6 +370,49 @@ public class WholeClusterSimulator {
             previousTime = start;
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
+                // ##########################################################################
+                // @Cesar: Lets replay
+                // ##########################################################################
+                if(WholeClusterSimulator.isReplayEnabled){
+                	GossipRound round = roundManager.pollNextSentMessage(performerAddress);
+                	if(round == null){
+                		// round for this guy is null, so no more messages to send
+                		roundManager.removeSentMessageQueue(performerAddress);
+                		// so, do we have any queues left?
+                		if(!roundManager.sentMessageQueuesLeft()){
+                			// always fail when no more message queues
+                			logger.error("@Cesar: Failing cause there are no more messages to gossip in any queue");
+                			System.exit(0);
+                		}
+                	}
+                	else{
+	                	logger.info("@Cesar: Gossip message to replay, round <" + round.getGossipRound() + ">");
+	                	logger.info("@Cesar: To live member: " + (round.getToLiveMember() != null? round.getToLiveMember().getToWho() : null));
+	                	logger.info("@Cesar: To unreachable member: " + (round.getToUnreachableMember() != null? round.getToUnreachableMember().getToWho() : null));
+	                	logger.info("@Cesar: To seed member: " + (round.getToSeed() != null? round.getToSeed().getToWho() : null));
+	                	// get the messages and replay
+	                	GossipMessage toLiveMember = round.getToLiveMember();
+	                	GossipMessage toUnreachableMember = round.getToUnreachableMember();
+	                	GossipMessage toSeed = round.getToSeed();
+	                	if(toLiveMember != null){
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
+	                		msgQueue.add(toLiveMember.getMessage());
+	                	}
+	                	if(toUnreachableMember != null){
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toUnreachableMember.getToWho());
+	                		msgQueue.add(toUnreachableMember.getMessage());
+	                	}
+	                	if(toSeed != null){
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toSeed.getToWho());
+	                		msgQueue.add(toSeed.getMessage());
+	                	}
+	                	// do status check
+	                	performer.doStatusCheck();
+	                	// and get out, but continue in this for loop
+	                	logger.info("@Cesar: Round done for <" + performerAddress + ">");
+                	}
+	                continue;
+                }
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();

@@ -25,6 +25,27 @@ public class GossipRoundManager {
 	private Map<InetAddress, Integer> roundsPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
 	
+	
+	public boolean sentMessageQueuesLeft(){
+		return queuesLeft(sentMessagesPerHost);
+	}
+	
+	private boolean queuesLeft(Map<InetAddress, PriorityBlockingQueue<GossipRound>> map){
+		return map.size() > 0;
+	}
+	
+	public void removeSentMessageQueue(InetAddress host){
+		removeMessageQueue(host, sentMessagesPerHost);
+	}
+	
+	private void removeMessageQueue(InetAddress host, 
+									Map<InetAddress, PriorityBlockingQueue<GossipRound>> map){
+		PriorityBlockingQueue<GossipRound> q = map.get(host);
+		if(q != null && q.size() == 0){
+			map.remove(host);
+		}
+	}
+	
 	public int getNextRoundFor(InetAddress host){
 		if(!roundsPerHost.containsKey(host)){
 			roundsPerHost.put(host, 1);
@@ -103,10 +124,15 @@ public class GossipRoundManager {
 			File dir = new File(directoryName);
 			File[] allSentMessages = dir.listFiles();
 			for(File message : allSentMessages){
-				brdr = new BufferedReader(new FileReader(message));
-				String serialized = brdr.readLine();
-				GossipRound reconstructed = GossipRound.messageFromString(serialized);
-				addSentMessage(id, reconstructed);
+				try{
+					brdr = new BufferedReader(new FileReader(message));
+					String serialized = brdr.readLine();
+					GossipRound reconstructed = GossipRound.messageFromString(serialized);
+					addSentMessage(id, reconstructed);
+				}
+				catch(Exception e){
+					logger.error("@Cesar: Skipped a message since cannot load", e);
+				}
 			}
 			logger.info("@Cesar: <" + geSentMessageQueueSize(id) + "> gossip rounds loaded " + 
 						 "for host <" + id + "> from <" + directoryName + ">");
