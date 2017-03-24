@@ -5,8 +5,8 @@ import java.net.InetAddress;
 
 public class MessageUtils {
 
-	private static final String GOSSIP_SENT = "gossip-sent";
-	private static final String GOSSIP_RECEIVED = "gossip-received";
+	private static final String GOSSIP_SENT = "-gossip-sent";
+	private static final String GOSSIP_RECEIVED = "-gossip-received";
 	
 	public static String buildSentGossipFilePath(String basePath, InetAddress id){
 		return basePath + 

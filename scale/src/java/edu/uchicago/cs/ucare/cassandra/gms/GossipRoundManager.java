@@ -81,7 +81,9 @@ public class GossipRoundManager {
 		String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
 		PrintWriter pr = null;
 		try{
-			pr = new PrintWriter(new File(fileName));
+			File file = new File(fileName);
+			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
+			pr = new PrintWriter(file);
 			String serializedRound = GossipRound.messageToString(round);
 			pr.println(serializedRound);
 			logger.info("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ">");
