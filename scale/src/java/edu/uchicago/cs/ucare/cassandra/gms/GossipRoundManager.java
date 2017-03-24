@@ -131,7 +131,7 @@ public class GossipRoundManager {
 					addSentMessage(id, reconstructed);
 				}
 				catch(Exception e){
-					logger.error("@Cesar: Skipped a message since cannot load", e);
+					// logger.error("@Cesar: Skipped a message since cannot load", e);
 				}
 			}
 			logger.info("@Cesar: <" + geSentMessageQueueSize(id) + "> gossip rounds loaded " + 
