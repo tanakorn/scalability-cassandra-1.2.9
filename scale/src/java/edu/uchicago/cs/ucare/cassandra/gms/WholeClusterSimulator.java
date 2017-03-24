@@ -37,7 +37,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.cassandra.gms.*;
+import edu.uchicago.cs.ucare.cassandra.gms.GossipMessage.GossipType;
 
 public class WholeClusterSimulator {
 
@@ -76,10 +76,14 @@ public class WholeClusterSimulator {
     
     // ##########################################################################
     // @Cesar: some variables
+    // ##########################################################################
     public static boolean isSerializationEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.recordSentMessages", "FALSE"));
     public static boolean isReplayEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.replayRecordedMessages", "FALSE"));
     public static boolean failOnStateNotFound = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.failOnNotFound", "FALSE"));
     public static String serializationFilePrefix = System.getProperty("edu.uchicago.ucare.sck.serializationFilePrefix", null);
+	// ##########################################################################
+    // @Cesar: This one handles messages (in record/replay escenario)
+    // ##########################################################################
     private static final GossipRoundManager roundManager = new GossipRoundManager(); 
     // ##########################################################################
     
