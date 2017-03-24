@@ -27,6 +27,7 @@ import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
+import org.apache.cassandra.gms.GossipRound;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
@@ -36,6 +37,8 @@ import org.apache.cassandra.service.StorageService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.cassandra.gms.GossipMessage.GossipType;
 
 public class WholeClusterSimulator {
 
@@ -71,6 +74,15 @@ public class WholeClusterSimulator {
     public static List<Double> percentProcLatenessList = Collections.synchronizedList(new LinkedList<Double>());
     
     public static List<Double> percentSendLatenessList = Collections.synchronizedList(new LinkedList<Double>());
+    
+    // ##########################################################################
+    // @Cesar: some variables
+    public static boolean isSerializationEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.recordSentMessages", "FALSE"));
+    public static boolean isReplayEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.replayRecordedMessages", "FALSE"));
+    public static boolean failOnStateNotFound = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.failOnNotFound", "FALSE"));
+    public static String serializationFilePrefix = System.getProperty("edu.uchicago.ucare.sck.serializationFilePrefix", null);
+    private static final GossipRoundManager roundManager = new GossipRoundManager(); 
+    // ##########################################################################
     
 //    public static double[] normalGossipExecSdRecords;
     
@@ -197,6 +209,13 @@ public class WholeClusterSimulator {
         }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
+        // ##########################################################################
+        // @Cesar: load round manager messages to replay. This are the sent
+        // gossiped messages
+        if(WholeClusterSimulator.isReplayEnabled){
+        	roundManager.loadSentGossipRounds(WholeClusterSimulator.serializationFilePrefix, addressList);
+        }
+        // ##########################################################################
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
                 .setNumTokens(32).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
@@ -345,6 +364,11 @@ public class WholeClusterSimulator {
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
                 Set<InetAddress> seeds = performer.getSeeds();
+                // ##########################################################################
+                // @Cesar: In here, i start saving the round (the possible 3 gossip messages)
+                // ##########################################################################
+                GossipRound currentRound = new GossipRound(roundManager.getNextRoundFor(performerAddress));
+                // ##########################################################################
                 if (!liveEndpoints.isEmpty()) {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
@@ -353,8 +377,16 @@ public class WholeClusterSimulator {
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
-//                        logger.debug(performerAddress + " sending sync to " + liveReceiver + " " + synMsg.payload.gDigests);
+                    	// ##########################################################################
+                        // @Cesar: gossip to live member
+                    	// ##########################################################################
+                    	if(WholeClusterSimulator.isSerializationEnabled){
+	                    	GossipMessage toLiveMember = GossipMessage.build(GossipType.TO_LIVE_MEMBER, synMsg, liveReceiver);
+	                    	currentRound.setToLiveMember(toLiveMember);
+                    	}
+                    	// ##########################################################################
                     }
+                    
                 } else {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
@@ -368,6 +400,14 @@ public class WholeClusterSimulator {
                         if (!msgQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
+                        	// ##########################################################################
+                            // @Cesar: gossip to unreachable member
+                        	// ##########################################################################
+                        	if(WholeClusterSimulator.isSerializationEnabled){
+    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
+    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
+                        	}
+                        	// ##########################################################################
                         }
                     }
                 }
@@ -384,7 +424,14 @@ public class WholeClusterSimulator {
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
-//                                    logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
+//                                  // ##########################################################################
+                                    // @Cesar: gossip to seed
+                                	// ##########################################################################
+                                	if(WholeClusterSimulator.isSerializationEnabled){
+            	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
+            	                    	currentRound.setToUnreachableMember(toSeed);
+                                	}
+                                	// ##########################################################################
                                 }
                             } else {
                                 double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
@@ -396,7 +443,14 @@ public class WholeClusterSimulator {
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
-//                                        logger.debug(performerAddress + " sending sync to seed " + seed + " " + synMsg.payload.gDigests);
+//                                      // ##########################################################################
+                                        // @Cesar: gossip to seed
+                                    	// ##########################################################################
+                                    	if(WholeClusterSimulator.isSerializationEnabled){
+                	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
+                	                    	currentRound.setToUnreachableMember(toSeed);
+                                    	}
+                                    	// ##########################################################################
                                     }
                                 }
                             }
@@ -404,6 +458,16 @@ public class WholeClusterSimulator {
                     }
                 }
                 performer.doStatusCheck();
+                // ##########################################################################
+                // @Cesar: save the round
+            	// ##########################################################################
+                if(WholeClusterSimulator.isSerializationEnabled){
+                	logger.info("@Cesar: Recording round: <" + currentRound + ">");
+                    roundManager.saveRoundToFile(currentRound, 
+                    							 WholeClusterSimulator.serializationFilePrefix, 
+                    							 performerAddress);
+                }
+                // ##########################################################################
             }
 //            long gossipingTime = System.currentTimeMillis() - start;
 //            if (gossipingTime > 1000) {

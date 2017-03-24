@@ -97,7 +97,7 @@ public final class MessagingService implements MessagingServiceMBean
     // ###############################################################
     // @Cesar: Utility for messages
     // ###############################################################
-    private static MessageRecordingUtils recordingUtils = new MessageRecordingUtils();
+    // private static MessageRecordingUtils recordingUtils = new MessageRecordingUtils();
     // ###############################################################
     /**
      * we preface every message with this number so the recipient can validate the sender is sane
@@ -374,7 +374,7 @@ public final class MessagingService implements MessagingServiceMBean
         // ###############################################################
         // @Cesar: also, load messages to replay if necessary
         // ###############################################################
-        try{
+        /*try{
         	if(recordingUtils.isReplayEnabled()){
         		recordingUtils.loadInitialSentMessages();
         		recordingUtils.loadInitialReceivedMessages();
@@ -385,7 +385,7 @@ public final class MessagingService implements MessagingServiceMBean
         }
         catch(Exception e){
         	logger.error("@Cesar: Exception when loading messages! We wont be able to replay", e);
-        }
+        }*/
         // ###############################################################
     }
 
@@ -639,7 +639,7 @@ public final class MessagingService implements MessagingServiceMBean
     	// ###############################################################
     	// @Cesar: this is added by me
     	// ###############################################################
-        if(message.payload instanceof GossipDigestAck2 || 
+        /*if(message.payload instanceof GossipDigestAck2 || 
            message.payload instanceof GossipDigestAck  ||
            message.payload instanceof GossipDigestSyn){
             if(recordingUtils.isRecordingEnabled()){
@@ -686,7 +686,7 @@ public final class MessagingService implements MessagingServiceMBean
                         logger.error("Exception, replay serialized message", e);
                 }
             }
-        }
+        }*/
         // ###############################################################
         if (logger.isTraceEnabled())
             logger.trace(FBUtilities.getBroadcastAddress() + " sending " + message.verb + " to " + id + "@" + to);
@@ -796,7 +796,7 @@ public final class MessagingService implements MessagingServiceMBean
     	// ###############################################################
     	// @Cesar: this is added by me
     	// ###############################################################
-    	if(message.payload instanceof GossipDigestAck2 || 
+    	/*if(message.payload instanceof GossipDigestAck2 || 
       	   message.payload instanceof GossipDigestAck  ||
       	   message.payload instanceof GossipDigestSyn){
     		if(recordingUtils.isRecordingEnabled()){
@@ -842,7 +842,7 @@ public final class MessagingService implements MessagingServiceMBean
     				logger.error("Exception, replay serialized message", e);
     			}
     		}
-    	}
+    	}*/
     	// ###############################################################
         TraceState state = Tracing.instance().initializeFromMessage(message);
         if (state != null)
