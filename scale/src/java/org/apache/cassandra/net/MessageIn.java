@@ -19,6 +19,7 @@ package org.apache.cassandra.net;
 
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.Map;
@@ -32,7 +33,7 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageIn<T>
+public class MessageIn<T> implements Serializable
 {
     public final InetAddress from;
     public final T payload;

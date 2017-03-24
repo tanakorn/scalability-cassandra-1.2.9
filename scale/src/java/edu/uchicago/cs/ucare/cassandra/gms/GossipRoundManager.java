@@ -8,8 +8,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +19,8 @@ public class GossipRoundManager {
 	private static final int INITIAL_CAPACITY = 100;
 	private static final Logger logger = LoggerFactory.getLogger(GossipRoundManager.class);
 	
-	private Map<InetAddress, PriorityQueue<GossipRound>> sentMessagesPerHost =
-				new ConcurrentHashMap<InetAddress, PriorityQueue<GossipRound>>();
+	private Map<InetAddress, PriorityBlockingQueue<GossipRound>> sentMessagesPerHost =
+				new ConcurrentHashMap<InetAddress, PriorityBlockingQueue<GossipRound>>();
 	
 	private Map<InetAddress, Integer> roundsPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
@@ -42,7 +42,7 @@ public class GossipRoundManager {
 	}
 	
 	private int getSizeOf(InetAddress host, 
-						  Map<InetAddress, PriorityQueue<GossipRound>> map){
+						  Map<InetAddress, PriorityBlockingQueue<GossipRound>> map){
 		return map.containsKey(host)? map.get(host).size() : 0;
 	}
 	
@@ -51,7 +51,7 @@ public class GossipRoundManager {
 	}
 	
 	private GossipRound pollNext(InetAddress host, 
-								 Map<InetAddress, PriorityQueue<GossipRound>> map){
+								 Map<InetAddress, PriorityBlockingQueue<GossipRound>> map){
 		if(!map.containsKey(host)) return null;
 		return map.get(host).poll();
 	}
@@ -63,14 +63,14 @@ public class GossipRoundManager {
 	
 	private void addToQueue(InetAddress host, 
 							GossipRound message, 
-							Map<InetAddress, PriorityQueue<GossipRound>> map){
+							Map<InetAddress, PriorityBlockingQueue<GossipRound>> map){
 		if (map.containsKey(host)){
 			map.get(host).add(message);
 		}
 		else{
-			PriorityQueue<GossipRound> pq = 
-					new PriorityQueue<GossipRound>(INITIAL_CAPACITY,
-												   new GossipRound.GossipRoundComparator());
+			PriorityBlockingQueue<GossipRound> pq = 
+					new PriorityBlockingQueue<GossipRound>(INITIAL_CAPACITY,
+												   			new GossipRound.GossipRoundComparator());
 			pq.add(message);
 			map.put(host, pq);
 			
