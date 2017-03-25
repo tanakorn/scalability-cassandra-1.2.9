@@ -186,6 +186,7 @@ public class MessageManager{
 					String serialized = brdr.readLine();
 					GossipRound reconstructed = GossipRound.messageFromString(serialized);
 					addSentMessage(id, reconstructed);
+					brdr.close();
 				}
 				catch(Exception e){
 					// logger.error("@Cesar: Skipped a message since cannot load", e);
@@ -219,6 +220,7 @@ public class MessageManager{
 					String serialized = brdr.readLine();
 					ReceivedMessage reconstructed = ReceivedMessage.messageFromString(serialized);
 					addReceivedMessage(id, reconstructed);
+					brdr.close();
 				}
 				catch(Exception e){
 					// logger.error("@Cesar: Skipped a message since cannot load", e);
