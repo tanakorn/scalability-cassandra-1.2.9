@@ -20,7 +20,7 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 	private int messageRound = 0;
 	private MessageIn<?> messageIn = null;
 	private long waitForNext = 0L;
-	private int generatedId = null; 
+	private int generatedId = 0; 
 	
 	public ReceivedMessage(int messageRound){
 		this.messageRound = messageRound;
