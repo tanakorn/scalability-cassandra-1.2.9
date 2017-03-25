@@ -42,7 +42,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+        long receiveTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
         InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack");
@@ -202,7 +202,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         gDigestAck2Message.createdTime = System.currentTimeMillis();
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
-        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+        long ackHandlerTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - receiveTime;
         if (result != null) {
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
