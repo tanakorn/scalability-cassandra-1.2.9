@@ -594,11 +594,16 @@ public class WholeClusterSimulator {
 	                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
 	                	received.setMessageIn(ackMessage);
 	                	received.setWaitForNext(endWaiting - startWaiting);
+	                	received.setGeneratedId(idGen.incrementAndGet());
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
 	                	messageManager.saveMessageToFile(received, 
 	                									 WholeClusterSimulator.serializationFilePrefix, 
 	                									 address);
 	                	// no continue here, we follow normal cycle
+	                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                AckProcessor.networkQueuedTime += networkQueuedTime;
+		                AckProcessor.processCount += 1;
+		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(received.getGeneratedId()));
 	                }
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message
@@ -634,7 +639,7 @@ public class WholeClusterSimulator {
 		                	AckProcessor.processCount += 1;
 		                	// process the message
 		                	try{
-		                		MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+		                		MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(nextMessage.getGeneratedId()));
 		                	}
 		                	catch(Exception e){
 		                		logger.error("@Cesar: Unexpected exception while processing message <" + ackMessage + ">", e);
@@ -645,11 +650,6 @@ public class WholeClusterSimulator {
 	                	continue;
 	                }
 	                // ##########################################################################
-	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-	                AckProcessor.networkQueuedTime += networkQueuedTime;
-	                AckProcessor.processCount += 1;
-	//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -20,6 +20,7 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 	private int messageRound = 0;
 	private MessageIn<?> messageIn = null;
 	private long waitForNext = 0L;
+	private int generatedId = null; 
 	
 	public ReceivedMessage(int messageRound){
 		this.messageRound = messageRound;
@@ -28,9 +29,11 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 	public MessageIn<?> getMessageIn() {
 		return messageIn;
 	}
+	
 	public void setMessageIn(MessageIn<?> messageIn) {
 		this.messageIn = messageIn;
 	}
+	
 	public int getMessageRound() {
 		return messageRound;
 	}
@@ -41,6 +44,15 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 
 	public void setWaitForNext(long waitForNext) {
 		this.waitForNext = waitForNext;
+	}
+
+	
+	public int getGeneratedId() {
+		return generatedId;
+	}
+
+	public void setGeneratedId(int generatedId) {
+		this.generatedId = generatedId;
 	}
 
 	public static String messageToString(ReceivedMessage message) throws Exception{
