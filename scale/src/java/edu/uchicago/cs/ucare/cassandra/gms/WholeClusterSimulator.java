@@ -579,58 +579,77 @@ public class WholeClusterSimulator {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
-                MessageIn<?> ackMessage = null;
-                // ##########################################################################
-                // @Cesar: in here, we save the received message
-            	// ##########################################################################
-                if(WholeClusterSimulator.isSerializationEnabled){
-                	// take from queue
-                	ackMessage = msgQueue.take();
-                	// save
-                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
-                	received.setMessageIn(ackMessage);
-                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
-                	messageManager.saveMessageToFile(received, 
-                									 WholeClusterSimulator.serializationFilePrefix, 
-                									 address);
-                	// no continue here, we follow normal cycle
-                }
-                // ##########################################################################
-                // @Cesar: in here, we load the received message
-            	// ##########################################################################
-                else if(WholeClusterSimulator.isReplayEnabled){
-                	// reconstruct the message
-                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
-                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
-                	if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
-                	if(nextMessage == null){
-                		// message for this guy is null, so no more messages to receive
-                		messageManager.removeReceivedMessageQueue(address);
-                		// so, do we have any queues left?
-                		if(!messageManager.receivedMessageQueuesLeft()){
-                			// always fail when no more message queues
-                			logger.error("@Cesar: Failing cause there are no more messages to receive in any queue");
-                			System.exit(0);
-                		}
-                	}
-                	else{
-                		ackMessage = nextMessage.getMessageIn();
-	                	// save the time and stuff
-	                	long networkQueuedTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - ackMessage.createdTime;
-	                	AckProcessor.networkQueuedTime += networkQueuedTime;
-	                	AckProcessor.processCount += 1;
-	                	// process the message
-	                	MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-	                	// continue the cycle
-                	}
-                	continue;
-                }
-                // ##########################################################################
-                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                MessageIn<?> ackMessage = null;
+	                // ##########################################################################
+	                // @Cesar: in here, we save the received message
+	            	// ##########################################################################
+	                if(WholeClusterSimulator.isSerializationEnabled){
+	                	// how much time did we wait?
+	                	long startWaiting = System.currentTimeMillis();
+	                	// take from queue
+	                	ackMessage = msgQueue.take();
+	                	// finish waiting
+	                	long endWaiting = System.currentTimeMillis();
+	                	// save
+	                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
+	                	received.setMessageIn(ackMessage);
+	                	received.setWaitForNext(endWaiting - startWaiting);
+	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+	                	messageManager.saveMessageToFile(received, 
+	                									 WholeClusterSimulator.serializationFilePrefix, 
+	                									 address);
+	                	// no continue here, we follow normal cycle
+	                }
+	                // ##########################################################################
+	                // @Cesar: in here, we load the received message
+	            	// ##########################################################################
+	                else if(WholeClusterSimulator.isReplayEnabled){
+	                	// reconstruct the message
+	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
+	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
+	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
+	                	if(nextMessage == null){
+	                		// message for this guy is null, so no more messages to receive
+	                		messageManager.removeReceivedMessageQueue(address);
+	                		// so, do we have any queues left?
+	                		if(!messageManager.receivedMessageQueuesLeft()){
+	                			// always fail when no more message queues
+	                			logger.error("@Cesar: Failing cause there are no more messages to receive in any queue");
+	                			System.exit(0);
+	                		}
+	                	}
+	                	else{
+	                		// wait the period for receive
+	                		try{
+	                			Thread.sleep(nextMessage.getWaitForNext());
+	                		}
+	                		catch(InterruptedException ie){
+	                			logger.error("@Cesar: Interrupted while waiting!");
+	                		}
+	                		// and now do it
+	                		ackMessage = nextMessage.getMessageIn();
+		                	// save the time and stuff
+		                	long networkQueuedTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - ackMessage.createdTime;
+		                	AckProcessor.networkQueuedTime += networkQueuedTime;
+		                	AckProcessor.processCount += 1;
+		                	// process the message
+		                	try{
+		                		MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+		                	}
+		                	catch(Exception e){
+		                		logger.error("@Cesar: Unexpected exception while processing message <" + ackMessage + ">", e);
+		                		System.exit(0);
+		                	}
+		                	// continue the cycle
+	                	}
+	                	continue;
+	                }
+	                // ##########################################################################
+	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

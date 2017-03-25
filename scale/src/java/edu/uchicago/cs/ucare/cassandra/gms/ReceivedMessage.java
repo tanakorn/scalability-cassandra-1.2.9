@@ -19,6 +19,7 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 	
 	private int messageRound = 0;
 	private MessageIn<?> messageIn = null;
+	private long waitForNext = 0L;
 	
 	public ReceivedMessage(int messageRound){
 		this.messageRound = messageRound;
@@ -34,6 +35,14 @@ private static final Logger logger = LoggerFactory.getLogger(GossipRound.class);
 		return messageRound;
 	}
 	
+	public long getWaitForNext() {
+		return waitForNext;
+	}
+
+	public void setWaitForNext(long waitForNext) {
+		this.waitForNext = waitForNext;
+	}
+
 	public static String messageToString(ReceivedMessage message) throws Exception{
 		ByteArrayOutputStream strm = null;
     	ObjectOutputStream out = null;
