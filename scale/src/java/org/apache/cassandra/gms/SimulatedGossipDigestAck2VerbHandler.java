@@ -176,6 +176,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         logger.info("@Cesar: rs" + receiverStub);
         logger.info("@Cesar: rsacknvb" + receiverStub.ackNewVersionBoot);
         logger.info("@Cesar: sb" + receiverStub.ackNewVersionBoot.get(ackId));
+        logger.info("@Cesar: ackid" + ackId);
         int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
         receiverStub.ackNewVersionBoot.remove(ackId);
         int sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
