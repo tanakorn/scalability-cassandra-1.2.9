@@ -492,7 +492,7 @@ public class WholeClusterSimulator {
                                 	// ##########################################################################
                                 	if(WholeClusterSimulator.isSerializationEnabled){
             	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
-            	                    	currentRound.setToUnreachableMember(toSeed);
+            	                    	currentRound.setToSeed(toSeed);
                                 	}
                                 	// ##########################################################################
                                 }
@@ -511,7 +511,7 @@ public class WholeClusterSimulator {
                                     	// ##########################################################################
                                     	if(WholeClusterSimulator.isSerializationEnabled){
                 	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
-                	                    	currentRound.setToUnreachableMember(toSeed);
+                	                    	currentRound.setToSeed(toSeed);
                                     	}
                                     	// ##########################################################################
                                     }
