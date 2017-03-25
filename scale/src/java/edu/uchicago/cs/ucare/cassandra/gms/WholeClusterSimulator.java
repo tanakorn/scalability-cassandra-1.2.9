@@ -396,10 +396,10 @@ public class WholeClusterSimulator {
 	                	// update heartbeat
                 		performer.updateHeartBeat();
                 		// now replay
-                		logger.debug("@Cesar: Gossip message to replay, round <" + round.getGossipRound() + ">");
-	                	logger.debug("@Cesar: To live member: " + (round.getToLiveMember() != null? round.getToLiveMember().getToWho() : null));
-	                	logger.debug("@Cesar: To unreachable member: " + (round.getToUnreachableMember() != null? round.getToUnreachableMember().getToWho() : null));
-	                	logger.debug("@Cesar: To seed member: " + (round.getToSeed() != null? round.getToSeed().getToWho() : null));
+                		if(logger.isDebugEnabled()) logger.debug("@Cesar: Gossip message to replay, round <" + round.getGossipRound() + ">");
+                		if(logger.isDebugEnabled()) logger.debug("@Cesar: To live member: " + (round.getToLiveMember() != null? round.getToLiveMember().getToWho() : null));
+                		if(logger.isDebugEnabled()) logger.debug("@Cesar: To unreachable member: " + (round.getToUnreachableMember() != null? round.getToUnreachableMember().getToWho() : null));
+                		if(logger.isDebugEnabled()) logger.debug("@Cesar: To seed member: " + (round.getToSeed() != null? round.getToSeed().getToWho() : null));
 	                	// get the messages and replay
 	                	GossipMessage toLiveMember = round.getToLiveMember();
 	                	GossipMessage toUnreachableMember = round.getToUnreachableMember();
@@ -525,7 +525,7 @@ public class WholeClusterSimulator {
                 // @Cesar: save the round
             	// ##########################################################################
                 if(WholeClusterSimulator.isSerializationEnabled){
-                	logger.info("@Cesar: Recording round: <" + currentRound + ">");
+                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording round: <" + currentRound + ">");
                     messageManager.saveRoundToFile(currentRound, 
                     							   WholeClusterSimulator.serializationFilePrefix, 
                     							   performerAddress);
@@ -589,7 +589,7 @@ public class WholeClusterSimulator {
                 	// save
                 	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
                 	received.setMessageIn(ackMessage);
-                	logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
                 	messageManager.saveMessageToFile(received, 
                 									 WholeClusterSimulator.serializationFilePrefix, 
                 									 address);
@@ -601,8 +601,8 @@ public class WholeClusterSimulator {
                 else if(WholeClusterSimulator.isReplayEnabled){
                 	// reconstruct the message
                 	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
-                	logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
-                	logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
+                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
+                	if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
                 	if(nextMessage == null){
                 		// message for this guy is null, so no more messages to receive
                 		messageManager.removeReceivedMessageQueue(address);
@@ -685,12 +685,12 @@ public class WholeClusterSimulator {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval +
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; network lateness " + (AckProcessor.processCount != 0? AckProcessor.networkQueuedTime / AckProcessor.processCount : 0));
                 } else {
                     logger.info("stable status no " + flapping + 
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval + 
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; network lateness " + (AckProcessor.processCount != 0? AckProcessor.networkQueuedTime / AckProcessor.processCount : 0));
                 }
                 for (GossiperStub stub : stubGroup) {
                     LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
