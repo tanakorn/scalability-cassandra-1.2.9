@@ -603,7 +603,7 @@ public class WholeClusterSimulator {
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message
 	            	// ##########################################################################
-	                else if(WholeClusterSimulator.isReplayEnabled){
+	                if(WholeClusterSimulator.isReplayEnabled){
 	                	// reconstruct the message
 	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
