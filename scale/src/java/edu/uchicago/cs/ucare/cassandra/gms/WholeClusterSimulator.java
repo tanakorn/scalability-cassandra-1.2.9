@@ -84,7 +84,7 @@ public class WholeClusterSimulator {
 	// ##########################################################################
     // @Cesar: This one handles messages (in record/replay escenario)
     // ##########################################################################
-    private static final GossipRoundManager roundManager = new GossipRoundManager(); 
+    private static final MessageManager messageManager = new MessageManager(); 
     // ##########################################################################
     
 //    public static double[] normalGossipExecSdRecords;
@@ -223,7 +223,14 @@ public class WholeClusterSimulator {
         // gossiped messages
         // ##########################################################################
         if(WholeClusterSimulator.isReplayEnabled){
-        	roundManager.loadSentGossipRounds(WholeClusterSimulator.serializationFilePrefix, addressList);
+        	messageManager.loadSentGossipRounds(WholeClusterSimulator.serializationFilePrefix, addressList);
+        	messageManager.loadReceivedMessages(WholeClusterSimulator.serializationFilePrefix, addressList);
+        	// also, load time
+        	TimePreservingService.loadInitialTime(WholeClusterSimulator.serializationFilePrefix);
+        	TimePreservingService.setRelativeTimeStamp();
+        }
+        else if(WholeClusterSimulator.isSerializationEnabled){
+        	TimePreservingService.saveInitialTime(WholeClusterSimulator.serializationFilePrefix);
         }
         // ##########################################################################
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
@@ -374,22 +381,25 @@ public class WholeClusterSimulator {
                 // @Cesar: Lets replay
                 // ##########################################################################
                 if(WholeClusterSimulator.isReplayEnabled){
-                	GossipRound round = roundManager.pollNextSentMessage(performerAddress);
+                	GossipRound round = messageManager.pollNextSentMessage(performerAddress);
                 	if(round == null){
                 		// round for this guy is null, so no more messages to send
-                		roundManager.removeSentMessageQueue(performerAddress);
+                		messageManager.removeSentMessageQueue(performerAddress);
                 		// so, do we have any queues left?
-                		if(!roundManager.sentMessageQueuesLeft()){
+                		if(!messageManager.sentMessageQueuesLeft()){
                 			// always fail when no more message queues
                 			logger.error("@Cesar: Failing cause there are no more messages to gossip in any queue");
                 			System.exit(0);
                 		}
                 	}
                 	else{
-	                	logger.info("@Cesar: Gossip message to replay, round <" + round.getGossipRound() + ">");
-	                	logger.info("@Cesar: To live member: " + (round.getToLiveMember() != null? round.getToLiveMember().getToWho() : null));
-	                	logger.info("@Cesar: To unreachable member: " + (round.getToUnreachableMember() != null? round.getToUnreachableMember().getToWho() : null));
-	                	logger.info("@Cesar: To seed member: " + (round.getToSeed() != null? round.getToSeed().getToWho() : null));
+	                	// update heartbeat
+                		performer.updateHeartBeat();
+                		// now replay
+                		logger.debug("@Cesar: Gossip message to replay, round <" + round.getGossipRound() + ">");
+	                	logger.debug("@Cesar: To live member: " + (round.getToLiveMember() != null? round.getToLiveMember().getToWho() : null));
+	                	logger.debug("@Cesar: To unreachable member: " + (round.getToUnreachableMember() != null? round.getToUnreachableMember().getToWho() : null));
+	                	logger.debug("@Cesar: To seed member: " + (round.getToSeed() != null? round.getToSeed().getToWho() : null));
 	                	// get the messages and replay
 	                	GossipMessage toLiveMember = round.getToLiveMember();
 	                	GossipMessage toUnreachableMember = round.getToUnreachableMember();
@@ -409,7 +419,7 @@ public class WholeClusterSimulator {
 	                	// do status check
 	                	performer.doStatusCheck();
 	                	// and get out, but continue in this for loop
-	                	logger.info("@Cesar: Round done for <" + performerAddress + ">");
+	                	logger.debug("@Cesar: Round done for <" + performerAddress + ">");
                 	}
 	                continue;
                 }
@@ -420,7 +430,7 @@ public class WholeClusterSimulator {
                 // ##########################################################################
                 // @Cesar: In here, i start saving the round (the possible 3 gossip messages)
                 // ##########################################################################
-                GossipRound currentRound = new GossipRound(roundManager.getNextRoundFor(performerAddress));
+                GossipRound currentRound = new GossipRound(messageManager.getNextRoundFor(performerAddress));
                 // ##########################################################################
                 if (!liveEndpoints.isEmpty()) {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
@@ -516,9 +526,9 @@ public class WholeClusterSimulator {
             	// ##########################################################################
                 if(WholeClusterSimulator.isSerializationEnabled){
                 	logger.info("@Cesar: Recording round: <" + currentRound + ">");
-                    roundManager.saveRoundToFile(currentRound, 
-                    							 WholeClusterSimulator.serializationFilePrefix, 
-                    							 performerAddress);
+                    messageManager.saveRoundToFile(currentRound, 
+                    							   WholeClusterSimulator.serializationFilePrefix, 
+                    							   performerAddress);
                 }
                 // ##########################################################################
             }
@@ -569,7 +579,53 @@ public class WholeClusterSimulator {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
-                MessageIn<?> ackMessage = msgQueue.take();
+                MessageIn<?> ackMessage = null;
+                // ##########################################################################
+                // @Cesar: in here, we save the received message
+            	// ##########################################################################
+                if(WholeClusterSimulator.isSerializationEnabled){
+                	// take from queue
+                	ackMessage = msgQueue.take();
+                	// save
+                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
+                	received.setMessageIn(ackMessage);
+                	logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+                	messageManager.saveMessageToFile(received, 
+                									 WholeClusterSimulator.serializationFilePrefix, 
+                									 address);
+                	// no continue here, we follow normal cycle
+                }
+                // ##########################################################################
+                // @Cesar: in here, we load the received message
+            	// ##########################################################################
+                else if(WholeClusterSimulator.isReplayEnabled){
+                	// reconstruct the message
+                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
+                	logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
+                	logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
+                	if(nextMessage == null){
+                		// message for this guy is null, so no more messages to receive
+                		messageManager.removeReceivedMessageQueue(address);
+                		// so, do we have any queues left?
+                		if(!messageManager.receivedMessageQueuesLeft()){
+                			// always fail when no more message queues
+                			logger.error("@Cesar: Failing cause there are no more messages to receive in any queue");
+                			System.exit(0);
+                		}
+                	}
+                	else{
+                		ackMessage = nextMessage.getMessageIn();
+	                	// save the time and stuff
+	                	long networkQueuedTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - ackMessage.createdTime;
+	                	AckProcessor.networkQueuedTime += networkQueuedTime;
+	                	AckProcessor.processCount += 1;
+	                	// process the message
+	                	MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                	// continue the cycle
+                	}
+                	continue;
+                }
+                // ##########################################################################
                 long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;

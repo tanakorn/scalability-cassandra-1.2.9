@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.TimePreservingService;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
@@ -36,7 +37,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+        long receiveTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
     	InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack2");

@@ -25,7 +25,7 @@ import org.apache.cassandra.io.IVersionedSerializer;
 /**
  * HeartBeat State associated with any given endpoint.
  */
-public class HeartBeatState
+public class HeartBeatState  implements Serializable
 {
     public static final IVersionedSerializer<HeartBeatState> serializer = new HeartBeatStateSerializer();
 
