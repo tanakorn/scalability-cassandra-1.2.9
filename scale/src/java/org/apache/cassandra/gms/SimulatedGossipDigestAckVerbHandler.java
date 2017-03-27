@@ -206,7 +206,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if(!WholeClusterSimulator.isReplayEnabled){
         	WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
         }
-        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
+     // ##########################################################################
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         long ackHandlerTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - receiveTime;
         if (result != null) {

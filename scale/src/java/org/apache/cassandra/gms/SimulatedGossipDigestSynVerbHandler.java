@@ -143,6 +143,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         if(!WholeClusterSimulator.isReplayEnabled){
         	WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
         }
+        // ##########################################################################
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
