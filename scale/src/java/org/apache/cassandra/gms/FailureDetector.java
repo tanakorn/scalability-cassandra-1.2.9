@@ -36,6 +36,7 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.BoundedStatsDeque;
 import org.apache.cassandra.utils.FBUtilities;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimePreservingService;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 /**
@@ -178,7 +179,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     {
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
-        long now = System.currentTimeMillis();
+        long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
         if (WholeClusterSimulator.observedNodes.contains(ep)) {
         	logger.info("See " + ep + " at time " + now);
         }
@@ -192,7 +193,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     }
     
     public double[] report(InetAddress observer, InetAddress ep) {
-        long now = System.currentTimeMillis();
+        long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -211,7 +212,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         {
             return 0;
         }
-        long now = System.currentTimeMillis();
+        long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);

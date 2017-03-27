@@ -600,15 +600,11 @@ public class WholeClusterSimulator {
 	                									 WholeClusterSimulator.serializationFilePrefix, 
 	                									 address);
 	                	// no continue here, we follow normal cycle
-	                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-		                AckProcessor.networkQueuedTime += networkQueuedTime;
-		                AckProcessor.processCount += 1;
-		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(received.getGeneratedId()));
 	                }
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message
 	            	// ##########################################################################
-	                if(WholeClusterSimulator.isReplayEnabled){
+	                else if(WholeClusterSimulator.isReplayEnabled){
 	                	// reconstruct the message
 	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
@@ -650,6 +646,10 @@ public class WholeClusterSimulator {
 	                	continue;
 	                }
 	                // ##########################################################################
+	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(received.getGeneratedId()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -712,10 +712,18 @@ public class WholeClusterSimulator {
                             " ; network lateness " + (AckProcessor.processCount != 0? AckProcessor.networkQueuedTime / AckProcessor.processCount : 0));
                 }
                 for (GossiperStub stub : stubGroup) {
-                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-                    if (queue.size() > 100) {
-                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-                    }
+                	if(WholeClusterSimulator.isReplayEnabled){
+                		int backlog = messageManager.getReceivedMessageQueueSize(stub.getInetAddress());
+                		if (backlog > 100) {
+	                        logger.info("Backlog of " + stub.getInetAddress() + " " + backlog);
+	                    }
+                	}
+                	else{
+	                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+	                    if (queue.size() > 100) {
+	                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+	                    }
+                	}
                 }
                 List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
                 TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();

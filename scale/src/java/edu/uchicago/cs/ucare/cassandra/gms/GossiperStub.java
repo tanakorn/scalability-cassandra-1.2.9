@@ -361,7 +361,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public void doStatusCheck() {
-        long now = System.currentTimeMillis();
+        long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
 
         Set<InetAddress> eps = endpointStateMap.keySet();
 //        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
@@ -395,7 +395,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public static long computeExpireTime() {
-        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+        return TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) + Gossiper.aVeryLongTime;
     }
 
     protected long getExpireTimeForEndpoint(InetAddress endpoint) {
