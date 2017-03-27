@@ -366,7 +366,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            long start = System.currentTimeMillis();
+            long start = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
             if (previousTime != 0) {
                 long interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
