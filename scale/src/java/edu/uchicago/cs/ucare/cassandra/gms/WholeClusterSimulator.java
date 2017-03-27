@@ -649,7 +649,7 @@ public class WholeClusterSimulator {
 	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
 	                AckProcessor.networkQueuedTime += networkQueuedTime;
 	                AckProcessor.processCount += 1;
-	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(received.getGeneratedId()));
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
