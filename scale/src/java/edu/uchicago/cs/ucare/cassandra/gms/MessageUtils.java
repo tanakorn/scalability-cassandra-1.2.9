@@ -5,8 +5,8 @@ import java.net.InetAddress;
 
 public class MessageUtils {
 
-	private static final String GOSSIP_SENT = "-gossip-sent";
-	private static final String MESSAGE_RECEIVED = "-message-received";
+	private static final String GOSSIP_SENT = "gossip-sent";
+	private static final String MESSAGE_RECEIVED = "message-received";
 	private static final String TIME = "time";
 	
 	public static String buildTimeFileName(String basePath){
@@ -19,6 +19,7 @@ public class MessageUtils {
 		return basePath + 
 			   File.separator + 
 			   id.toString().substring(1, id.toString().length()) +
+			   File.separator +
 			   GOSSIP_SENT;
 	}
 	
@@ -26,6 +27,7 @@ public class MessageUtils {
 		return basePath + 
 			   File.separator + 
 			   id.toString().substring(1, id.toString().length()) +
+			   File.separator +
 			   MESSAGE_RECEIVED;
 	}
 	

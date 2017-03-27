@@ -643,13 +643,16 @@ public class WholeClusterSimulator {
 		                	}
 		                	// continue the cycle
 	                	}
-	                	continue;
+	                }
+	                // operate normally
+	                else if(!WholeClusterSimulator.isReplayEnabled && 
+	                		!WholeClusterSimulator.isSerializationEnabled){
+		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                AckProcessor.networkQueuedTime += networkQueuedTime;
+		                AckProcessor.processCount += 1;
+		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
 	                }
 	                // ##########################################################################
-	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-	                AckProcessor.networkQueuedTime += networkQueuedTime;
-	                AckProcessor.processCount += 1;
-	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

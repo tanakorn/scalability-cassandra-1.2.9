@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import org.apache.cassandra.net.MessageIn;
@@ -20,10 +22,10 @@ public class MessageManager{
 	private static final int INITIAL_CAPACITY = 100;
 	private static final Logger logger = LoggerFactory.getLogger(MessageManager.class);
 	
-	private Map<InetAddress, PriorityBlockingQueue> sentMessagesPerHost =
-				new ConcurrentHashMap<InetAddress, PriorityBlockingQueue>();
-	private Map<InetAddress, PriorityBlockingQueue> receivedMessagesPerHost =
-			new ConcurrentHashMap<InetAddress, PriorityBlockingQueue>();
+	private Map<InetAddress, PriorityQueue> sentMessagesPerHost =
+				new HashMap<InetAddress, PriorityQueue>();
+	private Map<InetAddress, PriorityQueue> receivedMessagesPerHost =
+				new HashMap<InetAddress, PriorityQueue>();
 	
 	private Map<InetAddress, Integer> gossipRoundsPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
@@ -39,7 +41,7 @@ public class MessageManager{
 		return queuesLeft(receivedMessagesPerHost);
 	}
 	
-	private boolean queuesLeft(Map<InetAddress, PriorityBlockingQueue> map){
+	private boolean queuesLeft(Map<InetAddress, PriorityQueue> map){
 		return map.size() > 0;
 	}
 	
@@ -52,10 +54,12 @@ public class MessageManager{
 	}
 	
 	private void removeMessageQueue(InetAddress host, 
-									Map<InetAddress, PriorityBlockingQueue> map){
-		PriorityBlockingQueue q = map.get(host);
+									Map<InetAddress, PriorityQueue> map){
+		PriorityQueue q = map.get(host);
 		if(q != null && q.size() == 0){
-			map.remove(host);
+			synchronized(map) {
+				map.remove(host);
+			}
 		}
 	}
 	
@@ -92,7 +96,7 @@ public class MessageManager{
 	}
 	
 	private int getSizeOf(InetAddress host, 
-						  Map<InetAddress, PriorityBlockingQueue> map){
+						  Map<InetAddress, PriorityQueue> map){
 		return map.containsKey(host)? map.get(host).size() : 0;
 	}
 	
@@ -105,7 +109,7 @@ public class MessageManager{
 	}
 	
 	private Object pollNext(InetAddress host, 
-							Map<InetAddress, PriorityBlockingQueue> map){
+							Map<InetAddress, PriorityQueue> map){
 		if(!map.containsKey(host)) return null;
 		return map.get(host).poll();
 	}
@@ -123,13 +127,13 @@ public class MessageManager{
 	private void addToQueue(InetAddress host, 
 							Object message, 
 							Comparator comp,
-							Map<InetAddress, PriorityBlockingQueue> map){
+							Map<InetAddress, PriorityQueue> map){
 		if (map.containsKey(host)){
 			map.get(host).add(message);
 		}
 		else{
-			PriorityBlockingQueue pq = 
-					new PriorityBlockingQueue(INITIAL_CAPACITY, comp);
+			PriorityQueue pq = 
+					new PriorityQueue(INITIAL_CAPACITY, comp);
 			pq.add(message);
 			map.put(host, pq);
 			

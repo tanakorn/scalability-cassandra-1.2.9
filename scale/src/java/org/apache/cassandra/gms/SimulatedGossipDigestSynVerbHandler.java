@@ -137,7 +137,12 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
         gDigestAckMessage.createdTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);;
-        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        // ##########################################################################
+        // @Cesar: Only if we are not replaying
+    	// ##########################################################################
+        if(!WholeClusterSimulator.isReplayEnabled){
+        	WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        }
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
 
