@@ -1128,7 +1128,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     // #######################################################################
     // @Cesar: this methods was added by me to handle replay of state
     // #######################################################################
-    private static void handleRecordedMajorStateChangeStatic(InetAddress id, String inputId, InetAddress fromId, InetAddress itEp){
+    private static void handleRecordedMajorStateChangeStatic(InetAddress id, String inputId, InetAddress fromId, InetAddress itEp, GossiperStub stub){
     	// @Cesar: Just a check
     	if(id == null || inputId == null || itEp == null || fromId == null){
     		logger.error("@Cesar: ERROR! Input params are null");
@@ -1154,7 +1154,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     										id, 
     										WholeClusterSimulator.targetMemoizedMethod, 
     										hashed);
-    		edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.loadFromSnapshot(snapshot, Gossiper.instance);
+    		edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.loadFromSnapshot(snapshot, stub);
         	if(logger.isDebugEnabled()) logger.debug("@Cesar: State <" + hashed + "> loaded correctly");
         	if(logger.isDebugEnabled()) logger.debug("@Cesar: Cluster: " + Arrays.toString(Gossiper.instance.endpointStateMap.entrySet().toArray()));
         	// done
@@ -1215,7 +1215,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 	        if(WholeClusterSimulator.isSerializationEnabled){
 	        	float elapsedMillis = System.currentTimeMillis() - startTime;  
 	        	// take a picture
-	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(Gossiper.instance);
+	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
 	        	// id plus host
 	        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, ep);
 	        	// and save it
@@ -1386,7 +1386,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
+                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy(), stub);
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states

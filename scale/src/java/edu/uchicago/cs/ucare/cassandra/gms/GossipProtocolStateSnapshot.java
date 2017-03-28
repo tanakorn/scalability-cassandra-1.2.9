@@ -34,7 +34,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
     private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
     private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
 	
-    public static GossipProtocolStateSnapshot buildFromInstance(Gossiper gossiper){
+    public static GossipProtocolStateSnapshot buildFromInstance(GossiperStub gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
 		snapshot.endpointStateMap.clear(); snapshot.endpointStateMap.putAll(gossiper.getEndpointStateMap());
 		snapshot.liveEndpoints.clear(); snapshot.liveEndpoints.addAll(gossiper.getLiveEndpoints());
@@ -42,7 +42,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
 		return snapshot;
 	}
 	
-	public static void loadFromSnapshot(GossipProtocolStateSnapshot snapshot, Gossiper gossiper){
+	public static void loadFromSnapshot(GossipProtocolStateSnapshot snapshot, GossiperStub gossiper){
 		gossiper.getEndpointStateMap().clear(); gossiper.getEndpointStateMap().putAll(snapshot.endpointStateMap);
 		gossiper.getLiveEndpoints().clear(); gossiper.getLiveEndpoints().addAll(snapshot.liveEndpoints);
 		gossiper.getUnreachableEndpoints().clear(); gossiper.getUnreachableEndpoints().putAll(snapshot.unreachableEndpoints);
