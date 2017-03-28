@@ -38,7 +38,8 @@ public class GossipProtocolStateSnaphotManager {
 							BigInteger hash, 
 							Float elapsedTime, 
 							InetAddress id,
-							String methodName){
+							String methodName,
+							String uniqueId){
 		PrintWriter writer = null;
 	  	try{
 			// take the precaution to create dir if needed
@@ -47,7 +48,7 @@ public class GossipProtocolStateSnaphotManager {
 			String destinationFileName = MessageUtils.buildStateFilePath(filePath, id, methodName);
 			// append mode
 			writer = new PrintWriter(new BufferedWriter(new FileWriter(destinationFileName, true)));
-			writer.println(hash + MessageUtils.STATE_FIELD_SEP + elapsedTime);
+			writer.println(hash + MessageUtils.STATE_FIELD_SEP + elapsedTime + MessageUtils.STATE_FIELD_SEP + uniqueId);
 			if(logger.isDebugEnabled()) logger.debug("@Cesar: stored <" + hash + "> in <" + destinationFileName + ">");
 	  	}
 	  	catch(IOException ioe){

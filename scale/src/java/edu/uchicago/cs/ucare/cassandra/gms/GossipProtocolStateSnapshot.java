@@ -116,7 +116,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
 			writer.println(serialized);
 			if(logger.isDebugEnabled()) logger.debug("@Cesar: serialized <" + fileName + ">");
 			// also, save in map file
-			manager.storeInFile(filePath, hashed, time, id, methodName);
+			manager.storeInFile(filePath, hashed, time, id, methodName, messageId);
 	  	}
 	  	catch(IOException ioe){
 	  		logger.error("@Cesar: Exception on serialization", ioe);
