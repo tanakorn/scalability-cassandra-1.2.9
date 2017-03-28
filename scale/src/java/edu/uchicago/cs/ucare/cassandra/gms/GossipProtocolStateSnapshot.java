@@ -28,15 +28,15 @@ public class GossipProtocolStateSnapshot implements Serializable{
 
 	private static final Logger logger = LoggerFactory.getLogger(GossipProtocolStateSnapshot.class);
 	
-	private ConcurrentMap<InetAddress, EndpointState> endpointStateMap = null;
+	private Map<InetAddress, EndpointState> endpointStateMap = null;
     private Set<InetAddress> liveEndpoints = null;
     private Map<InetAddress, Long> unreachableEndpoints = null;
 	
     public static GossipProtocolStateSnapshot buildFromInstance(Gossiper gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
-		snapshot.endpointStateMap = gossiper.getEndpointStateMap();
-		snapshot.liveEndpoints = gossiper.getLiveEndpoints();
-		snapshot.unreachableEndpoints = gossiper.getUnreachableEndpoints();
+		snapshot.endpointStateMap.clear(); snapshot.endpointStateMap.putAll(gossiper.getEndpointStateMap());
+		snapshot.liveEndpoints.clear(); snapshot.liveEndpoints.addAll(gossiper.getLiveEndpoints());
+		snapshot.unreachableEndpoints.clear(); snapshot.unreachableEndpoints.putAll(gossiper.getUnreachableEndpoints());
 		return snapshot;
 	}
 	
