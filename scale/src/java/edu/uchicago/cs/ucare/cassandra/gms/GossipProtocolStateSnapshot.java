@@ -15,6 +15,8 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -28,9 +30,9 @@ public class GossipProtocolStateSnapshot implements Serializable{
 
 	private static final Logger logger = LoggerFactory.getLogger(GossipProtocolStateSnapshot.class);
 	
-	private Map<InetAddress, EndpointState> endpointStateMap = null;
-    private Set<InetAddress> liveEndpoints = null;
-    private Map<InetAddress, Long> unreachableEndpoints = null;
+	private Map<InetAddress, EndpointState> endpointStateMap = new HashMap<InetAddress, EndpointState>();
+    private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
+    private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
 	
     public static GossipProtocolStateSnapshot buildFromInstance(Gossiper gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
