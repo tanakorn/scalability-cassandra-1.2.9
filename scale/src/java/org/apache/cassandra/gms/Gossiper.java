@@ -1174,7 +1174,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
     		logger.info("Looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
-    		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep);
+    		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub);
     	}
     	else{
     		// ###################################################################
@@ -1386,7 +1386,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy(), stub);
+                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
