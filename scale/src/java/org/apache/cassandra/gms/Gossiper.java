@@ -1161,6 +1161,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     	}
     	else if(WholeClusterSimulator.failOnStateNotFound){
     		logger.error("@Cesar: State <" + hashed + "> was not found, failing...");
+    		logger.error("inputId=" + inputId + ", from=" + fromId + ", ep=" + itEp);
 			System.exit(0);
     	}
 	}
@@ -1172,6 +1173,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // @Cesar: are we replaying?
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
+    		logger.info("Looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
     		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep);
     	}
     	else{
