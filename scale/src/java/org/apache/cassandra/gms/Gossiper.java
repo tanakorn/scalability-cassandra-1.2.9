@@ -17,7 +17,9 @@
  */
 package org.apache.cassandra.gms;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -42,6 +44,7 @@ import org.apache.cassandra.utils.FBUtilities;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnaphotManager;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
@@ -103,7 +106,20 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     /* map where key is the endpoint and value is the state associated with the endpoint */
     final ConcurrentMap<InetAddress, EndpointState> endpointStateMap = new ConcurrentHashMap<InetAddress, EndpointState>();
 
-    /* map where key is endpoint and value is timestamp when this endpoint was removed from
+    
+    public Set<InetAddress> getLiveEndpoints(){
+		return liveEndpoints;
+	}
+
+	public Map<InetAddress, Long> getUnreachableEndpoints() {
+		return unreachableEndpoints;
+	}
+
+	public ConcurrentMap<InetAddress, EndpointState> getEndpointStateMap() {
+		return endpointStateMap;
+	}
+
+	/* map where key is endpoint and value is timestamp when this endpoint was removed from
      * gossip. We will ignore any gossip regarding these endpoints for QUARANTINE_DELAY time
      * after removal to prevent nodes from falsely reincarnating during the time when removal
      * gossip gets propagated to all nodes */
@@ -1109,36 +1125,108 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             subscriber.onJoin(ep, epState);
     }
     
-    static private void handleMajorStateChangeStatic(GossiperStub stub, 
-    		InetAddress ep, EndpointState epState)
+    // #######################################################################
+    // @Cesar: this methods was added by me to handle replay of state
+    // #######################################################################
+    private static void handleRecordedMajorStateChangeStatic(InetAddress id, String inputId, InetAddress fromId, InetAddress itEp){
+    	// @Cesar: Just a check
+    	if(id == null || inputId == null || itEp == null || fromId == null){
+    		logger.error("@Cesar: ERROR! Input params are null");
+    		System.exit(0);
+    	}
+		// hash the current arguments, which are the important thing in this function
+    	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, itEp);
+    	BigInteger hashed = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.hashId(messageIdentifier);
+    	if(logger.isDebugEnabled()) logger.info("@Cesar: Looking up <" + messageIdentifier + "> with hash " + hashed);
+    	Float sleepyTime = WholeClusterSimulator.stateManager.lookUpTime(id, hashed);
+    	if(sleepyTime != null){
+    		// "process"
+    		try{
+    			Thread.sleep(sleepyTime.longValue() + 1);
+    		}
+    		catch(InterruptedException ie){
+    			logger.error("@Cesar: Interrupted while sleeping!", ie);
+    		}
+    		// and load
+    		edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot snapshot = 
+    				edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.loadFromFile(
+    										WholeClusterSimulator.serializationFilePrefix, 
+    										id, 
+    										WholeClusterSimulator.targetMemoizedMethod, 
+    										hashed);
+    		edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.loadFromSnapshot(snapshot, Gossiper.instance);
+        	if(logger.isDebugEnabled()) logger.debug("@Cesar: State <" + hashed + "> loaded correctly");
+        	if(logger.isDebugEnabled()) logger.debug("@Cesar: Cluster: " + Arrays.toString(Gossiper.instance.endpointStateMap.entrySet().toArray()));
+        	// done
+    	}
+    	else if(WholeClusterSimulator.failOnStateNotFound){
+    		logger.error("@Cesar: State <" + hashed + "> was not found, failing...");
+			System.exit(0);
+    	}
+	}
+    // #######################################################################
+    
+    static private void handleMajorStateChangeStatic(InetAddress myId, String inputId, InetAddress fromId, GossiperStub stub, InetAddress ep, EndpointState epState)
     {
-        ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
-        if (!isDeadStateStatic(epState))
-        {
-//            if (endpointStateMap.get(ep) != null)
-//                logger.info("Node {} has restarted, now UP", ep);
-//            else
-//                logger.info("Node {} is now part of the cluster", ep);
-        }
-        if (logger.isTraceEnabled())
-            logger.trace("Adding endpoint state for " + ep);
-        endpointStateMap.put(ep, epState);
-
-        // the node restarted: it is up to the subscriber to take whatever action is necessary
-        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
-            subscriber.onRestart(stub, ep, epState);
-
-        if (!isDeadStateStatic(epState))
-            markAliveStatic(stub, ep, epState);
-        else
-        {
-            logger.debug("Not marking " + ep + " alive due to dead state");
-            markDeadStatic(stub, ep, epState);
-        }
-        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic) {
-            subscriber.onJoin(stub, ep, epState);
-//            logger.info("sc_debug: subscriber = " + subscriber.getClass());
-        }
+    	// ###################################################################
+        // @Cesar: are we replaying?
+        // ###################################################################
+    	if(WholeClusterSimulator.isReplayEnabled){
+    		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep);
+    	}
+    	else{
+    		// ###################################################################
+	        // @Cesar: measure execution time
+	        // ###################################################################
+    		long startTime = System.currentTimeMillis();
+    		// ###################################################################
+	        ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
+	        if (!isDeadStateStatic(epState))
+	        {
+	//            if (endpointStateMap.get(ep) != null)
+	//                logger.info("Node {} has restarted, now UP", ep);
+	//            else
+	//                logger.info("Node {} is now part of the cluster", ep);
+	        }
+	        if (logger.isTraceEnabled())
+	            logger.trace("Adding endpoint state for " + ep);
+	        endpointStateMap.put(ep, epState);
+	
+	        // the node restarted: it is up to the subscriber to take whatever action is necessary
+	        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
+	            subscriber.onRestart(stub, ep, epState);
+	
+	        if (!isDeadStateStatic(epState))
+	            markAliveStatic(stub, ep, epState);
+	        else
+	        {
+	            logger.debug("Not marking " + ep + " alive due to dead state");
+	            markDeadStatic(stub, ep, epState);
+	        }
+	        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic) {
+	            subscriber.onJoin(stub, ep, epState);
+	//            logger.info("sc_debug: subscriber = " + subscriber.getClass());
+	        }
+	        // ###################################################################
+	        // @Cesar: Ok, here we save the messages
+	        // ###################################################################
+	        if(WholeClusterSimulator.isSerializationEnabled){
+	        	float elapsedMillis = System.currentTimeMillis() - startTime;  
+	        	// take a picture
+	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(Gossiper.instance);
+	        	// id plus host
+	        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, ep);
+	        	// and save it
+	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.seriliazeToFile(
+	        			gSnapshot, 
+	        			WholeClusterSimulator.serializationFilePrefix, 
+	        			myId, 
+	        			elapsedMillis,
+	        			WholeClusterSimulator.targetMemoizedMethod, 
+	        			WholeClusterSimulator.stateManager, 
+	        			messageIdentifier);
+	        }
+    	}
     }
 
     private Boolean isDeadState(EndpointState epState)
@@ -1237,7 +1325,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         }
     }
     
-    static Object[] applyStateLocallyStatic(GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
+    static Object[] applyStateLocallyStatic(InetAddress id, String inputId, InetAddress fromId, GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
     {
         int newNode = 0;
         int newNodeToken = 0;
@@ -1296,7 +1384,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    handleMajorStateChangeStatic(stub, ep, remoteState.copy());
+                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
@@ -1331,7 +1419,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //                FailureDetector.instance.report(ep);
                 double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
                 updatedNodeInfo.put(ep, updatedInfo);
-                handleMajorStateChangeStatic(stub, ep, remoteState.copy());
+                handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;

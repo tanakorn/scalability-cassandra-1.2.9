@@ -81,11 +81,18 @@ public class WholeClusterSimulator {
     public static boolean isReplayEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.replayRecordedMessages", "FALSE"));
     public static boolean failOnStateNotFound = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.failOnNotFound", "FALSE"));
     public static String serializationFilePrefix = System.getProperty("edu.uchicago.ucare.sck.serializationFilePrefix", null);
+    public static String targetMemoizedMethod = System.getProperty("edu.uchicago.ucare.sck.targetMemoizedMethod", "");
 	// ##########################################################################
     // @Cesar: This one handles messages (in record/replay escenario)
     // ##########################################################################
     private static final MessageManager messageManager = new MessageManager(); 
     // ##########################################################################
+    // ##########################################################################
+    // @Cesar: Manages the state to replay them
+    // ##########################################################################
+    public static final GossipProtocolStateSnaphotManager stateManager = new GossipProtocolStateSnaphotManager(); 
+    // ##########################################################################
+    
     
 //    public static double[] normalGossipExecSdRecords;
     
@@ -228,6 +235,8 @@ public class WholeClusterSimulator {
         	// also, load time
         	TimePreservingService.loadInitialTime(WholeClusterSimulator.serializationFilePrefix);
         	TimePreservingService.setRelativeTimeStamp();
+        	// and message list manager
+        	stateManager.loadStatesFromFiles(WholeClusterSimulator.serializationFilePrefix, addressList, WholeClusterSimulator.targetMemoizedMethod);
         }
         else if(WholeClusterSimulator.isSerializationEnabled){
         	TimePreservingService.saveInitialTime(WholeClusterSimulator.serializationFilePrefix);

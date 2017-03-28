@@ -79,7 +79,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //            Gossiper.instance.applyStateLocally(epStateMap);
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
-            result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+            result = Gossiper.applyStateLocallyStatic(to, id, from, receiverStub, epStateMap);
 //            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
 //            try {
 //                realUpdate = (int) result[9];

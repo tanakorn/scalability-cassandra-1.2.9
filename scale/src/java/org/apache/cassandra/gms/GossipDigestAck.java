@@ -112,6 +112,7 @@ public class GossipDigestAck implements Serializable
 
 }
 
+
 class GossipDigestAckSerializer implements IVersionedSerializer<GossipDigestAck>
 {
     public void serialize(GossipDigestAck gDigestAckMessage, DataOutput dos, int version) throws IOException

@@ -109,7 +109,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            e.printStackTrace();
 //        }
 //        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
-        Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+        Object[] result = Gossiper.applyStateLocallyStatic(to, id, from, receiverStub, remoteEpStateMap);
 //        for (int i = 0; i < result.length; ++i) {
 //            if (!result[i].equals(result2[i])) {
 //                System.out.println(i + " index is not the same");

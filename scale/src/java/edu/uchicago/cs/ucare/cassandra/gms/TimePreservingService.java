@@ -27,7 +27,7 @@ public class TimePreservingService {
     		// is this is enabled, then we have to return time passed relative
     		// to out beggining
     		long elapsed = System.currentTimeMillis() - relativeTimeStamp;
-    		return baseTimeStamp + elapsed;
+    		return baseTimeStamp + elapsed > 0? baseTimeStamp + elapsed : 0;
     	}
     	else{
     		return System.currentTimeMillis();
