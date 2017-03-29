@@ -589,6 +589,7 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
 	                MessageIn<?> ackMessage = null;
+	                int messageId = idGen.incrementAndGet();
 	                // ##########################################################################
 	                // @Cesar: in here, we save the received message
 	            	// ##########################################################################
@@ -603,7 +604,7 @@ public class WholeClusterSimulator {
 	                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
 	                	received.setMessageIn(ackMessage);
 	                	received.setWaitForNext(endWaiting - startWaiting);
-	                	received.setGeneratedId(idGen.incrementAndGet());
+	                	received.setGeneratedId(messageId);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
 	                	messageManager.saveMessageToFile(received, 
 	                									 WholeClusterSimulator.serializationFilePrefix, 
@@ -658,7 +659,7 @@ public class WholeClusterSimulator {
 	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
 	                AckProcessor.networkQueuedTime += networkQueuedTime;
 	                AckProcessor.processCount += 1;
-	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
 	                // ##########################################################################
                 } catch (InterruptedException e) {
                     e.printStackTrace();
