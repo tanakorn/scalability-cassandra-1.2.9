@@ -96,13 +96,14 @@ public class TokenMetadata implements Serializable
     /* list of subscribers that are notified when the tokenToEndpointMap changed */
     private final CopyOnWriteArrayList<AbstractReplicationStrategy> subscribers = new CopyOnWriteArrayList<AbstractReplicationStrategy>();
 
-    private static final Comparator<InetAddress> inetaddressCmp = new Comparator<InetAddress>()
-    {
-        public int compare(InetAddress o1, InetAddress o2)
-        {
+    private static class InetAddressComparator implements Comparator<InetAddress>, Serializable{
+    	@Override
+    	public int compare(InetAddress o1, InetAddress o2){
             return ByteBuffer.wrap(o1.getAddress()).compareTo(ByteBuffer.wrap(o2.getAddress()));
         }
-    };
+    }
+    
+    private static final Comparator<InetAddress> inetaddressCmp = new InetAddressComparator();
 
     public TokenMetadata()
     {
