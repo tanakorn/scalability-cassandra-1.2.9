@@ -1201,7 +1201,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 	        // ###################################################################
 	        if(WholeClusterSimulator.isSerializationEnabled){
 	        	float elapsedMillis = System.currentTimeMillis() - startTime;  
-	        	logger.debug("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
+	        	logger.info("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
 	        	// take a picture
 	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
 	        	// id plus host
