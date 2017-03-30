@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.locator;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.util.*;
@@ -44,7 +45,7 @@ import org.cliffc.high_scale_lib.NonBlockingHashMap;
 /**
  * A abstract parent for all replication strategies.
 */
-public abstract class AbstractReplicationStrategy
+public abstract class AbstractReplicationStrategy implements Serializable
 {
     private static final Logger logger = LoggerFactory.getLogger(AbstractReplicationStrategy.class);
 
