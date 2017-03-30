@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.locator;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -40,7 +41,7 @@ import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.gms.FailureDetector;
 import org.apache.cassandra.service.StorageService;
 
-public class TokenMetadata
+public class TokenMetadata implements Serializable
 {
     private static final Logger logger = LoggerFactory.getLogger(TokenMetadata.class);
 

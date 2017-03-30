@@ -28,6 +28,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.Gossiper;
+import org.apache.cassandra.locator.TokenMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +40,9 @@ public class GossipProtocolStateSnapshot implements Serializable{
     private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
     private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
 	private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
-	private Collection<Token> tokens = new ArrayList<Token>();
-    
+	private Collection<Token> tokens = new HashSet<Token>();
+    private TokenMetadata tokenMetadata = null;
+	
     public static GossipProtocolStateSnapshot buildFromInstance(GossiperStub gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
     	if(gossiper.endpointStateMap != null) {
@@ -59,6 +61,9 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		snapshot.expireTimeEndpointMap.clear(); 
     		snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
     		
+    	}
+    	if(gossiper.tokenMetadata != null) {
+    		snapshot.tokenMetadata = gossiper.tokenMetadata;
     	}
     	if(gossiper.tokens != null) {
     		snapshot.tokens.clear(); 
@@ -85,8 +90,11 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
     		
     	}
+    	if(snapshot.tokenMetadata != null) {
+    		gossiper.tokenMetadata = snapshot.tokenMetadata;
+    	}
     	if(snapshot.tokens != null) {
-    		gossiper.tokens.clear(); 
+    		if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>(); 
     		gossiper.tokens.addAll(snapshot.tokens);
     	}
 	}
