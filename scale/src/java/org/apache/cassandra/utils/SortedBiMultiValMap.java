@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -24,7 +25,7 @@ import java.util.TreeMap;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
 
-public class SortedBiMultiValMap<K, V> extends BiMultiValMap<K, V>
+public class SortedBiMultiValMap<K, V> extends BiMultiValMap<K, V> implements Serializable
 {
     protected SortedBiMultiValMap(SortedMap<K, V> forwardMap, SortedSetMultimap<V, K> reverseMap)
     {
@@ -61,15 +62,17 @@ public class SortedBiMultiValMap<K, V> extends BiMultiValMap<K, V>
         return newMap;
     }
 
+    private static class DefaultComparator <T>  implements Comparator<T>, Serializable{
+
+		@Override
+		public int compare(T o1, T o2) {
+			return ((Comparable<T>) o1).compareTo(o2);
+		}
+    	
+    }
+    
     private static <T> Comparator<T> defaultComparator()
     {
-        return new Comparator<T>()
-        {
-            @SuppressWarnings("unchecked")
-            public int compare(T o1, T o2)
-            {
-                return ((Comparable<T>) o1).compareTo(o2);
-            }
-        };
+    	return new DefaultComparator<T>();
     }
 }
