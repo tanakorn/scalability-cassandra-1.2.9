@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ import com.google.common.collect.Multimaps;
  * @param <K>
  * @param <V>
  */
-public class BiMultiValMap<K, V> implements Map<K, V>
+public class BiMultiValMap<K, V> implements Map<K, V>, Serializable
 {
     protected final Map<K, V> forwardMap;
     protected final Multimap<V, K> reverseMap;
