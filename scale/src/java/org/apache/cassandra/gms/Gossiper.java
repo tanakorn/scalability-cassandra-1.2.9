@@ -106,18 +106,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     /* map where key is the endpoint and value is the state associated with the endpoint */
     final ConcurrentMap<InetAddress, EndpointState> endpointStateMap = new ConcurrentHashMap<InetAddress, EndpointState>();
 
-    
-    public Set<InetAddress> getLiveEndpoints(){
-		return liveEndpoints;
-	}
-
-	public Map<InetAddress, Long> getUnreachableEndpoints() {
-		return unreachableEndpoints;
-	}
-
-	public ConcurrentMap<InetAddress, EndpointState> getEndpointStateMap() {
-		return endpointStateMap;
-	}
 
 	/* map where key is endpoint and value is timestamp when this endpoint was removed from
      * gossip. We will ignore any gossip regarding these endpoints for QUARANTINE_DELAY time
@@ -1172,7 +1160,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // @Cesar: are we replaying?
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
-    		logger.info("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
+    		if(logger.isDebugEnabled()) logger.debug("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
     		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub);
     	}
     	else{
@@ -1209,7 +1197,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 	//            logger.info("sc_debug: subscriber = " + subscriber.getClass());
 	        }
 	        // ###################################################################
-	        // @Cesar: Ok, here we save the messages
+	        // @Cesar: Ok, here we save the state
 	        // ###################################################################
 	        if(WholeClusterSimulator.isSerializationEnabled){
 	        	float elapsedMillis = System.currentTimeMillis() - startTime;  

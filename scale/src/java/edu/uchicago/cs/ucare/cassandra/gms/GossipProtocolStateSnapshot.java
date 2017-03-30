@@ -15,12 +15,17 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import javax.xml.bind.DatatypeConverter;
+
+import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.Gossiper;
 import org.slf4j.Logger;
@@ -33,19 +38,25 @@ public class GossipProtocolStateSnapshot implements Serializable{
 	private Map<InetAddress, EndpointState> endpointStateMap = new HashMap<InetAddress, EndpointState>();
     private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
     private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
-	
+	private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
+	private Collection<Token> tokens = new ArrayList<Token>();
+    
     public static GossipProtocolStateSnapshot buildFromInstance(GossiperStub gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
-		snapshot.endpointStateMap.clear(); snapshot.endpointStateMap.putAll(gossiper.getEndpointStateMap());
-		snapshot.liveEndpoints.clear(); snapshot.liveEndpoints.addAll(gossiper.getLiveEndpoints());
-		snapshot.unreachableEndpoints.clear(); snapshot.unreachableEndpoints.putAll(gossiper.getUnreachableEndpoints());
+		snapshot.endpointStateMap.clear(); snapshot.endpointStateMap.putAll(gossiper.endpointStateMap);
+		snapshot.liveEndpoints.clear(); snapshot.liveEndpoints.addAll(gossiper.liveEndpoints);
+		snapshot.unreachableEndpoints.clear(); snapshot.unreachableEndpoints.putAll(gossiper.unreachableEndpoints);
+		snapshot.expireTimeEndpointMap.clear(); snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
+		snapshot.tokens.clear(); snapshot.tokens.addAll(gossiper.tokens);
 		return snapshot;
 	}
 	
 	public static void loadFromSnapshot(GossipProtocolStateSnapshot snapshot, GossiperStub gossiper){
-		gossiper.getEndpointStateMap().clear(); gossiper.getEndpointStateMap().putAll(snapshot.endpointStateMap);
-		gossiper.getLiveEndpoints().clear(); gossiper.getLiveEndpoints().addAll(snapshot.liveEndpoints);
-		gossiper.getUnreachableEndpoints().clear(); gossiper.getUnreachableEndpoints().putAll(snapshot.unreachableEndpoints);
+		gossiper.endpointStateMap.clear(); gossiper.endpointStateMap.putAll(snapshot.endpointStateMap);
+		gossiper.liveEndpoints.clear(); gossiper.liveEndpoints.addAll(snapshot.liveEndpoints);
+		gossiper.unreachableEndpoints.clear(); gossiper.unreachableEndpoints.putAll(snapshot.unreachableEndpoints);
+		gossiper.expireTimeEndpointMap.clear(); gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
+		gossiper.tokens.clear(); gossiper.tokens.addAll(snapshot.tokens);
 	}
     
 	private static String seriliazeToString(GossipProtocolStateSnapshot snapshot){

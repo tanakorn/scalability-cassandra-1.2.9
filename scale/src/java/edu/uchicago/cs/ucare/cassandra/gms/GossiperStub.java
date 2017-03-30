@@ -94,6 +94,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     Map<InetAddress, Long> expireTimeEndpointMap;
     Set<InetAddress> seeds;
 	
+    
 	boolean hasContactedSeed;
 	
 	private static final Random random = new Random();
@@ -435,7 +436,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, System.currentTimeMillis());
+        unreachableEndpoints.put(addr, TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled));
     }
 
     @Override
