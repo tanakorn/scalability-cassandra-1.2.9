@@ -1026,7 +1026,7 @@ public class TokenMetadata implements Serializable
      * Tracks the assignment of racks and endpoints in each datacenter for all the "normal" endpoints
      * in this TokenMetadata. This allows faster calculation of endpoints in NetworkTopologyStrategy.
      */
-    public static class Topology
+    public static class Topology implements Serializable
     {
         /** multi-map of DC to endpoints in that DC */
         private final Multimap<String, InetAddress> dcEndpoints;
