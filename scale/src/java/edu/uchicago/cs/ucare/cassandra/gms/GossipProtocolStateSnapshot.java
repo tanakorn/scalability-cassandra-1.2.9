@@ -162,13 +162,13 @@ public class GossipProtocolStateSnapshot implements Serializable{
 		}
 	}
 	
-	public static void seriliazeToFile(GossipProtocolStateSnapshot snapshot, 
-									   String filePath,
-									   InetAddress id,
-									   Float time, 
-									   String methodName,
-									   GossipProtocolStateSnaphotManager manager,
-									   String messageId){
+	public static void seriliazeToFile(final GossipProtocolStateSnapshot snapshot, 
+									   final String filePath,
+									   final InetAddress id,
+									   final Float time, 
+									   final String methodName,
+									   final GossipProtocolStateSnaphotManager manager,
+									   final String messageId){
 		new Thread(){
 			@Override
 			public void run(){

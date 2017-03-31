@@ -221,7 +221,9 @@ public class MessageManager{
 		}
 	}
 	
-	public void saveRoundToFile(GossipRound round, String basePath, InetAddress id){
+	public void saveRoundToFile(final GossipRound round, 
+							    final String basePath, 
+							    final InetAddress id){
 		new Thread(){
 			@Override
 			public void run(){
@@ -258,7 +260,9 @@ public class MessageManager{
 		}.start();
 	}
 	
-	public void saveMessageToFile(ReceivedMessage message, String basePath, InetAddress id){
+	public void saveMessageToFile(final ReceivedMessage message, 
+								  final String basePath, 
+								  final InetAddress id){
 		new Thread(){
 			@Override
 			public void run(){
