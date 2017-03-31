@@ -42,74 +42,134 @@ public class GossipProtocolStateSnapshot implements Serializable{
     // private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
     // private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
 	// private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
-	private Collection<Token> tokens = new HashSet<Token>();
-    private TokenMetadata tokenMetadata = null;
+	private byte[] tokens = null;
+	private byte[] tokenMetadata = null;
 	
     public static GossipProtocolStateSnapshot buildFromInstance(GossiperStub gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
-    	/*if(gossiper.endpointStateMap != null) {
-    		synchronized(gossiper.endpointStateMap){
-	    		snapshot.endpointStateMap.clear(); 
-	    		snapshot.endpointStateMap.putAll(gossiper.endpointStateMap);
-    		}
-    	}
-    	
-    	if(gossiper.liveEndpoints != null) {
-    		snapshot.liveEndpoints.clear(); 
-    		snapshot.liveEndpoints.addAll(gossiper.liveEndpoints);
-    	}
-    	if(gossiper.unreachableEndpoints != null) {
-    		snapshot.unreachableEndpoints.clear(); 
-    		snapshot.unreachableEndpoints.putAll(gossiper.unreachableEndpoints);
-    	}
-    	if(gossiper.expireTimeEndpointMap != null) {
-    		snapshot.expireTimeEndpointMap.clear(); 
-    		snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
-    		
-    	}*/
     	if(gossiper.tokenMetadata != null) {
     		synchronized(gossiper.tokenMetadata){
-	    		snapshot.tokenMetadata = gossiper.tokenMetadata;
+    			ByteArrayOutputStream bos = null;
+    			ObjectOutputStream out = null;
+    			try{
+    				bos = new ByteArrayOutputStream();
+        			out = new ObjectOutputStream(bos);
+	    			out.writeObject(gossiper.tokenMetadata);
+	    			snapshot.tokenMetadata = bos.toByteArray();
+    			}
+    			catch(IOException ioe){
+    				// nothing here?
+    			}
+    			finally{
+    				try{
+    					bos.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    				try{
+    					out.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    			}
 	    	}
     	}
     	if(gossiper.tokens != null) {
     		synchronized(gossiper.tokens){
-	    		snapshot.tokens.clear(); 
-	    		snapshot.tokens.addAll(gossiper.tokens);
+    			ByteArrayOutputStream bos = null;
+    			ObjectOutputStream out = null;
+    			try{
+    				bos = new ByteArrayOutputStream();
+        			out = new ObjectOutputStream(bos);
+	    			out.writeObject(gossiper.tokens);
+	    			snapshot.tokens = bos.toByteArray();
+    			}
+    			catch(IOException ioe){
+    				// nothing here?
+    			}
+    			finally{
+    				try{
+    					bos.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    				try{
+    					out.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    			}
 	    	}
     	}
 		return snapshot;
 	}
 	
 	public static void loadFromSnapshot(GossipProtocolStateSnapshot snapshot, GossiperStub gossiper){
-		/*if(snapshot.endpointStateMap != null) {
-			synchronized(gossiper.endpointStateMap){
-				gossiper.endpointStateMap.clear(); 
-				gossiper.endpointStateMap.putAll(snapshot.endpointStateMap);
-			}
-    	}
-    	if(snapshot.liveEndpoints != null) {
-    		gossiper.liveEndpoints.clear(); 
-    		gossiper.liveEndpoints.addAll(snapshot.liveEndpoints);
-    	}
-    	if(snapshot.unreachableEndpoints != null) {
-    		gossiper.unreachableEndpoints.clear(); 
-    		gossiper.unreachableEndpoints.putAll(snapshot.unreachableEndpoints);
-    	}
-    	if(snapshot.expireTimeEndpointMap != null) {
-    		gossiper.expireTimeEndpointMap.clear(); 
-    		gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
-    		
-    	}*/
-		if(snapshot.tokenMetadata != null) {
+		if(snapshot.tokenMetadata != null && snapshot.tokenMetadata.length > 0) {
 			synchronized(gossiper.tokenMetadata){
-	    		gossiper.tokenMetadata = snapshot.tokenMetadata;
+				ByteArrayInputStream bis = null;
+    			ObjectInputStream in = null;
+    			try{
+    				bis = new ByteArrayInputStream(snapshot.tokenMetadata);
+        			in = new ObjectInputStream(bis);
+	    			gossiper.tokenMetadata = (TokenMetadata)in.readObject();
+    			}
+    			catch(IOException ioe){
+    				logger.error("@Cesar: error!", ioe);
+    			}
+    			catch(ClassNotFoundException cnfe){
+    				// nothing
+    			}
+    			finally{
+    				try{
+    					bis.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    				try{
+    					in.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    			}
 	    	}
     	}
-		if(snapshot.tokens != null) {
+		if(snapshot.tokens != null && snapshot.tokens.length > 0) {
 			if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>();
 	    	synchronized(gossiper.tokens){	 
-	    		gossiper.tokens.addAll(snapshot.tokens);
+	    		ByteArrayInputStream bis = null;
+    			ObjectInputStream in = null;
+    			try{
+    				bis = new ByteArrayInputStream(snapshot.tokenMetadata);
+        			in = new ObjectInputStream(bis);
+	    			gossiper.tokens = (HashSet<Token>)in.readObject();
+    			}
+    			catch(IOException ioe){
+    				logger.error("@Cesar: error!", ioe);
+    			}
+    			catch(ClassNotFoundException cnfe){
+    				// nothing
+    			}
+    			finally{
+    				try{
+    					bis.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    				try{
+    					in.close();
+    				}
+    				catch(IOException ioe){
+    					// nothing
+    				}
+    			}
 	    	}
     	}
 	}
