@@ -37,18 +37,21 @@ public class GossipProtocolStateSnapshot implements Serializable{
 	private static final Logger logger = LoggerFactory.getLogger(GossipProtocolStateSnapshot.class);
 	
 	private Map<InetAddress, EndpointState> endpointStateMap = new HashMap<InetAddress, EndpointState>();
-    private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
-    private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
-	private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
+    // private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
+    // private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
+	// private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
 	//private Collection<Token> tokens = new HashSet<Token>();
     //private TokenMetadata tokenMetadata = null;
 	
     public static GossipProtocolStateSnapshot buildFromInstance(GossiperStub gossiper){
     	GossipProtocolStateSnapshot snapshot = new GossipProtocolStateSnapshot();
     	if(gossiper.endpointStateMap != null) {
-    		snapshot.endpointStateMap.clear(); 
-    		snapshot.endpointStateMap.putAll(gossiper.endpointStateMap);
+    		synchronized(gossiper.endpointStateMap){
+	    		snapshot.endpointStateMap.clear(); 
+	    		snapshot.endpointStateMap.putAll(gossiper.endpointStateMap);
+    		}
     	}
+    	/*
     	if(gossiper.liveEndpoints != null) {
     		snapshot.liveEndpoints.clear(); 
     		snapshot.liveEndpoints.addAll(gossiper.liveEndpoints);
@@ -62,7 +65,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
     		
     	}
-    	/*if(gossiper.tokenMetadata != null) {
+    	if(gossiper.tokenMetadata != null) {
     		snapshot.tokenMetadata = gossiper.tokenMetadata;
     	}
     	if(gossiper.tokens != null) {
@@ -74,10 +77,12 @@ public class GossipProtocolStateSnapshot implements Serializable{
 	
 	public static void loadFromSnapshot(GossipProtocolStateSnapshot snapshot, GossiperStub gossiper){
 		if(snapshot.endpointStateMap != null) {
-			gossiper.endpointStateMap.clear(); 
-			gossiper.endpointStateMap.putAll(snapshot.endpointStateMap);
+			synchronized(gossiper.endpointStateMap){
+				gossiper.endpointStateMap.clear(); 
+				gossiper.endpointStateMap.putAll(snapshot.endpointStateMap);
+			}
     	}
-    	if(snapshot.liveEndpoints != null) {
+    	/*if(snapshot.liveEndpoints != null) {
     		gossiper.liveEndpoints.clear(); 
     		gossiper.liveEndpoints.addAll(snapshot.liveEndpoints);
     	}
@@ -90,7 +95,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
     		
     	}
-    	/*if(snapshot.tokenMetadata != null) {
+    	if(snapshot.tokenMetadata != null) {
     		gossiper.tokenMetadata = snapshot.tokenMetadata;
     	}
     	if(snapshot.tokens != null) {
