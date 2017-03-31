@@ -1156,67 +1156,68 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     
     static private void handleMajorStateChangeStatic(InetAddress myId, String inputId, InetAddress fromId, GossiperStub stub, InetAddress ep, EndpointState epState)
     {
-    	// ###################################################################
+    	
+        ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
+        if (!isDeadStateStatic(epState))
+        {
+//            if (endpointStateMap.get(ep) != null)
+//                logger.info("Node {} has restarted, now UP", ep);
+//            else
+//                logger.info("Node {} is now part of the cluster", ep);
+        }
+        if (logger.isTraceEnabled())
+            logger.trace("Adding endpoint state for " + ep);
+        endpointStateMap.put(ep, epState);
+
+        // the node restarted: it is up to the subscriber to take whatever action is necessary
+        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
+            subscriber.onRestart(stub, ep, epState);
+
+        if (!isDeadStateStatic(epState))
+            markAliveStatic(stub, ep, epState);
+        else
+        {
+            logger.debug("Not marking " + ep + " alive due to dead state");
+            markDeadStatic(stub, ep, epState);
+        }
+        // ###################################################################
         // @Cesar: are we replaying?
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
     		if(logger.isDebugEnabled()) logger.debug("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
     		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub);
+    		// this ends here
+    		return;
     	}
-    	else{
-    		// ###################################################################
-	        // @Cesar: measure execution time
-	        // ###################################################################
-    		long startTime = System.currentTimeMillis();
-    		// ###################################################################
-	        ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
-	        if (!isDeadStateStatic(epState))
-	        {
-	//            if (endpointStateMap.get(ep) != null)
-	//                logger.info("Node {} has restarted, now UP", ep);
-	//            else
-	//                logger.info("Node {} is now part of the cluster", ep);
-	        }
-	        if (logger.isTraceEnabled())
-	            logger.trace("Adding endpoint state for " + ep);
-	        endpointStateMap.put(ep, epState);
-	
-	        // the node restarted: it is up to the subscriber to take whatever action is necessary
-	        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
-	            subscriber.onRestart(stub, ep, epState);
-	
-	        if (!isDeadStateStatic(epState))
-	            markAliveStatic(stub, ep, epState);
-	        else
-	        {
-	            logger.debug("Not marking " + ep + " alive due to dead state");
-	            markDeadStatic(stub, ep, epState);
-	        }
-	        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic) {
-	            subscriber.onJoin(stub, ep, epState);
-	//            logger.info("sc_debug: subscriber = " + subscriber.getClass());
-	        }
-	        // ###################################################################
-	        // @Cesar: Ok, here we save the state
-	        // ###################################################################
-	        if(WholeClusterSimulator.isSerializationEnabled){
-	        	float elapsedMillis = System.currentTimeMillis() - startTime;  
-	        	logger.info("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
-	        	// take a picture
-	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
-	        	// id plus host
-	        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, ep);
-	        	// and save it
-	        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.seriliazeToFile(
-	        			gSnapshot, 
-	        			WholeClusterSimulator.serializationFilePrefix, 
-	        			myId, 
-	        			elapsedMillis,
-	        			WholeClusterSimulator.targetMemoizedMethod, 
-	        			WholeClusterSimulator.stateManager, 
-	        			messageIdentifier);
-	        }
-    	}
+        // ###################################################################
+        // @Cesar: measure execution time
+        // ###################################################################
+		long startTime = System.currentTimeMillis();
+		// ###################################################################
+        for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic) {
+            subscriber.onJoin(stub, ep, epState);
+//            logger.info("sc_debug: subscriber = " + subscriber.getClass());
+        }
+        // ###################################################################
+        // @Cesar: Ok, here we save the state
+        // ###################################################################
+        if(WholeClusterSimulator.isSerializationEnabled){
+        	float elapsedMillis = System.currentTimeMillis() - startTime;  
+        	logger.info("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
+        	// take a picture
+        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
+        	// id plus host
+        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, ep);
+        	// and save it
+        	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.seriliazeToFile(
+        			gSnapshot, 
+        			WholeClusterSimulator.serializationFilePrefix, 
+        			myId, 
+        			elapsedMillis,
+        			WholeClusterSimulator.targetMemoizedMethod, 
+        			WholeClusterSimulator.stateManager, 
+        			messageIdentifier);
+        }    	
     }
 
     private Boolean isDeadState(EndpointState epState)
