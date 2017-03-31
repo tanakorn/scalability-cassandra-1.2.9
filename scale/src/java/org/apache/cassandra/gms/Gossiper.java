@@ -1184,7 +1184,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // @Cesar: are we replaying?
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
-    		if(logger.isDebugEnabled()) logger.debug("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
+    		logger.info("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", iterationCounter=" + iterationCounter);
     		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub, iterationCounter);
     		// this ends here
     		return;

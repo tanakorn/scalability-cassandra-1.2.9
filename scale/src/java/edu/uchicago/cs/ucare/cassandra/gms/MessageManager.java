@@ -3,6 +3,7 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -10,7 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import org.apache.cassandra.net.MessageIn;
@@ -22,10 +23,10 @@ public class MessageManager{
 	private static final int INITIAL_CAPACITY = 100;
 	private static final Logger logger = LoggerFactory.getLogger(MessageManager.class);
 	
-	private Map<InetAddress, PriorityQueue> sentMessagesPerHost =
-				new HashMap<InetAddress, PriorityQueue>();
-	private Map<InetAddress, PriorityQueue> receivedMessagesPerHost =
-				new HashMap<InetAddress, PriorityQueue>();
+	private Map<InetAddress, ArrayList> sentMessagesPerHost =
+				new HashMap<InetAddress, ArrayList>();
+	private Map<InetAddress, ArrayList> receivedMessagesPerHost =
+				new HashMap<InetAddress, ArrayList>();
 	
 	private Map<InetAddress, Integer> gossipRoundsPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
@@ -41,7 +42,7 @@ public class MessageManager{
 		return queuesLeft(receivedMessagesPerHost);
 	}
 	
-	private boolean queuesLeft(Map<InetAddress, PriorityQueue> map){
+	private boolean queuesLeft(Map<InetAddress, ArrayList> map){
 		return map.size() > 0;
 	}
 	
@@ -54,8 +55,8 @@ public class MessageManager{
 	}
 	
 	private void removeMessageQueue(InetAddress host, 
-									Map<InetAddress, PriorityQueue> map){
-		PriorityQueue q = map.get(host);
+									Map<InetAddress, ArrayList> map){
+		ArrayList q = map.get(host);
 		if(q != null && q.size() == 0){
 			synchronized(map) {
 				map.remove(host);
@@ -96,44 +97,101 @@ public class MessageManager{
 	}
 	
 	private int getSizeOf(InetAddress host, 
-						  Map<InetAddress, PriorityQueue> map){
+						  Map<InetAddress, ArrayList> map){
 		return map.containsKey(host)? map.get(host).size() : 0;
 	}
 	
-	public GossipRound pollNextSentMessage(InetAddress host){
-		return (GossipRound)pollNext(host, sentMessagesPerHost);
+	public GossipRound pollNextSentMessage(InetAddress host, String basePath){
+		// in here we reconstruct
+		Integer nextMessageId = pollNext(host, sentMessagesPerHost);
+		if(nextMessageId == null) return null;
+		String messageFileName = 
+				MessageUtils.buildSentGossipFilePathForRound(new GossipRound(nextMessageId), basePath, host);
+		// now load
+		BufferedReader brdr = null;
+		try{
+			brdr = new BufferedReader(new FileReader(messageFileName));
+			String serialized = brdr.readLine();
+			GossipRound reconstructed = GossipRound.messageFromString(serialized);
+			return reconstructed;
+		}
+		catch(Exception e){
+			logger.error("@Cesar: Skipped a message < " + nextMessageId + ">since cannot load", e);
+			return null;
+		}
+		finally{
+			if(brdr != null){
+				try{
+					brdr.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
+			}
+		}
+		
 	}
 	
-	public ReceivedMessage pollNextReceivedMessage(InetAddress host){
-		return (ReceivedMessage)pollNext(host, receivedMessagesPerHost);
+	public ReceivedMessage pollNextReceivedMessage(InetAddress host, String basePath){
+		// in here we reconstruct
+		Integer nextMessageId = pollNext(host, receivedMessagesPerHost);
+		if(nextMessageId == null) return null;
+		String messageFileName = 
+				MessageUtils.buildReceivedMessageFilePathForRound(new ReceivedMessage(nextMessageId), basePath, host);
+		// now load
+		BufferedReader brdr = null;
+		try{
+			brdr = new BufferedReader(new FileReader(messageFileName));
+			String serialized = brdr.readLine();
+			ReceivedMessage reconstructed = ReceivedMessage.messageFromString(serialized);
+			return reconstructed;
+		}
+		catch(Exception e){
+			logger.error("@Cesar: Skipped a message < " + nextMessageId + ">since cannot load", e);
+			return null;
+		}
+		finally{
+			if(brdr != null){
+				try{
+					brdr.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
+			}
+		}
 	}
 	
-	private Object pollNext(InetAddress host, 
-							Map<InetAddress, PriorityQueue> map){
+	private Integer pollNext(InetAddress host, 
+						Map<InetAddress, ArrayList> map){
 		if(!map.containsKey(host)) return null;
-		return map.get(host).poll();
+		ArrayList target = map.get(host);
+		if(target.size() > 0){
+			Integer value = (Integer)target.get(0);
+			target.remove(0);
+			return value;
+		}
+		return null;
 	}
 	
 	public void addSentMessage(InetAddress host, 
-							   GossipRound message){
-		addToQueue(host, message, new GossipRound.GossipRoundComparator(), sentMessagesPerHost);
+							   int message){
+		addToQueue(host, message, sentMessagesPerHost);
 	}
 	
 	public void addReceivedMessage(InetAddress host, 
-								   ReceivedMessage message){
-		addToQueue(host, message, new ReceivedMessage.ReceivedMessageComparator(), receivedMessagesPerHost);
+								   int message){
+		addToQueue(host, message, receivedMessagesPerHost);
 	}
 	
 	private void addToQueue(InetAddress host, 
-							Object message, 
-							Comparator comp,
-							Map<InetAddress, PriorityQueue> map){
+							int message, 
+							Map<InetAddress, ArrayList> map){
 		if (map.containsKey(host)){
 			map.get(host).add(message);
 		}
 		else{
-			PriorityQueue pq = 
-					new PriorityQueue(INITIAL_CAPACITY, comp);
+			ArrayList pq = new ArrayList();
 			pq.add(message);
 			map.put(host, pq);
 			
@@ -142,6 +200,7 @@ public class MessageManager{
 	
 	public void saveRoundToFile(GossipRound round, String basePath, InetAddress id){
 		String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
+		String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
 		PrintWriter pr = null;
 		try{
 			File file = new File(fileName);
@@ -149,7 +208,12 @@ public class MessageManager{
 			pr = new PrintWriter(file);
 			String serializedRound = GossipRound.messageToString(round);
 			pr.println(serializedRound);
-			logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ">");
+			pr.close();
+			pr = null;
+			// also, print and concat the id to a file
+			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+			pr.println(round.getGossipRound());
+			logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
 		}
 		catch(Exception ioe){
 			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
@@ -161,6 +225,7 @@ public class MessageManager{
 	
 	public void saveMessageToFile(ReceivedMessage message, String basePath, InetAddress id){
 		String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
+		String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
 		PrintWriter pr = null;
 		try{
 			File file = new File(fileName);
@@ -168,7 +233,12 @@ public class MessageManager{
 			pr = new PrintWriter(file);
 			String serializedRound = ReceivedMessage.messageToString(message);
 			pr.println(serializedRound);
-			logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ">");
+			pr.close();
+			pr = null;
+			// also, print and concat the id to a file
+			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+			pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());
+			logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
 		}
 		catch(Exception ioe){
 			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
@@ -179,28 +249,22 @@ public class MessageManager{
 	}
 	
 	private void loadRoundsFromFile(String basePath, InetAddress id){
-		String directoryName = MessageUtils.buildSentGossipFilePath(basePath, id);
+		String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
 		BufferedReader brdr = null;
 		try{
-			File dir = new File(directoryName);
-			File[] allSentMessages = dir.listFiles();
-			for(File message : allSentMessages){
-				try{
-					brdr = new BufferedReader(new FileReader(message));
-					String serialized = brdr.readLine();
-					GossipRound reconstructed = GossipRound.messageFromString(serialized);
-					addSentMessage(id, reconstructed);
-					brdr.close();
-				}
-				catch(Exception e){
-					// logger.error("@Cesar: Skipped a message since cannot load", e);
-				}
+			File file = new File(mapFileName);
+			brdr = new BufferedReader(new FileReader(file));
+			String line = null;
+			while((line = brdr.readLine()) != null){
+				int roundId = Integer.valueOf(line);
+				addSentMessage(id, roundId);
 			}
+			brdr.close();
 			logger.info("@Cesar: <" + getSentMessageQueueSize(id) + "> gossip rounds loaded " + 
-						 "for host <" + id + "> from <" + directoryName + ">");
+						 "for host <" + id + "> from <" + mapFileName + ">");
 		}
 		catch(Exception ioe){
-			logger.error("@Cesar: Exception while loading <" + directoryName + ">", ioe);
+			logger.error("@Cesar: Exception while loading <" + mapFileName + ">", ioe);
 		}
 		finally{
 			try{
@@ -213,28 +277,23 @@ public class MessageManager{
 	}
 	
 	private void loadMessagesFromFile(String basePath, InetAddress id){
-		String directoryName = MessageUtils.buildReceivedMessageFilePath(basePath, id);
+		String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
 		BufferedReader brdr = null;
 		try{
-			File dir = new File(directoryName);
-			File[] allMessages = dir.listFiles();
-			for(File message : allMessages){
-				try{
-					brdr = new BufferedReader(new FileReader(message));
-					String serialized = brdr.readLine();
-					ReceivedMessage reconstructed = ReceivedMessage.messageFromString(serialized);
-					addReceivedMessage(id, reconstructed);
-					brdr.close();
-				}
-				catch(Exception e){
-					// logger.error("@Cesar: Skipped a message since cannot load", e);
-				}
+			File file = new File(mapFileName);
+			brdr = new BufferedReader(new FileReader(file));
+			String line = null;
+			while((line = brdr.readLine()) != null){
+				String [] parsed = line.split(MessageUtils.STATE_FIELD_SEP);
+				int roundId = Integer.valueOf(parsed[0]);
+				addReceivedMessage(id, roundId);
 			}
+			brdr.close();
 			logger.info("@Cesar: <" + getReceivedMessageQueueSize(id) + "> messages loaded " + 
-						 "for host <" + id + "> from <" + directoryName + ">");
+						 "for host <" + id + "> from <" + mapFileName + ">");
 		}
 		catch(Exception ioe){
-			logger.error("@Cesar: Exception while loading <" + directoryName + ">", ioe);
+			logger.error("@Cesar: Exception while loading <" + mapFileName + ">", ioe);
 		}
 		finally{
 			try{

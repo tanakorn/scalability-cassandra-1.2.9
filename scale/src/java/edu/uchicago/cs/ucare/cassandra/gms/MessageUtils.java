@@ -10,6 +10,8 @@ public class MessageUtils {
 	private static final String MESSAGE_RECEIVED = "message-received";
 	private static final String TIME = "time";
 	public static final String STATE_FILE = "stateProcessingTimeMap";
+	public static final String SENT_GOSSIP_MAP = "sentGossipMap";
+	public static final String RECEIVED_MESSAGE_MAP = "receivedMessageMap";
 	public static final String STATE_FIELD_SEP = ",";
 	
 	public static String buildTimeFileName(String basePath){
@@ -65,6 +67,20 @@ public class MessageUtils {
 		return buildSentGossipFilePath(basePath, id) + 
 			   File.separator + 
 			   round.getGossipRound();
+			   
+	}
+	
+	public static String buildSentGossipFilePathForMap(String basePath, InetAddress id){
+		return buildSentGossipFilePath(basePath, id) + 
+			   File.separator + 
+			   SENT_GOSSIP_MAP;
+			   
+	}
+	
+	public static String buildReceivedMessageFilePathForMap(String basePath, InetAddress id){
+		return buildSentGossipFilePath(basePath, id) + 
+			   File.separator + 
+			   RECEIVED_MESSAGE_MAP;
 			   
 	}
 	

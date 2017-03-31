@@ -390,7 +390,7 @@ public class WholeClusterSimulator {
                 // @Cesar: Lets replay
                 // ##########################################################################
                 if(WholeClusterSimulator.isReplayEnabled){
-                	GossipRound round = messageManager.pollNextSentMessage(performerAddress);
+                	GossipRound round = messageManager.pollNextSentMessage(performerAddress, WholeClusterSimulator.serializationFilePrefix);
                 	if(round == null){
                 		// round for this guy is null, so no more messages to send
                 		messageManager.removeSentMessageQueue(performerAddress);
@@ -616,7 +616,7 @@ public class WholeClusterSimulator {
 	            	// ##########################################################################
 	                else if(WholeClusterSimulator.isReplayEnabled){
 	                	// reconstruct the message
-	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address);
+	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address, WholeClusterSimulator.serializationFilePrefix);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
 	                	if(nextMessage == null){
