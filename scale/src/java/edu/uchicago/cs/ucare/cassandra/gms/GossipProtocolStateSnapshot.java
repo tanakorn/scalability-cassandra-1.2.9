@@ -38,10 +38,6 @@ public class GossipProtocolStateSnapshot implements Serializable{
 
 	private static final Logger logger = LoggerFactory.getLogger(GossipProtocolStateSnapshot.class);
 	
-	//private Map<InetAddress, EndpointState> endpointStateMap = new HashMap<InetAddress, EndpointState>();
-    // private Set<InetAddress> liveEndpoints = new HashSet<InetAddress>();
-    // private Map<InetAddress, Long> unreachableEndpoints = new HashMap<InetAddress, Long>();
-	// private Map<InetAddress, Long> expireTimeEndpointMap = new HashMap<InetAddress, Long>();
 	private byte[] tokens = null;
 	private byte[] tokenMetadata = null;
 	
@@ -146,7 +142,7 @@ public class GossipProtocolStateSnapshot implements Serializable{
 	    		ByteArrayInputStream bis = null;
     			ObjectInputStream in = null;
     			try{
-    				bis = new ByteArrayInputStream(snapshot.tokenMetadata);
+    				bis = new ByteArrayInputStream(snapshot.tokens);
         			in = new ObjectInputStream(bis);
 	    			gossiper.tokens = (HashSet<Token>)in.readObject();
     			}
