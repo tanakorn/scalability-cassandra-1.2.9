@@ -65,13 +65,13 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
     		
     	}*/
-    	synchronized(gossiper.tokenMetadata){
-	    	if(gossiper.tokenMetadata != null) {
+    	if(gossiper.tokenMetadata != null) {
+    		synchronized(gossiper.tokenMetadata){
 	    		snapshot.tokenMetadata = gossiper.tokenMetadata;
 	    	}
     	}
-    	synchronized(gossiper.tokens){
-	    	if(gossiper.tokens != null) {
+    	if(gossiper.tokens != null) {
+    		synchronized(gossiper.tokens){
 	    		snapshot.tokens.clear(); 
 	    		snapshot.tokens.addAll(gossiper.tokens);
 	    	}
@@ -99,14 +99,14 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
     		
     	}*/
-    	synchronized(gossiper.tokenMetadata){
-			if(snapshot.tokenMetadata != null) {
+		if(snapshot.tokenMetadata != null) {
+			synchronized(gossiper.tokenMetadata){
 	    		gossiper.tokenMetadata = snapshot.tokenMetadata;
 	    	}
     	}
-    	synchronized(gossiper.tokens){
-	    	if(snapshot.tokens != null) {
-	    		if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>(); 
+		if(snapshot.tokens != null) {
+			if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>();
+	    	synchronized(gossiper.tokens){	 
 	    		gossiper.tokens.addAll(snapshot.tokens);
 	    	}
     	}
