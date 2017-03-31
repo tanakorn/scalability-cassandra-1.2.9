@@ -390,7 +390,7 @@ public class WholeClusterSimulator {
                 // @Cesar: Lets replay
                 // ##########################################################################
                 if(WholeClusterSimulator.isReplayEnabled){
-                	GossipRound round = messageManager.pollNextSentMessage(performerAddress, WholeClusterSimulator.serializationFilePrefix);
+                	/*GossipRound round = messageManager.pollNextSentMessage(performerAddress, WholeClusterSimulator.serializationFilePrefix);
                 	if(round == null){
                 		// round for this guy is null, so no more messages to send
                 		messageManager.removeSentMessageQueue(performerAddress);
@@ -429,7 +429,9 @@ public class WholeClusterSimulator {
 	                	performer.doStatusCheck();
 	                	// and get out, but continue in this for loop
 	                	logger.debug("@Cesar: Round done for <" + performerAddress + ">");
-                	}
+                	}*/
+                	performer.updateHeartBeat();
+                	performer.doStatusCheck();
 	                continue;
                 }
                 performer.updateHeartBeat();
@@ -452,10 +454,10 @@ public class WholeClusterSimulator {
                     	// ##########################################################################
                         // @Cesar: gossip to live member
                     	// ##########################################################################
-                    	if(WholeClusterSimulator.isSerializationEnabled){
+                    	/*if(WholeClusterSimulator.isSerializationEnabled){
 	                    	GossipMessage toLiveMember = GossipMessage.build(GossipType.TO_LIVE_MEMBER, synMsg, liveReceiver);
 	                    	currentRound.setToLiveMember(toLiveMember);
-                    	}
+                    	}*/
                     	// ##########################################################################
                     }
                     
@@ -475,10 +477,10 @@ public class WholeClusterSimulator {
                         	// ##########################################################################
                             // @Cesar: gossip to unreachable member
                         	// ##########################################################################
-                        	if(WholeClusterSimulator.isSerializationEnabled){
+                        	/*if(WholeClusterSimulator.isSerializationEnabled){
     	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
     	                    	currentRound.setToUnreachableMember(toUnreachableMember);
-                        	}
+                        	}*/
                         	// ##########################################################################
                         }
                     }
@@ -499,10 +501,10 @@ public class WholeClusterSimulator {
 //                                  // ##########################################################################
                                     // @Cesar: gossip to seed
                                 	// ##########################################################################
-                                	if(WholeClusterSimulator.isSerializationEnabled){
+                                	/*if(WholeClusterSimulator.isSerializationEnabled){
             	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
             	                    	currentRound.setToSeed(toSeed);
-                                	}
+                                	}*/
                                 	// ##########################################################################
                                 }
                             } else {
@@ -518,10 +520,10 @@ public class WholeClusterSimulator {
 //                                      // ##########################################################################
                                         // @Cesar: gossip to seed
                                     	// ##########################################################################
-                                    	if(WholeClusterSimulator.isSerializationEnabled){
+                                    	/*if(WholeClusterSimulator.isSerializationEnabled){
                 	                    	GossipMessage toSeed = GossipMessage.build(GossipType.TO_SEED, synMsg, seed);
                 	                    	currentRound.setToSeed(toSeed);
-                                    	}
+                                    	}*/
                                     	// ##########################################################################
                                     }
                                 }
@@ -606,9 +608,7 @@ public class WholeClusterSimulator {
 	                	received.setWaitForNext(endWaiting - startWaiting);
 	                	received.setGeneratedId(messageId);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
-	                	messageManager.saveMessageToFile(received, 
-	                									 WholeClusterSimulator.serializationFilePrefix, 
-	                									 address);
+	                	messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
 	                	// no continue here, we follow normal cycle
 	                }
 	                // ##########################################################################
