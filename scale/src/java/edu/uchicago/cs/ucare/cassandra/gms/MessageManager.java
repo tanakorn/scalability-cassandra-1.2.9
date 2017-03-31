@@ -222,60 +222,71 @@ public class MessageManager{
 	}
 	
 	public void saveRoundToFile(GossipRound round, String basePath, InetAddress id){
-		String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
-		String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
-		PrintWriter pr = null;
-		ObjectOutputStream out = null;
-		FileOutputStream fopt = null;
-		try{
-			File file = new File(fileName);
-			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-			fopt = new FileOutputStream(fileName);
-			out = new ObjectOutputStream(fopt);
-			out.writeObject(round);
-			// also, print and concat the id to a file
-			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
-			pr.println(round.getGossipRound());
-			logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
-		}
-		catch(Exception ioe){
-			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
-		}
-		finally{
-			try{
-				if(pr != null) pr.close();
-				if(fopt != null) fopt.close();
-				if(out != null) out.close();
+		new Thread(){
+			@Override
+			public void run(){
+				String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
+				String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
+				PrintWriter pr = null;
+				ObjectOutputStream out = null;
+				FileOutputStream fopt = null;
+				try{
+					File file = new File(fileName);
+					if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
+					fopt = new FileOutputStream(fileName);
+					out = new ObjectOutputStream(fopt);
+					out.writeObject(round);
+					// also, print and concat the id to a file
+					pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+					pr.println(round.getGossipRound());
+					logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
+				}
+				catch(Exception ioe){
+					logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
+				}
+				finally{
+					try{
+						if(pr != null) pr.close();
+						if(fopt != null) fopt.close();
+						if(out != null) out.close();
+					}
+					catch(IOException ioe){
+						// nothing here
+					}
+				}
 			}
-			catch(IOException ioe){
-				// nothing here
-			}
-		}
+		}.start();
 	}
 	
 	public void saveMessageToFile(ReceivedMessage message, String basePath, InetAddress id){
-		String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
-		String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
-		PrintWriter pr = null;
-		ObjectOutputStream out = null;
-		FileOutputStream fopt = null;
-		try{
-			File file = new File(fileName);
-			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-			fopt = new FileOutputStream(fileName);
-			out = new ObjectOutputStream(fopt);
-			out.writeObject(message);
-			// also, print and concat the id to a file
-			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
-			pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());
-			logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
-		}
-		catch(Exception ioe){
-			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
-		}
-		finally{
-			if(pr != null) pr.close();
-		}
+		new Thread(){
+			@Override
+			public void run(){
+				String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
+				String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
+				PrintWriter pr = null;
+				ObjectOutputStream out = null;
+				FileOutputStream fopt = null;
+				try{
+					File file = new File(fileName);
+					if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
+					fopt = new FileOutputStream(fileName);
+					out = new ObjectOutputStream(fopt);
+					out.writeObject(message);
+					// also, print and concat the id to a file
+					pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+					pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());
+					logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
+				}
+				catch(Exception ioe){
+					logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
+				}
+				finally{
+					if(pr != null) pr.close();
+				}
+			}
+		}.start();
+		
 	}
 	
 	private void loadRoundsFromFile(String basePath, InetAddress id){

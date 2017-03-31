@@ -169,40 +169,46 @@ public class GossipProtocolStateSnapshot implements Serializable{
 									   String methodName,
 									   GossipProtocolStateSnaphotManager manager,
 									   String messageId){
-		ObjectOutputStream out = null;
-		FileOutputStream fopt = null;
-	  	try{
-			String hrSerialized = messageId;
-			BigInteger hashed = hashId(hrSerialized);
-			String fileName = MessageUtils.buildStateFilePathForFile(filePath, id, methodName, hashed);
-			// take the precaution to create dir if needed
-			File targetFile = new File(fileName);
-			if(!targetFile.getParentFile().exists()) targetFile.getParentFile().mkdirs();
-			fopt = new FileOutputStream(targetFile);
-			out = new ObjectOutputStream(fopt);
-			out.writeObject(snapshot);
-			if(logger.isDebugEnabled()) logger.debug("@Cesar: serialized <" + fileName + ">");
-			// also, save in map file
-			manager.storeInFile(filePath, hashed, time, id, methodName, messageId);
-	  	}
-	  	catch(IOException ioe){
-	  		logger.error("@Cesar: Exception on serialization", ioe);
-	  	}
-	  	finally{
-	  		try{
-	  			if(out != null) out.close();
-	  		}
-	  		catch(IOException ioe){
-	  			// nothing
-	  		}
-	  		try{
-	  			if(fopt != null) fopt.close();
-	  		}
-	  		catch(IOException ioe){
-	  			// nothing
-	  		}
-	  		
-		}
+		new Thread(){
+			@Override
+			public void run(){
+				ObjectOutputStream out = null;
+				FileOutputStream fopt = null;
+			  	try{
+					String hrSerialized = messageId;
+					BigInteger hashed = hashId(hrSerialized);
+					String fileName = MessageUtils.buildStateFilePathForFile(filePath, id, methodName, hashed);
+					// take the precaution to create dir if needed
+					File targetFile = new File(fileName);
+					if(!targetFile.getParentFile().exists()) targetFile.getParentFile().mkdirs();
+					fopt = new FileOutputStream(targetFile);
+					out = new ObjectOutputStream(fopt);
+					out.writeObject(snapshot);
+					if(logger.isDebugEnabled()) logger.debug("@Cesar: serialized <" + fileName + ">");
+					// also, save in map file
+					manager.storeInFile(filePath, hashed, time, id, methodName, messageId);
+			  	}
+			  	catch(IOException ioe){
+			  		logger.error("@Cesar: Exception on serialization", ioe);
+			  	}
+			  	finally{
+			  		try{
+			  			if(out != null) out.close();
+			  		}
+			  		catch(IOException ioe){
+			  			// nothing
+			  		}
+			  		try{
+			  			if(fopt != null) fopt.close();
+			  		}
+			  		catch(IOException ioe){
+			  			// nothing
+			  		}
+			  		
+				}
+			}
+		}.start();
+		
 	}
 	
 	public static GossipProtocolStateSnapshot loadFromFile(String filePath, InetAddress id, String methodName, BigInteger hashValue){
