@@ -78,7 +78,7 @@ public class MessageUtils {
 	}
 	
 	public static String buildReceivedMessageFilePathForMap(String basePath, InetAddress id){
-		return buildSentGossipFilePath(basePath, id) + 
+		return buildReceivedMessageFilePath(basePath, id) + 
 			   File.separator + 
 			   RECEIVED_MESSAGE_MAP;
 			   
