@@ -65,12 +65,16 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		snapshot.expireTimeEndpointMap.putAll(gossiper.expireTimeEndpointMap);
     		
     	}*/
-    	if(gossiper.tokenMetadata != null) {
-    		snapshot.tokenMetadata = gossiper.tokenMetadata;
+    	synchronized(gossiper.tokenMetadata){
+	    	if(gossiper.tokenMetadata != null) {
+	    		snapshot.tokenMetadata = gossiper.tokenMetadata;
+	    	}
     	}
-    	if(gossiper.tokens != null) {
-    		snapshot.tokens.clear(); 
-    		snapshot.tokens.addAll(gossiper.tokens);
+    	synchronized(gossiper.tokens){
+	    	if(gossiper.tokens != null) {
+	    		snapshot.tokens.clear(); 
+	    		snapshot.tokens.addAll(gossiper.tokens);
+	    	}
     	}
 		return snapshot;
 	}
@@ -95,12 +99,16 @@ public class GossipProtocolStateSnapshot implements Serializable{
     		gossiper.expireTimeEndpointMap.putAll(snapshot.expireTimeEndpointMap);
     		
     	}*/
-    	if(snapshot.tokenMetadata != null) {
-    		gossiper.tokenMetadata = snapshot.tokenMetadata;
+    	synchronized(gossiper.tokenMetadata){
+			if(snapshot.tokenMetadata != null) {
+	    		gossiper.tokenMetadata = snapshot.tokenMetadata;
+	    	}
     	}
-    	if(snapshot.tokens != null) {
-    		if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>(); 
-    		gossiper.tokens.addAll(snapshot.tokens);
+    	synchronized(gossiper.tokens){
+	    	if(snapshot.tokens != null) {
+	    		if(gossiper.tokens == null) gossiper.tokens = new HashSet<Token>(); 
+	    		gossiper.tokens.addAll(snapshot.tokens);
+	    	}
     	}
 	}
     

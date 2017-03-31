@@ -1116,14 +1116,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     // #######################################################################
     // @Cesar: this methods was added by me to handle replay of state
     // #######################################################################
-    private static void handleRecordedMajorStateChangeStatic(InetAddress id, String inputId, InetAddress fromId, InetAddress itEp, GossiperStub stub){
+    private static void handleRecordedMajorStateChangeStatic(InetAddress id, String inputId, InetAddress fromId, InetAddress itEp, GossiperStub stub, int iterationCounter){
     	// @Cesar: Just a check
     	if(id == null || inputId == null || itEp == null || fromId == null){
     		logger.error("@Cesar: ERROR! Input params are null");
     		System.exit(0);
     	}
 		// hash the current arguments, which are the important thing in this function
-    	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, itEp);
+    	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, iterationCounter);
     	BigInteger hashed = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.hashId(messageIdentifier);
     	if(logger.isDebugEnabled()) logger.info("@Cesar: Looking up <" + messageIdentifier + "> with hash " + hashed);
     	Float sleepyTime = WholeClusterSimulator.stateManager.lookUpTime(id, hashed);
@@ -1154,7 +1154,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 	}
     // #######################################################################
     
-    static private void handleMajorStateChangeStatic(InetAddress myId, String inputId, InetAddress fromId, GossiperStub stub, InetAddress ep, EndpointState epState)
+    static private void handleMajorStateChangeStatic(InetAddress myId, String inputId, InetAddress fromId, GossiperStub stub, InetAddress ep, EndpointState epState, int iterationCounter)
     {
     	
         ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
@@ -1185,7 +1185,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
     		if(logger.isDebugEnabled()) logger.debug("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", ep=" + ep);
-    		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub);
+    		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub, iterationCounter);
     		// this ends here
     		return;
     	}
@@ -1207,7 +1207,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         	// take a picture
         	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
         	// id plus host
-        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, ep);
+        	String messageIdentifier = GossipProtocolStateSnaphotManager.buildMessageIdentifier(inputId, fromId, iterationCounter);
         	// and save it
         	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.seriliazeToFile(
         			gSnapshot, 
@@ -1328,6 +1328,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         Set<InetAddress> updatedNodes = new HashSet<InetAddress>();
         int realUpdate = 0;
         Map<InetAddress, double[]> updatedNodeInfo = new HashMap<InetAddress, double[]>();
+        // ##############################################################################
+        // @Cesar: This is mine: how much did we iterate? for this message on this host
+        // ##############################################################################
+        int iterationCounter = 0;
+        // ##############################################################################
         for (Entry<InetAddress, EndpointState> entry : epStateMap.entrySet())
         {
             InetAddress ep = entry.getKey();
@@ -1375,7 +1380,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     if (logger.isTraceEnabled())
                         logger.trace("Updating heartbeat state generation to " + remoteGeneration + " from " + localGeneration + " for " + ep);
                     // major state change will handle the update by inserting the remote state directly
-                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
+                    handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy(), iterationCounter);
+                    // ##############################################################################
+                    // @Cesar: increment
+                    // ##############################################################################
+                    ++iterationCounter;
+                    // ##############################################################################
                     newRestart++;
                 }
                 else if ( remoteGeneration == localGeneration ) // generation has not changed, apply new states
@@ -1410,7 +1420,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //                FailureDetector.instance.report(ep);
                 double[] updatedInfo = stub.getFailureDetector().report(stub.getInetAddress(), ep);
                 updatedNodeInfo.put(ep, updatedInfo);
-                handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy());
+                handleMajorStateChangeStatic(id, inputId, fromId, stub, ep, remoteState.copy(), iterationCounter);
+                // ##############################################################################
+                // @Cesar: increment
+                // ##############################################################################
+                ++iterationCounter;
+                // ##############################################################################
                 newNode++;
                 if (remoteState.applicationState.containsKey(ApplicationState.TOKENS)) {
                     newNodeToken++;
