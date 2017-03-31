@@ -1,10 +1,15 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.Comparator;
@@ -108,11 +113,12 @@ public class MessageManager{
 		String messageFileName = 
 				MessageUtils.buildSentGossipFilePathForRound(new GossipRound(nextMessageId), basePath, host);
 		// now load
-		BufferedReader brdr = null;
+		FileInputStream strm = null;
+		ObjectInputStream in = null;
 		try{
-			brdr = new BufferedReader(new FileReader(messageFileName));
-			String serialized = brdr.readLine();
-			GossipRound reconstructed = GossipRound.messageFromString(serialized);
+			strm = new FileInputStream(messageFileName);
+			in = new ObjectInputStream(strm);
+			GossipRound reconstructed = (GossipRound)in.readObject();
 			return reconstructed;
 		}
 		catch(Exception e){
@@ -120,9 +126,17 @@ public class MessageManager{
 			return null;
 		}
 		finally{
-			if(brdr != null){
+			if(strm != null){
 				try{
-					brdr.close();
+					strm.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
+			}
+			if(in != null){
+				try{
+					in.close();
 				}
 				catch(IOException ioe){
 					// nothing here
@@ -139,21 +153,30 @@ public class MessageManager{
 		String messageFileName = 
 				MessageUtils.buildReceivedMessageFilePathForRound(new ReceivedMessage(nextMessageId), basePath, host);
 		// now load
-		BufferedReader brdr = null;
+		FileInputStream strm = null;
+		ObjectInputStream in = null;
 		try{
-			brdr = new BufferedReader(new FileReader(messageFileName));
-			String serialized = brdr.readLine();
-			ReceivedMessage reconstructed = ReceivedMessage.messageFromString(serialized);
+			strm = new FileInputStream(messageFileName);
+			in = new ObjectInputStream(strm);
+			ReceivedMessage reconstructed = (ReceivedMessage)in.readObject();
 			return reconstructed;
 		}
 		catch(Exception e){
-			logger.error("@Cesar: Skipped a message < " + nextMessageId + ">since cannot load", e);
+			logger.error("@Cesar: Skipped a message <" + nextMessageId + ">since cannot load", e);
 			return null;
 		}
 		finally{
-			if(brdr != null){
+			if(strm != null){
 				try{
-					brdr.close();
+					strm.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
+			}
+			if(in != null){
+				try{
+					in.close();
 				}
 				catch(IOException ioe){
 					// nothing here
@@ -202,14 +225,14 @@ public class MessageManager{
 		String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
 		String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
 		PrintWriter pr = null;
+		ObjectOutputStream out = null;
+		FileOutputStream fopt = null;
 		try{
 			File file = new File(fileName);
 			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-			pr = new PrintWriter(file);
-			String serializedRound = GossipRound.messageToString(round);
-			pr.println(serializedRound);
-			pr.close();
-			pr = null;
+			fopt = new FileOutputStream(fileName);
+			out = new ObjectOutputStream(fopt);
+			out.writeObject(round);
 			// also, print and concat the id to a file
 			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
 			pr.println(round.getGossipRound());
@@ -219,7 +242,14 @@ public class MessageManager{
 			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
 		}
 		finally{
-			if(pr != null) pr.close();
+			try{
+				if(pr != null) pr.close();
+				if(fopt != null) fopt.close();
+				if(out != null) out.close();
+			}
+			catch(IOException ioe){
+				// nothing here
+			}
 		}
 	}
 	
@@ -227,14 +257,14 @@ public class MessageManager{
 		String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
 		String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
 		PrintWriter pr = null;
+		ObjectOutputStream out = null;
+		FileOutputStream fopt = null;
 		try{
 			File file = new File(fileName);
 			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-			pr = new PrintWriter(file);
-			String serializedRound = ReceivedMessage.messageToString(message);
-			pr.println(serializedRound);
-			pr.close();
-			pr = null;
+			fopt = new FileOutputStream(fileName);
+			out = new ObjectOutputStream(fopt);
+			out.writeObject(message);
 			// also, print and concat the id to a file
 			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
 			pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());

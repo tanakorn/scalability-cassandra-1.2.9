@@ -5,6 +5,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -167,17 +169,18 @@ public class GossipProtocolStateSnapshot implements Serializable{
 									   String methodName,
 									   GossipProtocolStateSnaphotManager manager,
 									   String messageId){
-	  	PrintWriter writer = null;
+		ObjectOutputStream out = null;
+		FileOutputStream fopt = null;
 	  	try{
-			String serialized = seriliazeToString(snapshot);
 			String hrSerialized = messageId;
 			BigInteger hashed = hashId(hrSerialized);
 			String fileName = MessageUtils.buildStateFilePathForFile(filePath, id, methodName, hashed);
 			// take the precaution to create dir if needed
 			File targetFile = new File(fileName);
 			if(!targetFile.getParentFile().exists()) targetFile.getParentFile().mkdirs();
-			writer = new PrintWriter(targetFile);
-			writer.println(serialized);
+			fopt = new FileOutputStream(targetFile);
+			out = new ObjectOutputStream(fopt);
+			out.writeObject(snapshot);
 			if(logger.isDebugEnabled()) logger.debug("@Cesar: serialized <" + fileName + ">");
 			// also, save in map file
 			manager.storeInFile(filePath, hashed, time, id, methodName, messageId);
@@ -186,24 +189,30 @@ public class GossipProtocolStateSnapshot implements Serializable{
 	  		logger.error("@Cesar: Exception on serialization", ioe);
 	  	}
 	  	finally{
-	  		if(writer != null) writer.close();
+	  		try{
+	  			if(out != null) out.close();
+	  		}
+	  		catch(IOException ioe){
+	  			// nothing
+	  		}
+	  		try{
+	  			if(fopt != null) fopt.close();
+	  		}
+	  		catch(IOException ioe){
+	  			// nothing
+	  		}
+	  		
 		}
 	}
 	
 	public static GossipProtocolStateSnapshot loadFromFile(String filePath, InetAddress id, String methodName, BigInteger hashValue){
-		ByteArrayInputStream strm = null;
+		FileInputStream strm = null;
 		ObjectInputStream in = null;
-		BufferedReader bfr = null;
-		FileReader fr = null;
 		try{
 			// retrieve
 			String sourceFileName = MessageUtils.buildStateFilePathForFile(filePath, id, methodName, hashValue);
-			fr = new FileReader(new File(sourceFileName));
-			bfr = new BufferedReader(fr);
-			String target = bfr.readLine();
 			// reconstruct
-			byte [] decodedMessage = DatatypeConverter.parseBase64Binary(target);
-			strm = new ByteArrayInputStream(decodedMessage);
+			strm = new FileInputStream(sourceFileName);
 			in = new ObjectInputStream(strm);
 			GossipProtocolStateSnapshot reconstructed = (GossipProtocolStateSnapshot)in.readObject();
 			// done
@@ -218,15 +227,21 @@ public class GossipProtocolStateSnapshot implements Serializable{
 			return null;
 		}
 		finally{
-			try{
-				if(strm != null) strm.close();
-				if(in != null) in.close();
-				if(fr != null) fr.close();
-				if(bfr != null) bfr.close();
+			if(strm != null){
+				try{
+					strm.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
 			}
-			catch(IOException ioe){
-				// nothing to do here, dont care
-	  			logger.error("@Cesar: Could not close streams!", ioe);
+			if(in != null){
+				try{
+					in.close();
+				}
+				catch(IOException ioe){
+					// nothing here
+				}
 			}
 		}
 	}
