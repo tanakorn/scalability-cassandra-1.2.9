@@ -263,33 +263,28 @@ public class MessageManager{
 	public void saveMessageToFile(final ReceivedMessage message, 
 								  final String basePath, 
 								  final InetAddress id){
-		new Thread(){
-			@Override
-			public void run(){
-				String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
-				String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
-				PrintWriter pr = null;
-				ObjectOutputStream out = null;
-				FileOutputStream fopt = null;
-				try{
-					File file = new File(fileName);
-					if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-					fopt = new FileOutputStream(fileName);
-					out = new ObjectOutputStream(fopt);
-					out.writeObject(message);
-					// also, print and concat the id to a file
-					pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
-					pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());
-					logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
-				}
-				catch(Exception ioe){
-					logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
-				}
-				finally{
-					if(pr != null) pr.close();
-				}
-			}
-		}.start();
+		String fileName = MessageUtils.buildReceivedMessageFilePathForRound(message, basePath, id);
+		String mapFileName = MessageUtils.buildReceivedMessageFilePathForMap(basePath, id);
+		PrintWriter pr = null;
+		ObjectOutputStream out = null;
+		FileOutputStream fopt = null;
+		try{
+			File file = new File(fileName);
+			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
+			fopt = new FileOutputStream(fileName);
+			out = new ObjectOutputStream(fopt);
+			out.writeObject(message);
+			// also, print and concat the id to a file
+			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+			pr.println(message.getMessageRound() +MessageUtils.STATE_FIELD_SEP + message.getWaitForNext());
+			logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
+		}
+		catch(Exception ioe){
+			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
+		}
+		finally{
+			if(pr != null) pr.close();
+		}
 		
 	}
 	

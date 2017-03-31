@@ -608,8 +608,14 @@ public class WholeClusterSimulator {
 	                	received.setWaitForNext(endWaiting - startWaiting);
 	                	received.setGeneratedId(messageId);
 	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+	                	// time things
+	                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                AckProcessor.networkQueuedTime += networkQueuedTime;
+		                AckProcessor.processCount += 1;
 	                	messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
-	                	// no continue here, we follow normal cycle
+	                	// normal
+		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
+		                continue;
 	                }
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message
