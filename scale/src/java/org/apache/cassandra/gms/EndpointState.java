@@ -56,7 +56,7 @@ public class EndpointState
         // ##############################################################################
         // @Cesar: Change time
         // ##############################################################################   
-        updateTimestamp = WholeClusterSimulator.globalTimeService.get(WholeClusterSimulator.adjustThreadRunningTime);
+        updateTimestamp = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
         // ##############################################################################
         isAlive = true;
         hopNum = 0;
