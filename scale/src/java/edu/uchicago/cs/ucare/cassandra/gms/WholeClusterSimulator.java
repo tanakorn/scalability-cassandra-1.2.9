@@ -341,9 +341,14 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
+        	// ##############################################################################
+	        // @Cesar: Change time
+	        // ##############################################################################
             long start = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+            long interval = 0L;
+            // ##############################################################################
             if (previousTime != 0) {
-                long interval = start - previousTime;
+                interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
                 totalIntLength += (interval * stubs.size());
                 sentCount += stubs.size();
@@ -425,6 +430,10 @@ public class WholeClusterSimulator {
 //                logger.warn("Sending lateness " + lateness + " " + totalLateness);
 //            }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
+            // ##############################################################################
+	        // @Cesar: Adjust a little
+            WholeClusterSimulator.globalTimeService.adjustThreadTime(Thread.currentThread().getId(), interval);
+	        // ##############################################################################
         }
         
     }
