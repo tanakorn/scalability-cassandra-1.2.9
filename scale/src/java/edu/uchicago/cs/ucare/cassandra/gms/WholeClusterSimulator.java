@@ -49,7 +49,7 @@ public class WholeClusterSimulator {
     
     private static Timer[] timers;
     private static MyGossiperTask[] tasks;
-    private static Random random = new Random();
+    public static Random random = new Random();
     // ##############################################################################
     // @Cesar: This is going to be used as global time service
     // ##############################################################################
@@ -218,7 +218,9 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
-        timers = new Timer[numGossiper];
+        BoundedClusterSimulator simulator = new BoundedClusterSimulator(numGossiper - 4, stubGroup.getAllStubs());
+        simulator.runCluster();
+        /*timers = new Timer[numGossiper];
         tasks = new MyGossiperTask[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
@@ -240,7 +242,7 @@ public class WholeClusterSimulator {
             Thread t = new Thread(new AckProcessor(address));
             ackProcessThreadPool.add(t);
             t.start();
-        }
+        }*/
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
