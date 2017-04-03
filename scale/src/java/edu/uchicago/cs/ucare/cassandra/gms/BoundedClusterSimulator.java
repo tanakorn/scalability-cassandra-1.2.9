@@ -218,8 +218,8 @@ public class BoundedClusterSimulator {
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
             } 
             catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            	e.printStackTrace();
+            }
         }
 		
 	}
