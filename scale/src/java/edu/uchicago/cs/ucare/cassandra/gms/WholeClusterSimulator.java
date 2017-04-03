@@ -352,6 +352,8 @@ public class WholeClusterSimulator {
             previousTime = start;
             for (GossiperStub performer : stubs) {
                 InetAddress performerAddress = performer.getInetAddress();
+                // @Cesar: Just a test
+            	logger.info("@Cesar: ThreadId <" + Thread.currentThread().getId() + ", host = " + performerAddress);
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
