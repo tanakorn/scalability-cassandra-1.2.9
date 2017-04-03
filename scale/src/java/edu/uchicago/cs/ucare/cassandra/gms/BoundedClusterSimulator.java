@@ -46,7 +46,7 @@ public class BoundedClusterSimulator {
 		nThreads = nThreads - 4;
 		executorSendService = Executors.newFixedThreadPool(nThreads/2);
 		executorReceiveService = Executors.newFixedThreadPool(nThreads/2);
-		stubs = stubs;
+		BoundedClusterSimulator.stubs = stubs;
 	}
 	
 	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
