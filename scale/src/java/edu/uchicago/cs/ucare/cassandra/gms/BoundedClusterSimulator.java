@@ -210,17 +210,16 @@ public class BoundedClusterSimulator {
 	    @Override
         public void run() {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = WholeClusterSimulator.msgQueues.get(address);
-            while (true) {
-                try {
+            try {
                 MessageIn<?> ackMessage = msgQueue.take();
                 long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
-                } catch (InterruptedException e) {
+            } 
+            catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
         }
 		
 	}
