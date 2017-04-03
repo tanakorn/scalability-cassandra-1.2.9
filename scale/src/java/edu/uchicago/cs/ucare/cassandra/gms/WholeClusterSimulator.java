@@ -218,6 +218,7 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
+        logger.info("@Cesar; Using " + stubGroup.getAllStubs().size() + " stubs");
         BoundedClusterSimulator simulator = new BoundedClusterSimulator(numGossiper, stubGroup.getAllStubs());
         simulator.runCluster(addressList, seeds);
         /*timers = new Timer[numGossiper];
