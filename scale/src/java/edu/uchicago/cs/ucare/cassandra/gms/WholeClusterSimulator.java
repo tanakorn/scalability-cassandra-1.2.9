@@ -464,8 +464,8 @@ public class WholeClusterSimulator {
         
         InetAddress address;
         
-        public static long networkQueuedTime = 0;
-        public static int processCount = 0;
+        public static long networkQueuedTime = 1;
+        public static int processCount = 1;
         
         public AckProcessor(InetAddress address) {
             this.address = address;
