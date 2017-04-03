@@ -211,6 +211,7 @@ public class BoundedClusterSimulator {
         public void run() {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = WholeClusterSimulator.msgQueues.get(address);
             try {
+            	logger.info("@Cesar: Msg for " + address + "????");
                 MessageIn<?> ackMessage = msgQueue.take();
                 logger.info("@Cesar: Taken " + ackMessage + " by " + address);
                 long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
