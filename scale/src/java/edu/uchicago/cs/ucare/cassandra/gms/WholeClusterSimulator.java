@@ -242,8 +242,8 @@ public class WholeClusterSimulator {
             Thread t = new Thread(new AckProcessor(address));
             ackProcessThreadPool.add(t);
             t.start();
-        }*/
-        Thread seedThread = new Thread(new Runnable() {
+        }
+        /*Thread seedThread = new Thread(new Runnable() {
             
             @Override
             public void run() {
@@ -295,7 +295,7 @@ public class WholeClusterSimulator {
         otherThread.start();
         
         Thread infoPrinter = new Thread(new RingInfoPrinter());
-        infoPrinter.start();
+        infoPrinter.start();*/
 
     }
     
