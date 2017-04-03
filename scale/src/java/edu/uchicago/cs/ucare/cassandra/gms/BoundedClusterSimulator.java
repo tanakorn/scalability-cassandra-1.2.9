@@ -1,7 +1,9 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,13 +40,16 @@ public class BoundedClusterSimulator {
 	private static AtomicLong sentInterval = new AtomicLong(0L);
 	
 	public BoundedClusterSimulator(int nThreads, Collection<GossiperStub> stubs){
-		this.executorService = Executors.newFixedThreadPool(nThreads);
+		this.executorService = Executors.newFixedThreadPool(nThreads - 4);
 		this.stubs = stubs;
 	}
 	
-	public void runCluster(){
+	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
 		// populate initially
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
+		new Thread(new RingInfoPrinter(stubs)).start();
+		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
+		new Thread(new FixerThread(all, seeds, stubs)).start();
 		// sleep a little
 		try{
 			Thread.sleep(1000);
@@ -58,6 +63,16 @@ public class BoundedClusterSimulator {
 		catch(InterruptedException ie){
 			// nothing here
 		}
+	}
+	
+	private Collection<GossiperStub> getSeedStubs(Collection<GossiperStub> stubs, Collection<InetAddress> seeds){
+		Collection<GossiperStub> seedStubs = new ArrayList<GossiperStub>();
+		for(GossiperStub stub : stubs){
+			if(seeds.contains(stub.getInetAddress())){
+				seedStubs.add(stub);
+			}
+		}
+		return seedStubs;
 	}
 	
 	private static void populateWithGossipTasks(Collection<GossiperStub> stubs){
@@ -83,6 +98,82 @@ public class BoundedClusterSimulator {
 			populateWithGossipTasks(stubs);
 		}
 		
+	}
+	
+	public static class SeedThread implements Runnable{
+
+		private Collection<GossiperStub> seedStubs = null;
+		
+		public SeedThread(Collection<GossiperStub> seedStubs){
+			this.seedStubs = seedStubs;
+		}
+		
+		@Override
+		public void run() {
+			for (GossiperStub seed : seedStubs) {
+				seed.setupTokenState();
+				seed.updateNormalTokens();
+				seed.setNormalStatusState();
+				seed.setSeverityState(0.0);
+                seed.setLoad(10000);
+            }
+		}
+		
+	}
+	
+	public static class FixerThread implements Runnable{
+		
+		private Collection<InetAddress> addressList = null;
+		private Collection<InetAddress> seeds = null;
+		private Collection<GossiperStub> stubs = null;
+		
+		public FixerThread(Collection<InetAddress> addressList, 
+						   Collection<InetAddress> seeds,
+						   Collection<GossiperStub> stubs){
+			this.addressList = addressList;
+			this.stubs = stubs;
+			this.seeds = seeds;
+		}
+		
+		@Override
+        public void run() {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (InetAddress address : addressList) {
+                if (!seeds.contains(address)) {
+                    for(GossiperStub stub : stubs){
+                    	if(stub.getInetAddress().equals(address)){
+                    		stub.setupTokenState();
+                            stub.setBootStrappingStatusState();
+                            break;
+                    	}
+                    }
+                    
+                }
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (InetAddress address : addressList) {
+                if (!seeds.contains(address)){
+                	 for(GossiperStub stub : stubs){
+                     	if(stub.getInetAddress().equals(address)){
+		                    stub.updateNormalTokens();
+		                    stub.setupTokenState();
+		                    stub.setNormalStatusState();
+		                    stub.setSeverityState(0.0);
+		                    stub.setLoad(10000);
+		                    break;
+                     	}
+                	 }
+                }
+            }
+        }
 	}
 	
 	public static class AckProcessorTask implements Runnable{
