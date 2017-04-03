@@ -58,7 +58,7 @@ public class WholeClusterSimulator {
     // ##############################################################################
     // @Cesar: This are some properties
     // ##############################################################################
-    public static boolean adjustThreadRunningTime = Boolean.parseBoolean(System.getProperty("", "FALSE"));
+    public static boolean adjustThreadRunningTime = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.adjustThreadTime", "FALSE"));
     // ##############################################################################
     
     
