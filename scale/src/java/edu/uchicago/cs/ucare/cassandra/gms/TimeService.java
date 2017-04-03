@@ -32,7 +32,7 @@ public class TimeService {
 	
 	public long getAdjustedCurrentTimeMillis(){
 		long threadCpuTime = toMillis(threadMxBean.getCurrentThreadCpuTime());
-		return baseTimeStamp + threadCpuTime + (adjustedTime.get(Thread.currentThread().getId()) != null? adjustedTime.get(Thread.currentThread().getId()) : 0L);
+		return baseTimeStamp + threadCpuTime + toMillis((adjustedTime.get(Thread.currentThread().getId()) != null? adjustedTime.get(Thread.currentThread().getId()) : 0L));
 	}
 	
 	public long getCurrentTimeMillis(){
