@@ -36,7 +36,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
     	InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack2");
@@ -168,7 +172,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         String syncId = from + "_" + message.payload.syncId;
         long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
         receiverStub.syncReceivedTime.remove(syncId);
-        long tmpCurrent = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        long tmpCurrent = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
         String ackId = from + "_" + message.payload.ackId;

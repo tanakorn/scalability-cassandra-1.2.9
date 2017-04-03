@@ -50,6 +50,17 @@ public class WholeClusterSimulator {
     private static Timer[] timers;
     private static MyGossiperTask[] tasks;
     private static Random random = new Random();
+    // ##############################################################################
+    // @Cesar: This is going to be used as global time service
+    // ##############################################################################
+    public static TimeService globalTimeService = new TimeService();
+    // ##############################################################################
+    // ##############################################################################
+    // @Cesar: This are some properties
+    // ##############################################################################
+    public static boolean adjustThreadRunningTime = Boolean.parseBoolean(System.getProperty("", "FALSE"));
+    // ##############################################################################
+    
     
     private static Logger logger = LoggerFactory.getLogger(ScaleSimulator.class);
     
@@ -152,7 +163,12 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-        if (args.length < 4) {
+    	// ##############################################################################
+        // @Cesar: and set the initial time
+        // ##############################################################################
+    	globalTimeService.setBaseTimeStamp();
+        // ##############################################################################
+    	if (args.length < 4) {
             System.err.println("Please enter execution_time files");
             System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
             System.exit(1);
@@ -183,7 +199,6 @@ public class WholeClusterSimulator {
         }
         buffReader.close();
         Gossiper.registerStatic(StorageService.instance);
-//        Gossiper.registerStatic(LoadBroadcaster.instance);
         DatabaseDescriptor.loadYaml();
         GossiperStubGroupBuilder stubGroupBuilder = new GossiperStubGroupBuilder();
         final List<InetAddress> addressList = new LinkedList<InetAddress>();
@@ -201,10 +216,6 @@ public class WholeClusterSimulator {
                 .setNumTokens(32).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
         stubGroup.prepareInitialState();
-        // I should start MyGossiperTask here
-        
-//        int numGossiper = numStubs / 100;
-//        int numGossiper = 2;
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
@@ -330,7 +341,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            long start = System.currentTimeMillis();
+            long start = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
             if (previousTime != 0) {
                 long interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
@@ -453,7 +464,11 @@ public class WholeClusterSimulator {
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
-                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+                // ##############################################################################
+		        // @Cesar: Change time
+		        // ##############################################################################
+                long networkQueuedTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - ackMessage.createdTime;    
+		        // ##############################################################################
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;
 //                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 

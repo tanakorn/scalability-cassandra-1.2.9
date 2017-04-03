@@ -22,6 +22,9 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
+
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
@@ -50,7 +53,11 @@ public class EndpointState
     public EndpointState(HeartBeatState initialHbState)
     {
         hbState = initialHbState;
-        updateTimestamp = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################   
+        updateTimestamp = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         isAlive = true;
         hopNum = 0;
     }
@@ -108,7 +115,11 @@ public class EndpointState
 
     public void updateTimestamp()
     {
-        updateTimestamp = System.currentTimeMillis();
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################   
+        updateTimestamp = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
     }
 
     public boolean isAlive()

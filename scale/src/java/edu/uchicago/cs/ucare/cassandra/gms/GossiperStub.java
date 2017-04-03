@@ -110,8 +110,12 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	
 	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, int numTokens,
 			Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner) {
-		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA, 
-				new HeartBeatState((int) System.currentTimeMillis()), 
+		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA,
+				// ##############################################################################
+		        // @Cesar: Change time
+		        // ##############################################################################
+				new HeartBeatState((int) WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime)), 
+		        // ##############################################################################
 				numTokens, seeds, partitioner);
 	}
 	
@@ -274,7 +278,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
        MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, 
                emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        message.setTo(to);
-       message.createdTime = System.currentTimeMillis();
+       // ##############################################################################
+       // @Cesar: Change time
+       // ##############################################################################
+       message.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+       // ##############################################################################
        return message;
    }
 	
@@ -361,8 +369,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public void doStatusCheck() {
-        long now = System.currentTimeMillis();
-
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         Set<InetAddress> eps = endpointStateMap.keySet();
 //        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
         for ( InetAddress endpoint : eps ) {
@@ -395,7 +406,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public static long computeExpireTime() {
-        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + Gossiper.aVeryLongTime;
+        // ##############################################################################
     }
 
     protected long getExpireTimeForEndpoint(InetAddress endpoint) {
@@ -412,7 +427,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     private void quarantineEndpoint(InetAddress endpoint) {
-        justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	justRemovedEndpoints.put(endpoint, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+        // ##############################################################################
     }
     
     private Boolean isDeadState(EndpointState epState)
@@ -435,7 +454,12 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, System.currentTimeMillis());
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        unreachableEndpoints.put(addr, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+        // ##############################################################################
+        
     }
 
     @Override

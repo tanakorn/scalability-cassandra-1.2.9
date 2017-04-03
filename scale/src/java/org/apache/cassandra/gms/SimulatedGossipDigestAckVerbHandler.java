@@ -41,7 +41,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack");
@@ -198,10 +202,18 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        gDigestAck2Message.createdTime = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        gDigestAck2Message.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
-        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        long ackHandlerTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - receiveTime;
+        // ##############################################################################
         if (result != null) {
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];

@@ -178,7 +178,12 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     {
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
-        long now = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
+        
         if (WholeClusterSimulator.observedNodes.contains(ep)) {
         	logger.info("See " + ep + " at time " + now);
         }
@@ -192,7 +197,11 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     }
     
     public double[] report(InetAddress observer, InetAddress ep) {
-        long now = System.currentTimeMillis();
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -211,7 +220,11 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         {
             return 0;
         }
-        long now = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);

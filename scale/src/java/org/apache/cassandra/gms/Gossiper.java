@@ -326,7 +326,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         Long downtime = unreachableEndpoints.get(ep);
         if (downtime != null)
-            return System.currentTimeMillis() - downtime;
+        	// ##############################################################################
+            // @Cesar: Change time
+            // ##############################################################################
+        	return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - downtime;
+            // ##############################################################################
+            
         else
             return 0L;
     }
@@ -417,7 +422,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      */
     private void quarantineEndpoint(InetAddress endpoint)
     {
-        justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	justRemovedEndpoints.put(endpoint, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+    	// ##############################################################################
+        
     }
 
     /**
@@ -548,7 +558,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         logger.warn("Assassinating {} via gossip", endpoint);
         if (epState == null)
         {
-            epState = new EndpointState(new HeartBeatState((int)((System.currentTimeMillis() + 60000) / 1000), 9999));
+        	// ##############################################################################
+            // @Cesar: Change time
+            // ##############################################################################
+        	epState = new EndpointState(new HeartBeatState((int)((WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + 60000) / 1000), 9999));
+        	// ##############################################################################
+            
         }
         else
         {
@@ -688,8 +703,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void doStatusCheck()
     {
-        long now = System.currentTimeMillis();
-
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	// ##############################################################################
         Set<InetAddress> eps = endpointStateMap.keySet();
         for ( InetAddress endpoint : eps )
         {
@@ -1053,7 +1071,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             logger.trace("marking as down {}", addr);
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, System.currentTimeMillis());
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        unreachableEndpoints.put(addr, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+    	// ##############################################################################
         logger.info("InetAddress {} is now DOWN", addr);
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
             subscriber.onDead(addr, localState);
@@ -1739,7 +1761,11 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
         epState.markDead();
         endpointStateMap.put(ep, epState);
-        unreachableEndpoints.put(ep, System.currentTimeMillis());
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        unreachableEndpoints.put(ep, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+    	// ##############################################################################
         if (logger.isTraceEnabled())
             logger.trace("Adding saved endpoint " + ep + " " + epState.getHeartBeatState().getGeneration());
     }
@@ -1815,7 +1841,12 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
 
     public static long computeExpireTime() {
-        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + Gossiper.aVeryLongTime;
+        // ##############################################################################
+        
     }
 
 }

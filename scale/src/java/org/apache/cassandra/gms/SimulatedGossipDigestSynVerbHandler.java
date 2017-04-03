@@ -37,7 +37,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+    	// ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb syn");
@@ -135,7 +139,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        gDigestAckMessage.createdTime = System.currentTimeMillis();
+        // ##############################################################################
+        // @Cesar: Change time
+        // ##############################################################################
+        gDigestAckMessage.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }
