@@ -308,7 +308,7 @@ public class BoundedClusterSimulator {
                             ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     if (memberNode != stubs.size() || deadNode > 0) {
                         isStable = false;
-                        break;
+                        //break;
                     }
                 }
                 int flapping = 0;
