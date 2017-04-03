@@ -11,6 +11,12 @@ for jar in ls $scriptdir/../build/lib/jars/*.jar; do
   classpath=$classpath:$jar
 done
 
-java -Xmx16G -Xms16G -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime \
-    -XX:+PrintGCApplicationConcurrentTime -Xloggc:/tmp/gc -classpath $classpath -Dobserved.nodes=$observed_nodes \
-    edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat tok32 10 100 100 &
+## @Cesar: Adding new properties
+JVM_OPTS="-Dedu.uchicago.ucare.sck.adjustThreadTime=true"
+## @Cesar: Done, set
+JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS"
+
+
+java $JVM_OPTS -Xmx32G -Xms32G -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime \
+     -XX:+PrintGCApplicationConcurrentTime -Xloggc:/tmp/gc -classpath $classpath -Dobserved.nodes=$observed_nodes \
+     edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator $num_node nome_boot.dat tok32 10 100 100 &
