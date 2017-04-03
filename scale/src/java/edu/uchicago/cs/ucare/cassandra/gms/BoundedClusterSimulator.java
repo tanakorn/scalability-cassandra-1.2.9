@@ -212,12 +212,14 @@ public class BoundedClusterSimulator {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = WholeClusterSimulator.msgQueues.get(address);
             try {
             	logger.info("@Cesar: Msg for " + address + "????");
-                MessageIn<?> ackMessage = msgQueue.take();
-                logger.info("@Cesar: Taken " + ackMessage + " by " + address);
-                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
+                MessageIn<?> ackMessage = msgQueue.poll();
+                if(ackMessage != null){
+	                logger.info("@Cesar: Taken " + ackMessage + " by " + address);
+	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
+                }
             } 
             catch (InterruptedException e) {
             	e.printStackTrace();
