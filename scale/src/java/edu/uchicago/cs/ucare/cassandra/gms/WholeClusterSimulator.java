@@ -417,6 +417,7 @@ public class WholeClusterSimulator {
                     }
                 }
                 performer.doStatusCheck();
+                WholeClusterSimulator.globalTimeService.adjustThreadTime(Thread.currentThread().getId(), 1000);
             }
 //            long gossipingTime = System.currentTimeMillis() - start;
 //            if (gossipingTime > 1000) {
