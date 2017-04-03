@@ -53,9 +53,9 @@ public class BoundedClusterSimulator {
 		// sleep a little
 		try{
 			while(true){
-				logger.info("@Cesar: " + tasks.size() + " tasks in queue...");
 				Runnable task = tasks.take();
 				if(task != null){
+					if(task instanceof AckProcessorTask) logger.info("------->PROCESSING!");
 					executorService.execute(task);
 				}
 			}
@@ -78,6 +78,7 @@ public class BoundedClusterSimulator {
 	private static void populateWithGossipTasks(Collection<GossiperStub> stubs){
 		for(GossiperStub stub : stubs){
 			tasks.add(new GossipTask(stub));
+			tasks.add
 		}
 	}
 	
