@@ -33,14 +33,17 @@ public class BoundedClusterSimulator {
 	private static Logger logger = LoggerFactory.getLogger(BoundedClusterSimulator.class);
 	
 	private static BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<Runnable>();
-	private static ExecutorService executorService = null;
+	private static ExecutorService executorSendService = null;
+	private static ExecutorService executorReceiveService = null;
 	private static Timer gossipTimer = new Timer();
 	private static Collection<GossiperStub> stubs = null;
 	private static AtomicInteger sentGossipCount = new AtomicInteger(0);
 	private static AtomicLong sentInterval = new AtomicLong(0L);
 	
 	public BoundedClusterSimulator(int nThreads, Collection<GossiperStub> stubs){
-		this.executorService = Executors.newFixedThreadPool(nThreads - 4);
+		nThreads = nThreads - 4;
+		this.executorSendService = Executors.newFixedThreadPool(nThreads/2);
+		this.executorReceiveService = Executors.newFixedThreadPool(nThreads/2);
 		this.stubs = stubs;
 	}
 	
@@ -55,8 +58,8 @@ public class BoundedClusterSimulator {
 			while(true){
 				Runnable task = tasks.take();
 				if(task != null){
-					if(task instanceof AckProcessorTask) logger.info("------->PROCESSING!");
-					executorService.execute(task);
+					if(task instanceof AckProcessorTask) executorReceiveService.execute(task);
+					else executorSendService.execute(task);
 				}
 			}
 		}
