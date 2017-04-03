@@ -304,8 +304,8 @@ public class BoundedClusterSimulator {
                             deadNode++;
                         }
                     }
-//                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-//                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    logger.info("ringinfo of " + stub.getInetAddress() + 
+                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     if (memberNode != stubs.size() || deadNode > 0) {
                         isStable = false;
                         break;
