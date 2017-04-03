@@ -52,8 +52,8 @@ public class BoundedClusterSimulator {
 		new Thread(new FixerThread(all, seeds, stubs)).start();
 		// sleep a little
 		try{
-			Thread.sleep(1000);
-			while(tasks.size() > 0){
+			while(true){
+				logger.info("@Cesar: " + tasks.size() + " tasks in queue...");
 				Runnable task = tasks.take();
 				if(task != null){
 					executorService.execute(task);
