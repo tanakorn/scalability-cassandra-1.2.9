@@ -32,35 +32,37 @@ public class BoundedClusterSimulator {
 
 	private static Logger logger = LoggerFactory.getLogger(BoundedClusterSimulator.class);
 	
-	private static BlockingQueue<Runnable> tasks = new LinkedBlockingQueue<Runnable>();
+	private static BlockingQueue<Runnable> sendTasks = new LinkedBlockingQueue<Runnable>();
+	private static BlockingQueue<Runnable> receiveTasks = new LinkedBlockingQueue<Runnable>();
 	private static ExecutorService executorSendService = null;
 	private static ExecutorService executorReceiveService = null;
 	private static Timer gossipTimer = new Timer();
+	private static Timer receiveTimer = new Timer();
 	private static Collection<GossiperStub> stubs = null;
 	private static AtomicInteger sentGossipCount = new AtomicInteger(0);
 	private static AtomicLong sentInterval = new AtomicLong(0L);
 	
 	public BoundedClusterSimulator(int nThreads, Collection<GossiperStub> stubs){
 		nThreads = nThreads - 4;
-		this.executorSendService = Executors.newFixedThreadPool(nThreads/2);
-		this.executorReceiveService = Executors.newFixedThreadPool(nThreads/2);
-		this.stubs = stubs;
+		executorSendService = Executors.newFixedThreadPool(nThreads/2);
+		executorReceiveService = Executors.newFixedThreadPool(nThreads/2);
+		stubs = stubs;
 	}
 	
 	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
 		// populate initially
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
+		receiveTimer.scheduleAtFixedRate(new AckProcessorTimerTask(stubs), 0, 1000);
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
 		new Thread(new FixerThread(all, seeds, stubs)).start();
 		// sleep a little
 		try{
 			while(true){
-				Runnable task = tasks.take();
-				if(task != null){
-					if(task instanceof AckProcessorTask) executorReceiveService.execute(task);
-					else executorSendService.execute(task);
-				}
+				Runnable sendTask = sendTasks.take();
+				Runnable receiveTask = receiveTasks.take();
+				if(sendTask != null) executorSendService.execute(sendTask);
+				if(receiveTask != null) executorReceiveService.execute(receiveTask);
 			}
 		}
 		catch(InterruptedException ie){
@@ -80,14 +82,16 @@ public class BoundedClusterSimulator {
 	
 	private static void populateWithGossipTasks(Collection<GossiperStub> stubs){
 		for(GossiperStub stub : stubs){
-			tasks.add(new GossipTask(stub));
-			tasks.add
+			sendTasks.add(new GossipTask(stub));
 		}
 	}
 	
-	private static void addReceiveTask(InetAddress address){
-		tasks.add(new AckProcessorTask(address));
+	private static void populateWithReceiveTasks(Collection<GossiperStub> stubs){
+		for(GossiperStub stub : stubs){
+			receiveTasks.add(new AckProcessorTask(stub.getInetAddress()));
+		}
 	}
+	
 	
 	public static class GossiperTimerTask extends TimerTask{
 
@@ -100,6 +104,21 @@ public class BoundedClusterSimulator {
 		@Override
 		public void run() {
 			populateWithGossipTasks(stubs);
+		}
+		
+	}
+	
+	public static class AckProcessorTimerTask extends TimerTask{
+
+		private Collection<GossiperStub> stubs = null;
+		
+		public AckProcessorTimerTask(Collection<GossiperStub> stubs){
+			this.stubs = stubs;
+		}
+		
+		@Override
+		public void run() {
+			populateWithReceiveTasks(stubs);
 		}
 		
 	}
@@ -280,7 +299,6 @@ public class BoundedClusterSimulator {
                  }
              }
              performer.doStatusCheck();
-             addReceiveTask(performer.getInetAddress());
              sentGossipCount.incrementAndGet();
              sentInterval.set(sentInterval.get() + 1000L);
 		}
