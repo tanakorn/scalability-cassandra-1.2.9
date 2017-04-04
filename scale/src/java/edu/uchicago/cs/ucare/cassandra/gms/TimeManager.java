@@ -45,14 +45,16 @@ public class TimeManager {
 			threadList = threadsPerHost.get(host);
 		}
 		// now check
-		for(long threadId : threadList){
-			if(threadId == currentThreadId){
-				Map<Long, Long> timeMap = chooseTimeMap(meta);
-				Long time = timeMap.get(threadId);
-				if((time != null && time <= threadCpuTime) || (time == null)){
-					timeMap.put(threadId, threadCpuTime);
+		synchronized(threadList){
+			for(long threadId : threadList){
+				if(threadId == currentThreadId){
+					Map<Long, Long> timeMap = chooseTimeMap(meta);
+					Long time = timeMap.get(threadId);
+					if((time != null && time <= threadCpuTime) || (time == null)){
+						timeMap.put(threadId, threadCpuTime);
+					}
+					break;
 				}
-				break;
 			}
 		}
 	}
@@ -68,9 +70,15 @@ public class TimeManager {
 	
 	private long getTimeForHost(InetAddress host, TimeMeta meta, Map<Long, Long> map){
 		long totalNanos = 0L;
-		for(long threadId : threadsPerHost.get(host)){
-			Long time = map.get(threadId);
-			if(time != null) totalNanos += time;
+		List<Long> threadList = Collections.EMPTY_LIST;
+		synchronized(threadsPerHost){
+			threadList = threadsPerHost.get(host);
+		}
+		synchronized(threadList){
+			for(long threadId : threadList){
+				Long time = map.get(threadId);
+				if(time != null) totalNanos += time;
+			}
 		}
 		return toMillis(totalNanos);
 	}
