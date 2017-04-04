@@ -213,7 +213,7 @@ public class BoundedClusterSimulator {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = WholeClusterSimulator.msgQueues.get(address);
             try {
             	logger.info("@Cesar: Msg for " + address + "????");
-                MessageIn<?> ackMessage = msgQueue.take();
+                MessageIn<?> ackMessage = msgQueue.poll();
                 if(ackMessage != null){
 	                logger.info("@Cesar: Taken " + ackMessage + " by " + address);
 	                // ##############################################################################
@@ -340,7 +340,7 @@ public class BoundedClusterSimulator {
                             ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     if (memberNode != stubs.size() || deadNode > 0) {
                         isStable = false;
-                        //break;
+                        break;
                     }
                 }
                 int flapping = 0;
