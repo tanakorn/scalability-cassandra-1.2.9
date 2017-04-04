@@ -37,7 +37,6 @@ public class BoundedClusterSimulator {
 	private static ExecutorService executorSendService = null;
 	private static ExecutorService executorReceiveService = null;
 	private static Timer gossipTimer = new Timer();
-	private static Timer receiveTimer = new Timer();
 	private static Collection<GossiperStub> stubs = null;
 	private static AtomicInteger sentGossipCount = new AtomicInteger(0);
 	private static AtomicLong sentInterval = new AtomicLong(0L);
@@ -50,18 +49,15 @@ public class BoundedClusterSimulator {
 	}
 	
 	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
-		// populate initially
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
-		//receiveTimer.scheduleAtFixedRate(new AckProcessorTimerTask(stubs), 0, 1000);
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
 		new Thread(new FixerThread(all, seeds, stubs)).start();
-		// sleep a little
 		while(true){
 			Runnable sendTask = sendTasks.poll();
 			Runnable receiveTask = receiveTasks.poll();
-			if(sendTask != null) executorSendService.submit(sendTask);
-			if(receiveTask != null) executorReceiveService.submit(receiveTask);
+			if(sendTask != null) executorSendService.execute(sendTask);
+			if(receiveTask != null) executorReceiveService.execute(receiveTask);
 		}
 	}
 	
