@@ -224,6 +224,7 @@ public class BoundedClusterSimulator {
 	                AckProcessor.processCount += 1;
 	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
 	                WholeClusterSimulator.globalTimeService.adjustThreadTime();
+	                Thread.sleep(0);
                 }
             } 
             catch (InterruptedException e) {
