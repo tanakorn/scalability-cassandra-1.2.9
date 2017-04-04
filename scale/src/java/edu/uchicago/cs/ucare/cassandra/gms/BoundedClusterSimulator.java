@@ -48,7 +48,7 @@ public class BoundedClusterSimulator {
 		BoundedClusterSimulator.stubs.addAll(stubs);
 	}
 	
-	public void runCluster(Collection<InetAddress> all, List<InetAddress> seeds){
+	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
@@ -81,8 +81,8 @@ public class BoundedClusterSimulator {
 		}.start();
 	}
 	
-	private List<GossiperStub> getSeedStubs(List<GossiperStub> stubs, Collection<InetAddress> seeds){
-		List<GossiperStub> seedStubs = new ArrayList<GossiperStub>();
+	private Collection<GossiperStub> getSeedStubs(List<GossiperStub> stubs, Collection<InetAddress> seeds){
+		Collection<GossiperStub> seedStubs = new ArrayList<GossiperStub>();
 		for(GossiperStub stub : stubs){
 			if(seeds.contains(stub.getInetAddress())){
 				seedStubs.add(stub);
@@ -141,9 +141,9 @@ public class BoundedClusterSimulator {
 	
 	public static class SeedThread implements Runnable{
 
-		private List<GossiperStub> seedStubs = null;
+		private Collection<GossiperStub> seedStubs = null;
 		
-		public SeedThread(List<GossiperStub> seedStubs){
+		public SeedThread(Collection<GossiperStub> seedStubs){
 			this.seedStubs = seedStubs;
 		}
 		
@@ -163,11 +163,11 @@ public class BoundedClusterSimulator {
 	public static class FixerThread implements Runnable{
 		
 		private Collection<InetAddress> addressList = null;
-		private List<InetAddress> seeds = null;
+		private Collection<InetAddress> seeds = null;
 		private List<GossiperStub> stubs = null;
 		
 		public FixerThread(Collection<InetAddress> addressList, 
-						   List<InetAddress> seeds,
+						   Collection<InetAddress> seeds,
 						   List<GossiperStub> stubs){
 			this.addressList = addressList;
 			this.stubs = stubs;

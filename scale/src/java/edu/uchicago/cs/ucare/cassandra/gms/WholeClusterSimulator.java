@@ -435,7 +435,7 @@ public class WholeClusterSimulator {
 //            logger.info("Gossip message in the queue " + msgQueue.size());
             // ##############################################################################
 	        // @Cesar: Adjust a little
-            WholeClusterSimulator.globalTimeService.adjustThreadTime(Thread.currentThread().getId(), interval);
+            // WholeClusterSimulator.globalTimeService.adjustThreadTime(Thread.currentThread().getId(), interval);
 	        // ##############################################################################
         }
         
