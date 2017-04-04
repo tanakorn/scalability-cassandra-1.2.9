@@ -325,13 +325,14 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     public long getEndpointDowntime(InetAddress ep)
     {
         Long downtime = unreachableEndpoints.get(ep);
-        if (downtime != null)
+        if (downtime != null){
         	// ##############################################################################
-            // @Cesar: Change time
+            // @Cesar: Change time? No, this one should not be called
             // ##############################################################################
-        	return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - downtime;
+        	logger.error("@Cesar: Calling a function that should not be called: Gossiper.getEndpointDowntime");
+        	return System.currentTimeMillis() - downtime;
             // ##############################################################################
-            
+        }
         else
             return 0L;
     }
@@ -423,9 +424,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private void quarantineEndpoint(InetAddress endpoint)
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should not be called
         // ##############################################################################
-    	justRemovedEndpoints.put(endpoint, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+    	logger.error("@Cesar: Calling a function that should not be called: Gossiper.quarantineEndpoint");
+    	justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
     	// ##############################################################################
         
     }
@@ -559,9 +561,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         if (epState == null)
         {
         	// ##############################################################################
-            // @Cesar: Change time
+            // @Cesar: Change time? No, this one should not be called
             // ##############################################################################
-        	epState = new EndpointState(new HeartBeatState((int)((WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + 60000) / 1000), 9999));
+        	logger.error("@Cesar: Calling a function that should not be called: Gossiper.unsafeAssassinateEndpoint");
+        	epState = new EndpointState(new HeartBeatState((int)((System.currentTimeMillis() + 60000) / 1000), 9999));
         	// ##############################################################################
             
         }
@@ -704,9 +707,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     private void doStatusCheck()
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should not be called
         // ##############################################################################
-    	long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	logger.error("@Cesar: Calling a function that should not be called: Gossiper.doStatusCheck");
+    	long now = System.currentTimeMillis();
     	// ##############################################################################
         Set<InetAddress> eps = endpointStateMap.keySet();
         for ( InetAddress endpoint : eps )
@@ -1072,9 +1076,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         localState.markDead();
         liveEndpoints.remove(addr);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should not be called
         // ##############################################################################
-        unreachableEndpoints.put(addr, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+        logger.error("@Cesar: Calling a function that should not be called: Gossiper.markDead");
+        unreachableEndpoints.put(addr, System.currentTimeMillis());
     	// ##############################################################################
         logger.info("InetAddress {} is now DOWN", addr);
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
@@ -1762,9 +1767,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         epState.markDead();
         endpointStateMap.put(ep, epState);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this function should no be called
         // ##############################################################################
-        unreachableEndpoints.put(ep, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+        unreachableEndpoints.put(ep, System.currentTimeMillis());
+        logger.error("@Cesar: A function that should not be called is being called: Gossiper.addSavedEndpoint");
     	// ##############################################################################
         if (logger.isTraceEnabled())
             logger.trace("Adding saved endpoint " + ep + " " + epState.getHeartBeatState().getGeneration());
@@ -1842,9 +1848,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     public static long computeExpireTime() {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should no be called
         // ##############################################################################
-        return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + Gossiper.aVeryLongTime;
+        logger.error("@Cesar: Calling a function that should not be called: Gossiper.computeExpireTime");
+    	return System.currentTimeMillis() + Gossiper.aVeryLongTime;
         // ##############################################################################
         
     }

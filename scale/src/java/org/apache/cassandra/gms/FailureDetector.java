@@ -36,6 +36,7 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.BoundedStatsDeque;
 import org.apache.cassandra.utils.FBUtilities;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 /**
@@ -179,9 +180,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, relevant
         // ##############################################################################
-        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        long now = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustMiscReduce);
         // ##############################################################################
         
         if (WholeClusterSimulator.observedNodes.contains(ep)) {
@@ -198,9 +199,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     
     public double[] report(InetAddress observer, InetAddress ep) {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, this one is relevant
         // ##############################################################################
-        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        long now = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustMiscReduce);
         // ##############################################################################
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
@@ -221,9 +222,9 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
             return 0;
         }
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, this one is relevant
         // ##############################################################################
-        long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        long now = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustMiscReduce);
         // ##############################################################################
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())

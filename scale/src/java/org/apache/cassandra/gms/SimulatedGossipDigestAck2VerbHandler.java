@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<GossipDigestAck2>
@@ -37,9 +38,13 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Adjust time 
         // ##############################################################################
-    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	TimeManager.instance.adjustForHost(message.to, TimeManager.timeMetaAdjustReceiveSource);
+    	// ##############################################################################
+        // @Cesar: Change time? Yes, relevant. Receive op
+        // ##############################################################################
+    	long receiveTime = TimeManager.instance.getCurrentTime(message.to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
     	InetAddress from = message.from;
         InetAddress to = message.to;
@@ -113,6 +118,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        }
 //        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
         Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
+        // ##############################################################################
+        // @Cesar: Adjust time 
+        // ##############################################################################
+    	TimeManager.instance.adjustForHost(message.to, TimeManager.timeMetaAdjustReceiveSource);
+    	// ##############################################################################
 //        for (int i = 0; i < result.length; ++i) {
 //            if (!result[i].equals(result2[i])) {
 //                System.out.println(i + " index is not the same");
@@ -175,7 +185,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         // ##############################################################################
         // @Cesar: Change time
         // ##############################################################################
-        long tmpCurrent = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        long tmpCurrent = TimeManager.instance.getCurrentTime(message.to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;

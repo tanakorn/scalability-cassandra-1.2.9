@@ -112,9 +112,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 			Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA,
 				// ##############################################################################
-		        // @Cesar: Change time
+		        // @Cesar: Change time? Yes, this one is relevant
 		        // ##############################################################################
-				new HeartBeatState((int) WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime)), 
+				new HeartBeatState((int) TimeManager.instance.getCurrentTime(broadcastAddress, TimeManager.timeMetaAdjustMiscReduce)), 
 		        // ##############################################################################
 				numTokens, seeds, partitioner);
 	}
@@ -132,7 +132,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 		this.partitioner = partitioner;
 		partitionerName = partitioner.getClass().getName();
 		endpointStateMap = new ConcurrentHashMap<InetAddress, EndpointState>();
-		state = new EndpointState(heartBeatState);
+		state = new EndpointState(broadcastAddress, heartBeatState);
 		versionedValueFactory = new VersionedValueFactory(partitioner);
 		hasContactedSeed = false;
 		tokenMetadata = new TokenMetadata();
@@ -279,9 +279,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        message.setTo(to);
        // ##############################################################################
-       // @Cesar: Change time
+       // @Cesar: Change time? Yes, this one is for sending
        // ##############################################################################
-       message.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+       message.createdTime = TimeManager.instance.getCurrentTime(broadcastAddress, TimeManager.timeMetaAdjustSendReduce);
        // ##############################################################################
        return message;
    }
@@ -370,9 +370,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 
     public void doStatusCheck() {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? yes, this one is relevant
         // ##############################################################################
-    	long now = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	long now = TimeManager.instance.getCurrentTime(broadcastAddress, TimeManager.timeMetaAdjustMiscReduce);
         // ##############################################################################
         Set<InetAddress> eps = endpointStateMap.keySet();
 //        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
@@ -405,18 +405,18 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         }
     }
 
-    public static long computeExpireTime() {
+    public static long computeExpireTime(InetAddress endpoint) {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? yes, this is important and is in the stub
         // ##############################################################################
-    	return WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) + Gossiper.aVeryLongTime;
+    	return  TimeManager.instance.getCurrentTime(endpoint, TimeManager.timeMetaAdjustMiscReduce) + Gossiper.aVeryLongTime;
         // ##############################################################################
     }
 
     protected long getExpireTimeForEndpoint(InetAddress endpoint) {
         /* default expireTime is aVeryLongTime */
         Long storedTime = expireTimeEndpointMap.get(endpoint);
-        return storedTime == null ? computeExpireTime() : storedTime;
+        return storedTime == null ? computeExpireTime(endpoint) : storedTime;
     }
     
     private void evictFromMembership(InetAddress endpoint) {
@@ -428,9 +428,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     
     private void quarantineEndpoint(InetAddress endpoint) {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, this one is relevant
         // ##############################################################################
-    	justRemovedEndpoints.put(endpoint, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+    	justRemovedEndpoints.put(endpoint, TimeManager.instance.getCurrentTime(broadcastAddress, TimeManager.timeMetaAdjustMiscReduce));
         // ##############################################################################
     }
     
@@ -455,9 +455,9 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         localState.markDead();
         liveEndpoints.remove(addr);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, relevant
         // ##############################################################################
-        unreachableEndpoints.put(addr, WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime));
+        unreachableEndpoints.put(addr, TimeManager.instance.getCurrentTime(broadcastAddress, TimeManager.timeMetaAdjustMiscReduce));
         // ##############################################################################
         
     }
@@ -476,7 +476,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     
     public void markAlive(InetAddress addr, EndpointState localState) {
         localState.markAlive();
-        localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
+        localState.updateTimestamp(broadcastAddress); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
         liveEndpoints.add(addr);
         unreachableEndpoints.remove(addr);
         expireTimeEndpointMap.remove(addr);

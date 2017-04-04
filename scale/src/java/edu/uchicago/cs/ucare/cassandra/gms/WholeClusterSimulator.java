@@ -166,8 +166,8 @@ public class WholeClusterSimulator {
     	// ##############################################################################
         // @Cesar: and set the initial time
         // ##############################################################################
-    	globalTimeService.setBaseTimeStamp();
-        // ##############################################################################
+        TimeManager.instance.initTimeManager(WholeClusterSimulator.adjustThreadRunningTime);
+    	// ##############################################################################
     	if (args.length < 4) {
             System.err.println("Please enter execution_time files");
             System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
@@ -294,7 +294,6 @@ public class WholeClusterSimulator {
             }
         });
         otherThread.start();
-        
         Thread infoPrinter = new Thread(new RingInfoPrinter());
         infoPrinter.start();
 
@@ -319,12 +318,6 @@ public class WholeClusterSimulator {
             System.out.println(currentVersion + " " + numNormal);
         }
         return result;
-//        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
-//        return execTimeMilli;
-//        double sdExecTime = normalGossipExecSdRecords[numNormal];
-//        double gaussian = rand.nextGaussian();
-//        double adjustedExecTime = execTime + sdExecTime * gaussian;
-//        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
     }
     
     public static class MyGossiperTask extends TimerTask {
@@ -345,9 +338,9 @@ public class WholeClusterSimulator {
         @Override
         public void run() {
         	// ##############################################################################
-	        // @Cesar: Change time
+	        // @Cesar: Change time? No, this is not relevant on messaging
 	        // ##############################################################################
-            long start = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+            long start = System.currentTimeMillis();
             long interval = 0L;
             // ##############################################################################
             if (previousTime != 0) {
@@ -359,6 +352,11 @@ public class WholeClusterSimulator {
             }
             previousTime = start;
             for (GossiperStub performer : stubs) {
+            	// ##############################################################################
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(performer.getInetAddress(), TimeManager.timeMetaAdjustSendSource);
+            	// ##############################################################################
                 InetAddress performerAddress = performer.getInetAddress();
                 // @Cesar: Just a test
             	logger.info("@Cesar: ThreadId <" + Thread.currentThread().getId() + ", host = " + performerAddress);
@@ -425,7 +423,11 @@ public class WholeClusterSimulator {
                     }
                 }
                 performer.doStatusCheck();
-                WholeClusterSimulator.globalTimeService.adjustThreadTime();
+                // ##############################################################################
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(performer.getInetAddress(), TimeManager.timeMetaAdjustSendSource);
+            	// ##############################################################################
             }
 //            long gossipingTime = System.currentTimeMillis() - start;
 //            if (gossipingTime > 1000) {
@@ -434,10 +436,7 @@ public class WholeClusterSimulator {
 //                logger.warn("Sending lateness " + lateness + " " + totalLateness);
 //            }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
-            // ##############################################################################
-	        // @Cesar: Adjust a little
-            // WholeClusterSimulator.globalTimeService.adjustThreadTime(Thread.currentThread().getId(), interval);
-	        // ##############################################################################
+            
         }
         
     }
@@ -480,15 +479,23 @@ public class WholeClusterSimulator {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
                 // ##############################################################################
-		        // @Cesar: Change time
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustSendSource);
+                // ##############################################################################
+		        // @Cesar: Change time? Yes, relevant
 		        // ##############################################################################
-                long networkQueuedTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - ackMessage.createdTime;    
+                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
 		        // ##############################################################################
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;
 //                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-                WholeClusterSimulator.globalTimeService.adjustThreadTime();
+                // ##############################################################################
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustSendSource);
+                // ##############################################################################
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

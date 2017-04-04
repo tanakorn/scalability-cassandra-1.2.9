@@ -18,11 +18,13 @@
 package org.apache.cassandra.gms;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 import org.apache.cassandra.db.TypeSizes;
@@ -54,9 +56,24 @@ public class EndpointState
     {
         hbState = initialHbState;
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should not be called!
+        // ############################################################################## 
+        logger.error("@Cesar: Calling a function that should not be called: EndpointState()");
+        updateTimestamp = System.currentTimeMillis();
+        // ##############################################################################
+        isAlive = true;
+        hopNum = 0;
+    }
+    
+    public EndpointState(InetAddress endpoint, HeartBeatState initialHbState)
+    {
+        hbState = initialHbState;
+        // ##############################################################################
+        // @Cesar: Change time? Yes. Im not sure how many times should this constructor be called,
+        // i think once per creation (this is, once per node), cause the endpoints are serialized...
+        // but well
         // ##############################################################################   
-        updateTimestamp = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        updateTimestamp = TimeManager.instance.getCurrentTime(endpoint, TimeManager.timeMetaAdjustMiscReduce);
         // ##############################################################################
         isAlive = true;
         hopNum = 0;
@@ -116,12 +133,22 @@ public class EndpointState
     public void updateTimestamp()
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? No, this one should not be called
         // ##############################################################################   
-        updateTimestamp = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	logger.error("@Cesar: Calling a function that should not be called: EndpointState.updateTimestamp");
+        updateTimestamp = System.currentTimeMillis();
         // ##############################################################################
     }
 
+    public void updateTimestamp(InetAddress me)
+    {
+    	// ##############################################################################
+        // @Cesar: Change time? Yes, this one should be called
+        // ##############################################################################   
+        updateTimestamp = TimeManager.instance.getCurrentTime(me, TimeManager.timeMetaAdjustMiscReduce);
+        // ##############################################################################
+    }
+    
     public boolean isAlive()
     {
         return isAlive;

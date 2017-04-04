@@ -29,6 +29,7 @@ import org.apache.cassandra.net.MessagingService;
 
 import edu.uchicago.cs.ucare.cassandra.gms.BoundedClusterSimulator;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
@@ -39,9 +40,13 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Adjust time 
         // ##############################################################################
-    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	TimeManager.instance.adjustForHost(message.to, TimeManager.timeMetaAdjustReceiveSource);
+    	// ##############################################################################
+        // @Cesar: Change time? Yes, relevant. Receive op
+        // ##############################################################################
+    	long receiveTime = TimeManager.instance.getCurrentTime(message.to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         InetAddress from = message.from;
         InetAddress to = message.to;
@@ -143,10 +148,10 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         // ##############################################################################
         // @Cesar: Change time
         // ##############################################################################
-        gDigestAckMessage.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        gDigestAckMessage.createdTime = TimeManager.instance.getCurrentTime(message.to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
-        BoundedClusterSimulator.addReceiveTask(from);
+        
     }
 
     /*

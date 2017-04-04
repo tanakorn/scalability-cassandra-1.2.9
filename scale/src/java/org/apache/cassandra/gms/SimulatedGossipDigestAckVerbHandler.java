@@ -32,6 +32,7 @@ import org.apache.cassandra.net.MessagingService;
 
 import edu.uchicago.cs.ucare.cassandra.gms.BoundedClusterSimulator;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
 public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
@@ -43,9 +44,13 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
     	// ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Adjust time 
         // ##############################################################################
-    	long receiveTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+    	TimeManager.instance.adjustForHost(message.to, TimeManager.timeMetaAdjustReceiveSource);
+    	// ##############################################################################
+        // @Cesar: Change time? Yes, relevant. This is receive operation, so the current host is message.to
+        // ##############################################################################
+    	long receiveTime = TimeManager.instance.getCurrentTime(message.to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         InetAddress from = message.from;
         InetAddress to = message.to;
@@ -84,6 +89,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
             result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
+            // ##############################################################################
+            // @Cesar: Adjust time 
+            // ##############################################################################
+        	TimeManager.instance.adjustForHost(message.to, TimeManager.timeMetaAdjustReceiveSource);
+        	// ##############################################################################
 //            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
 //            try {
 //                realUpdate = (int) result[9];
@@ -204,16 +214,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, relevant
         // ##############################################################################
-        gDigestAck2Message.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
+        gDigestAck2Message.createdTime = TimeManager.instance.getCurrentTime(to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
-        BoundedClusterSimulator.addReceiveTask(from);
+        // BoundedClusterSimulator.addReceiveTask(from);
         // ##############################################################################
-        // @Cesar: Change time
+        // @Cesar: Change time? Yes, relevant
         // ##############################################################################
-        long ackHandlerTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - receiveTime;
+        long ackHandlerTime = TimeManager.instance.getCurrentTime(to, TimeManager.timeMetaAdjustReceiveReduce);
         // ##############################################################################
         if (result != null) {
             bootstrapCount = (int) result[5];
