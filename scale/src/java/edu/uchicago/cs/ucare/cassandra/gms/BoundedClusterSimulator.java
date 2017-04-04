@@ -53,12 +53,34 @@ public class BoundedClusterSimulator {
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
 		new Thread(new FixerThread(all, seeds, stubs)).start();
-		while(true){
-			Runnable sendTask = sendTasks.poll();
-			Runnable receiveTask = receiveTasks.poll();
-			if(sendTask != null) executorSendService.execute(sendTask);
-			if(receiveTask != null) executorReceiveService.execute(receiveTask);
-		}
+		new Thread(){
+			public void run(){
+				while(true){
+					try{
+						Runnable sendTask = sendTasks.poll();
+						if(sendTask != null) executorSendService.execute(sendTask);
+						else Thread.sleep(100);	
+					}
+					catch(InterruptedException ie){
+						// nothing here...
+					}
+				}
+			}
+		}.start();
+		new Thread(){
+			public void run(){
+				while(true){
+					try{
+						Runnable receiveTask = receiveTasks.poll();
+						if(receiveTask != null) executorReceiveService.execute(receiveTask);
+						else Thread.sleep(100);
+					}
+					catch(InterruptedException ie){
+						// nothing here...
+					}
+				}
+			}
+		}.start();
 	}
 	
 	private Collection<GossiperStub> getSeedStubs(Collection<GossiperStub> stubs, Collection<InetAddress> seeds){
