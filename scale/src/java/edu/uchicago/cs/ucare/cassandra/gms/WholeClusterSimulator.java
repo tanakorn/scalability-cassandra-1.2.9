@@ -163,11 +163,6 @@ public class WholeClusterSimulator {
     }
 
     public static void main(String[] args) throws ConfigurationException, InterruptedException, IOException {
-    	// ##############################################################################
-        // @Cesar: and set the initial time
-        // ##############################################################################
-        TimeManager.instance.initTimeManager(WholeClusterSimulator.adjustThreadRunningTime);
-    	// ##############################################################################
     	if (args.length < 4) {
             System.err.println("Please enter execution_time files");
             System.err.println("usage: WholeClusterSimulator <num_node> <boot_exec> <normal_exec> <num_workers>");
@@ -207,6 +202,11 @@ public class WholeClusterSimulator {
             int b = (i - 1) % 255 + 1;
             addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
+        // ##############################################################################
+        // @Cesar: and set the initial time
+        // ##############################################################################
+        TimeManager.instance.initTimeManager(WholeClusterSimulator.adjustThreadRunningTime, addressList);
+    	// ##############################################################################
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
         }
