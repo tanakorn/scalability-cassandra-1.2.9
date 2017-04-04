@@ -3,6 +3,8 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,11 +39,13 @@ public class TimeManager {
 		long currentThreadId = Thread.currentThread().getId();
 		long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
 		// update the threads per host
+		List<Long> threadList = Collections.EMPTY_LIST;
 		synchronized(threadsPerHost){
 			threadsPerHost.put(host, currentThreadId);
+			threadList = threadsPerHost.get(host);
 		}
 		// now check
-		for(long threadId : threadsPerHost.get(host)){
+		for(long threadId : threadList){
 			if(threadId == currentThreadId){
 				Map<Long, Long> timeMap = chooseTimeMap(meta);
 				Long time = timeMap.get(threadId);
