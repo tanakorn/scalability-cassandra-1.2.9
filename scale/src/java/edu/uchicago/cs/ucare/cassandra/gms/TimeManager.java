@@ -3,9 +3,13 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -19,105 +23,123 @@ public class TimeManager {
 	public static final TimeMeta timeMetaAdjustReceiveReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
 	public static final TimeMeta timeMetaAdjustMiscReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
 	
-	
-	private ArrayListMultimap<InetAddress, Long> threadsPerHost = ArrayListMultimap.create();
-	private Map<Long, Long> cpuSendTimePerThread = new ConcurrentHashMap<Long, Long>();
-	private Map<Long, Long> cpuReceiveTimePerThread = new ConcurrentHashMap<Long, Long>();
-	private Map<Long, Long> cpuCommonTimePerThread = new ConcurrentHashMap<Long, Long>();
 	private long baseTimeStamp = 0L;
 	private ThreadMXBean threadMxBean = null;
 	private boolean timeAdjustEnabled = false;
+	private Map<InetAddress, HostTimeManager> timeServicePerHost = new HashMap<InetAddress, HostTimeManager>();
 	
-	
-	public void initTimeManager(boolean timeAdjustEnabled){
+	public void initTimeManager(boolean timeAdjustEnabled, Collection<InetAddress> allHosts){
 		baseTimeStamp = System.currentTimeMillis();
 		threadMxBean = ManagementFactory.getThreadMXBean();
 		this.timeAdjustEnabled = timeAdjustEnabled;
+		for(InetAddress host : allHosts){
+			timeServicePerHost.put(host, new HostTimeManager(host, threadMxBean));
+		}
 	}
 	
 	public void adjustForHost(InetAddress host, TimeMeta meta){
-		long currentThreadId = Thread.currentThread().getId();
-		long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
-		// update the threads per host
-		List<Long> threadList = Collections.EMPTY_LIST;
-		synchronized(threadsPerHost){
-			threadsPerHost.put(host, currentThreadId);
-			threadList = threadsPerHost.get(host);
-		}
-		// now check
-		synchronized(threadList){
-			for(long threadId : threadList){
-				if(threadId == currentThreadId){
-					Map<Long, Long> timeMap = chooseTimeMap(meta);
-					Long time = timeMap.get(threadId);
-					if((time != null && time <= threadCpuTime) || (time == null)){
-						timeMap.put(threadId, threadCpuTime);
-					}
-					break;
-				}
-			}
-		}
+		HostTimeManager manager = timeServicePerHost.get(host);
+		manager.adjustForHost(meta);
 	}
 	
-	private Map<Long, Long> chooseTimeMap(TimeMeta meta){
-		Map<Long, Long> timeMap = 
-				meta != null && meta.source != null? 
-						(meta.source == TimeMeta.TimeSource.SEND? 
-								cpuSendTimePerThread : cpuReceiveTimePerThread) :
-						cpuCommonTimePerThread;
-		return timeMap;
-	}
-	
-	private long getTimeForHost(InetAddress host, TimeMeta meta, Map<Long, Long> map){
-		long totalNanos = 0L;
-		List<Long> threadList = Collections.EMPTY_LIST;
-		synchronized(threadsPerHost){
-			threadList = threadsPerHost.get(host);
-		}
-		synchronized(threadList){
-			for(long threadId : threadList){
-				Long time = map.get(threadId);
-				if(time != null) totalNanos += time;
-			}
-		}
-		return toMillis(totalNanos);
-	}
 	
 	public long getCurrentTime(InetAddress host, TimeMeta meta){
-		if(timeAdjustEnabled) {
-			long time = baseTimeStamp;
-			if(meta != null && meta.reduce != null){
-				if(meta.reduce == TimeMeta.TimeReduce.ALL){
-					time += getTimeForHost(host, meta, cpuSendTimePerThread);
-					time += getTimeForHost(host, meta, cpuReceiveTimePerThread);
-				}
-				else if(meta.reduce == TimeMeta.TimeReduce.JUST_RECEIVE){
-					time += getTimeForHost(host, meta, cpuReceiveTimePerThread);
-				}
-				else if(meta.reduce == TimeMeta.TimeReduce.JUST_SEND){
-					time += getTimeForHost(host, meta, cpuSendTimePerThread);
-				}
-				else if(meta.reduce == TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE){
-					long sendTime = getTimeForHost(host, meta, cpuSendTimePerThread);
-					long receiveTime = getTimeForHost(host, meta, cpuReceiveTimePerThread);
-					if(sendTime > receiveTime) time += sendTime;
-					else time += receiveTime;
-				}
-				return time;
-			}
-			else{
-				return time + getTimeForHost(host, meta, cpuCommonTimePerThread);
-			}
-		}
-		else{
-			return System.currentTimeMillis();
-		}
-		
+		HostTimeManager manager = timeServicePerHost.get(host);
+		return manager.getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta);
 	}
 	
-	private long toMillis(long value){
-		return value / 1000000L;
+	
+	private static class HostTimeManager{
+		
+		private InetAddress hostAddress = null;
+		private ThreadMXBean threadMxBean = null;
+		private Map<Long, Long> cpuSendTimePerThread = new ConcurrentHashMap<Long, Long>();
+		private Map<Long, Long> cpuReceiveTimePerThread = new ConcurrentHashMap<Long, Long>();
+		private Map<Long, Long> cpuCommonTimePerThread = new ConcurrentHashMap<Long, Long>();
+		private Set<Long> threads = new HashSet<Long>();
+		
+		public HostTimeManager(InetAddress hostAddress, ThreadMXBean threadMxBean){
+			this.hostAddress = hostAddress;
+			this.threadMxBean = threadMxBean;
+		}
+		
+		private Map<Long, Long> chooseTimeMap(TimeMeta meta){
+			Map<Long, Long> timeMap = 
+					meta != null && meta.source != null? 
+							(meta.source == TimeMeta.TimeSource.SEND? 
+									cpuSendTimePerThread : cpuReceiveTimePerThread) :
+							cpuCommonTimePerThread;
+			return timeMap;
+		}
+		
+		private long getTimeForHost(TimeMeta meta, Map<Long, Long> map){
+			long totalNanos = 0L;
+			synchronized(threads){
+				for(long threadId : threads){
+					Long time = map.get(threadId);
+					if(time != null) totalNanos += time;
+				}
+			}
+			return toMillis(totalNanos);
+		}
+		
+		private long toMillis(long value){
+			return value / 1000000L;
+		}
+		
+		public void adjustForHost(TimeMeta meta){
+			long currentThreadId = Thread.currentThread().getId();
+			long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
+			// update the threads per host
+			threads.add(currentThreadId);
+			// now check
+			synchronized(threads){
+				for(long threadId : threads){
+					if(threadId == currentThreadId){
+						Map<Long, Long> timeMap = chooseTimeMap(meta);
+						Long time = timeMap.get(threadId);
+						if((time != null && time <= threadCpuTime) || (time == null)){
+							timeMap.put(threadId, threadCpuTime);
+						}
+						break;
+					}
+				}
+			}
+		}
+		
+		public long getCurrentTime(boolean timeAdjustEnabled, long baseTimeStamp, TimeMeta meta){
+			if(timeAdjustEnabled) {
+				long time = baseTimeStamp;
+				if(meta != null && meta.reduce != null){
+					if(meta.reduce == TimeMeta.TimeReduce.ALL){
+						time += getTimeForHost(meta, cpuSendTimePerThread);
+						time += getTimeForHost(meta, cpuReceiveTimePerThread);
+					}
+					else if(meta.reduce == TimeMeta.TimeReduce.JUST_RECEIVE){
+						time += getTimeForHost(meta, cpuReceiveTimePerThread);
+					}
+					else if(meta.reduce == TimeMeta.TimeReduce.JUST_SEND){
+						time += getTimeForHost(meta, cpuSendTimePerThread);
+					}
+					else if(meta.reduce == TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE){
+						long sendTime = getTimeForHost(meta, cpuSendTimePerThread);
+						long receiveTime = getTimeForHost(meta, cpuReceiveTimePerThread);
+						if(sendTime > receiveTime) time += sendTime;
+						else time += receiveTime;
+					}
+					return time;
+				}
+				else{
+					return time + getTimeForHost(meta, cpuCommonTimePerThread);
+				}
+			}
+			else{
+				return System.currentTimeMillis();
+			}
+			
+		}
 	}
+	
 	
 	public static class TimeMeta{
 		

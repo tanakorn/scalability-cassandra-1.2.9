@@ -358,8 +358,6 @@ public class WholeClusterSimulator {
                 TimeManager.instance.adjustForHost(performer.getInetAddress(), TimeManager.timeMetaAdjustSendSource);
             	// ##############################################################################
                 InetAddress performerAddress = performer.getInetAddress();
-                // @Cesar: Just a test
-            	logger.info("@Cesar: ThreadId <" + Thread.currentThread().getId() + ", host = " + performerAddress);
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
                 Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
