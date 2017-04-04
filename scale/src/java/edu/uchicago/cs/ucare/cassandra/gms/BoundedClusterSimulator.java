@@ -57,9 +57,8 @@ public class BoundedClusterSimulator {
 			public void run(){
 				while(true){
 					try{
-						Runnable sendTask = sendTasks.poll();
-						if(sendTask != null) executorSendService.execute(sendTask);
-						else Thread.sleep(100);	
+						Runnable sendTask = sendTasks.take();
+						executorSendService.execute(sendTask);	
 					}
 					catch(InterruptedException ie){
 						// nothing here...
@@ -71,9 +70,8 @@ public class BoundedClusterSimulator {
 			public void run(){
 				while(true){
 					try{
-						Runnable receiveTask = receiveTasks.poll();
-						if(receiveTask != null) executorReceiveService.execute(receiveTask);
-						else Thread.sleep(100);
+						Runnable receiveTask = receiveTasks.take();
+						executorReceiveService.execute(receiveTask);
 					}
 					catch(InterruptedException ie){
 						// nothing here...
@@ -242,7 +240,7 @@ public class BoundedClusterSimulator {
             	e.printStackTrace();
             }*/
             logger.info("@Cesar: Msg for " + address + "????");
-            MessageIn<?> ackMessage = msgQueue.poll();
+            MessageIn<?> ackMessage = msgQueue.take();
             if(ackMessage != null){
                 logger.info("@Cesar: Taken " + ackMessage + " by " + address);
                 long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
