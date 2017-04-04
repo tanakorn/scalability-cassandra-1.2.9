@@ -27,6 +27,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessagingService;
 
+import edu.uchicago.cs.ucare.cassandra.gms.BoundedClusterSimulator;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
@@ -145,7 +146,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         gDigestAckMessage.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
         // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
-//        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+        BoundedClusterSimulator.addReceiveTask(from);
     }
 
     /*

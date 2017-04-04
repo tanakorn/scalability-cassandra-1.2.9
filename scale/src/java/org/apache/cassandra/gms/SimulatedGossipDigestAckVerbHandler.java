@@ -30,6 +30,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessagingService;
 
+import edu.uchicago.cs.ucare.cassandra.gms.BoundedClusterSimulator;
 import edu.uchicago.cs.ucare.cassandra.gms.GossiperStub;
 import edu.uchicago.cs.ucare.cassandra.gms.WholeClusterSimulator;
 
@@ -208,7 +209,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         gDigestAck2Message.createdTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime);
         // ##############################################################################
         WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
-//        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
+        BoundedClusterSimulator.addReceiveTask(from);
         // ##############################################################################
         // @Cesar: Change time
         // ##############################################################################

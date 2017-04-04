@@ -103,7 +103,7 @@ public class BoundedClusterSimulator {
 		}
 	}
 	
-	private static void addReceiveTask(InetAddress id){
+	public static void addReceiveTask(InetAddress id){
 		receiveTasks.add(new AckProcessorTask(id));
 	}
 	
@@ -298,7 +298,7 @@ public class BoundedClusterSimulator {
                              if (!msgQueue.add(synMsg)) {
                                  logger.error("Cannot add more message to message queue");
                              } else {
-                            	 
+                            	 addReceiveTask(seed);
                              }
                          } else {
                              double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
