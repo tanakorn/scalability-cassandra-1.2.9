@@ -53,7 +53,7 @@ public class BoundedClusterSimulator {
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
 		new Thread(new FixerThread(all, seeds, stubs)).start();
-		new Thread(){
+		Thread sender = new Thread(){
 			public void run(){
 				while(true){
 					try{
@@ -65,8 +65,8 @@ public class BoundedClusterSimulator {
 					}
 				}
 			}
-		}.start();
-		new Thread(){
+		};
+		Thread receiver = new Thread(){
 			public void run(){
 				while(true){
 					try{
@@ -78,7 +78,16 @@ public class BoundedClusterSimulator {
 					}
 				}
 			}
-		}.start();
+		};
+		sender.start();
+		receiver.start();
+		try{
+			sender.join();
+			receiver.join();
+		}
+		catch(InterruptedException ie){
+			logger.error("Interrupted!", ie);
+		}
 	}
 	
 	private Collection<GossiperStub> getSeedStubs(List<GossiperStub> stubs, Collection<InetAddress> seeds){
