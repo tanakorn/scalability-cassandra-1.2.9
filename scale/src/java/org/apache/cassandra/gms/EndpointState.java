@@ -58,7 +58,7 @@ public class EndpointState
         // ##############################################################################
         // @Cesar: Change time? No, this one should not be called!
         // ############################################################################## 
-        logger.error("@Cesar: Calling a function that should not be called: EndpointState()");
+        logger.error("@Cesar: Calling a function that should not be called: EndpointState()", new Exception("Error!"));
         updateTimestamp = System.currentTimeMillis();
         // ##############################################################################
         isAlive = true;
@@ -135,7 +135,7 @@ public class EndpointState
     	// ##############################################################################
         // @Cesar: Change time? No, this one should not be called
         // ##############################################################################   
-    	logger.error("@Cesar: Calling a function that should not be called: EndpointState.updateTimestamp");
+    	logger.error("@Cesar: Calling a function that should not be called: EndpointState.updateTimestamp", new Exception("Error!"));
         updateTimestamp = System.currentTimeMillis();
         // ##############################################################################
     }
