@@ -97,6 +97,12 @@ public class EndpointState
         hbState = newHbState;
     }
 
+    public void setHeartBeatState(InetAddress whoAmI, HeartBeatState newHbState)
+    {
+        updateTimestamp(whoAmI);
+        hbState = newHbState;
+    }
+    
     public int getHopNum() {
         return hopNum;
     }

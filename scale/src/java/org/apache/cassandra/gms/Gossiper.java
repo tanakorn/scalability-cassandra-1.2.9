@@ -874,7 +874,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
     
     static EndpointState getStateForVersionBiggerThanStatic(ConcurrentMap<InetAddress, EndpointState> endpointStateMap, 
-    		InetAddress forEndpoint, int version)
+    		InetAddress forEndpoint, int version, InetAddress whoAmI)
     {
         EndpointState epState = endpointStateMap.get(forEndpoint);
         EndpointState reqdEndpointState = null;
@@ -892,7 +892,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             int localHbVersion = epState.getHeartBeatState().getHeartBeatVersion();
             if ( localHbVersion > version )
             {
-                reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy());
+                reqdEndpointState = new EndpointState(whoAmI, epState.getHeartBeatState().copy());
                 if (logger.isTraceEnabled())
                     logger.trace("local heartbeat version " + localHbVersion + " greater than " + version + " for " + forEndpoint);
             }
@@ -1493,7 +1493,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // don't assert here, since if the node restarts the version will go back to zero
         int oldVersion = localState.getHeartBeatState().getHeartBeatVersion();
 
-        localState.setHeartBeatState(remoteState.getHeartBeatState());
+        localState.setHeartBeatState(stub.getInetAddress(), remoteState.getHeartBeatState());
         stub.getEndpointStateMap().get(addr).setHopNum(remoteState.getHopNum() + 1);
         if (logger.isTraceEnabled())
             logger.trace("Updating heartbeat state version to " + localState.getHeartBeatState().getHeartBeatVersion() + " from " + oldVersion + " for " + addr + " ...");
