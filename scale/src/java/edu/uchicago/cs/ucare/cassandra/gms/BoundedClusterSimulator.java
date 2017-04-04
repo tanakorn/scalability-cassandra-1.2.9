@@ -37,7 +37,7 @@ public class BoundedClusterSimulator {
 	private static ExecutorService executorSendService = null;
 	private static ExecutorService executorReceiveService = null;
 	private static Timer gossipTimer = new Timer();
-	private static Collection<GossiperStub> stubs = null;
+	private static List<GossiperStub> stubs = new ArrayList<GossiperStub>();
 	private static AtomicInteger sentGossipCount = new AtomicInteger(0);
 	private static AtomicLong sentInterval = new AtomicLong(0L);
 	
@@ -45,10 +45,10 @@ public class BoundedClusterSimulator {
 		nThreads = nThreads - 4;
 		executorSendService = Executors.newFixedThreadPool(nThreads/2);
 		executorReceiveService = Executors.newFixedThreadPool(nThreads/2);
-		BoundedClusterSimulator.stubs = stubs;
+		BoundedClusterSimulator.stubs.addAll(stubs);
 	}
 	
-	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
+	public void runCluster(Collection<InetAddress> all, List<InetAddress> seeds){
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
@@ -81,8 +81,8 @@ public class BoundedClusterSimulator {
 		}.start();
 	}
 	
-	private Collection<GossiperStub> getSeedStubs(Collection<GossiperStub> stubs, Collection<InetAddress> seeds){
-		Collection<GossiperStub> seedStubs = new ArrayList<GossiperStub>();
+	private List<GossiperStub> getSeedStubs(List<GossiperStub> stubs, Collection<InetAddress> seeds){
+		List<GossiperStub> seedStubs = new ArrayList<GossiperStub>();
 		for(GossiperStub stub : stubs){
 			if(seeds.contains(stub.getInetAddress())){
 				seedStubs.add(stub);
@@ -91,13 +91,14 @@ public class BoundedClusterSimulator {
 		return seedStubs;
 	}
 	
-	private static void populateWithGossipTasks(Collection<GossiperStub> stubs){
+	private static void populateWithGossipTasks(List<GossiperStub> stubs){
+		Collections.shuffle(stubs);
 		for(GossiperStub stub : stubs){
 			sendTasks.add(new GossipTask(stub));
 		}
 	}
 	
-	private static void populateWithReceiveTasks(Collection<GossiperStub> stubs){
+	private static void populateWithReceiveTasks(List<GossiperStub> stubs){
 		for(GossiperStub stub : stubs){
 			receiveTasks.add(new AckProcessorTask(stub.getInetAddress()));
 		}
@@ -110,9 +111,9 @@ public class BoundedClusterSimulator {
 	
 	public static class GossiperTimerTask extends TimerTask{
 
-		private Collection<GossiperStub> stubs = null;
+		private List<GossiperStub> stubs = null;
 		
-		public GossiperTimerTask(Collection<GossiperStub> stubs){
+		public GossiperTimerTask(List<GossiperStub> stubs){
 			this.stubs = stubs;
 		}
 		
@@ -125,9 +126,9 @@ public class BoundedClusterSimulator {
 	
 	public static class AckProcessorTimerTask extends TimerTask{
 
-		private Collection<GossiperStub> stubs = null;
+		private List<GossiperStub> stubs = null;
 		
-		public AckProcessorTimerTask(Collection<GossiperStub> stubs){
+		public AckProcessorTimerTask(List<GossiperStub> stubs){
 			this.stubs = stubs;
 		}
 		
@@ -140,9 +141,9 @@ public class BoundedClusterSimulator {
 	
 	public static class SeedThread implements Runnable{
 
-		private Collection<GossiperStub> seedStubs = null;
+		private List<GossiperStub> seedStubs = null;
 		
-		public SeedThread(Collection<GossiperStub> seedStubs){
+		public SeedThread(List<GossiperStub> seedStubs){
 			this.seedStubs = seedStubs;
 		}
 		
@@ -162,12 +163,12 @@ public class BoundedClusterSimulator {
 	public static class FixerThread implements Runnable{
 		
 		private Collection<InetAddress> addressList = null;
-		private Collection<InetAddress> seeds = null;
-		private Collection<GossiperStub> stubs = null;
+		private List<InetAddress> seeds = null;
+		private List<GossiperStub> stubs = null;
 		
 		public FixerThread(Collection<InetAddress> addressList, 
-						   Collection<InetAddress> seeds,
-						   Collection<GossiperStub> stubs){
+						   List<InetAddress> seeds,
+						   List<GossiperStub> stubs){
 			this.addressList = addressList;
 			this.stubs = stubs;
 			this.seeds = seeds;
@@ -230,7 +231,10 @@ public class BoundedClusterSimulator {
                 MessageIn<?> ackMessage = msgQueue.take();
                 if(ackMessage != null){
 	                logger.info("@Cesar: Taken " + ackMessage + " by " + address);
-	                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime; 
+	                // ##############################################################################
+	                // @Cesar: Change time
+	                // ##############################################################################
+	                long networkQueuedTime = WholeClusterSimulator.globalTimeService.getCurrentTime(WholeClusterSimulator.adjustThreadRunningTime) - ackMessage.createdTime; 
 	                AckProcessor.networkQueuedTime += networkQueuedTime;
 	                AckProcessor.processCount += 1;
 	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
