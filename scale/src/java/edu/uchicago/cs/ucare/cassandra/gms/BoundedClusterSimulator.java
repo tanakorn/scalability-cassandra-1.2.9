@@ -75,6 +75,7 @@ public class BoundedClusterSimulator {
 					}
 					catch(InterruptedException ie){
 						// nothing here...
+						logger.error("Interrupted receive!", ie);
 					}
 				}
 			}

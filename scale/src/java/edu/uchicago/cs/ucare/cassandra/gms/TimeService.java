@@ -11,7 +11,8 @@ public class TimeService {
 
 	private ThreadMXBean threadMxBean = null;
 	private long baseTimeStamp = 0L;
-	private AtomicLong maxCpuTimeOfAllThreads = new AtomicLong(0);
+	private AtomicLong averageCpuTimeOfAllThreads = new AtomicLong(0);
+	private AtomicLong numMetrics = new AtomicLong(0);
 	
 	public TimeService(){
 		this.threadMxBean = ManagementFactory.getThreadMXBean();
@@ -22,12 +23,14 @@ public class TimeService {
 	}
 	
 	public void adjustThreadTime(){
-		if(maxCpuTimeOfAllThreads.longValue() < threadMxBean.getCurrentThreadCpuTime()) 
-			maxCpuTimeOfAllThreads.set(threadMxBean.getCurrentThreadCpuTime());
+		long oldMt = numMetrics.incrementAndGet() - 1;
+		averageCpuTimeOfAllThreads.set(
+				(averageCpuTimeOfAllThreads.get() / (oldMt > 0? oldMt : 1L) + 
+				threadMxBean.getCurrentThreadCpuTime()) / numMetrics.get());
 	}
 	
 	public long getAdjustedCurrentTimeMillis(){
-		return baseTimeStamp + toMillis(maxCpuTimeOfAllThreads.get());
+		return baseTimeStamp + toMillis(averageCpuTimeOfAllThreads.get());
 	}
 	
 	public long getCurrentTimeMillis(){

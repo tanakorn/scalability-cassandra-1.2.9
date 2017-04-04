@@ -218,10 +218,10 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
-        logger.info("@Cesar; Using " + stubGroup.getAllStubs().size() + " stubs");
-        BoundedClusterSimulator simulator = new BoundedClusterSimulator(numGossiper, stubGroup.getAllStubs());
-        simulator.runCluster(addressList, seeds);
-        /*timers = new Timer[numGossiper];
+        //logger.info("@Cesar; Using " + stubGroup.getAllStubs().size() + " stubs");
+        //BoundedClusterSimulator simulator = new BoundedClusterSimulator(numGossiper, stubGroup.getAllStubs());
+        //simulator.runCluster(addressList, seeds);
+        timers = new Timer[numGossiper];
         tasks = new MyGossiperTask[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
@@ -244,7 +244,7 @@ public class WholeClusterSimulator {
             ackProcessThreadPool.add(t);
             t.start();
         }
-        /*Thread seedThread = new Thread(new Runnable() {
+        Thread seedThread = new Thread(new Runnable() {
             
             @Override
             public void run() {
@@ -296,7 +296,7 @@ public class WholeClusterSimulator {
         otherThread.start();
         
         Thread infoPrinter = new Thread(new RingInfoPrinter());
-        infoPrinter.start();*/
+        infoPrinter.start();
 
     }
     
@@ -425,6 +425,7 @@ public class WholeClusterSimulator {
                     }
                 }
                 performer.doStatusCheck();
+                WholeClusterSimulator.globalTimeService.adjustThreadTime();
             }
 //            long gossipingTime = System.currentTimeMillis() - start;
 //            if (gossipingTime > 1000) {
@@ -487,6 +488,7 @@ public class WholeClusterSimulator {
                 AckProcessor.processCount += 1;
 //                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
                 MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                WholeClusterSimulator.globalTimeService.adjustThreadTime();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
