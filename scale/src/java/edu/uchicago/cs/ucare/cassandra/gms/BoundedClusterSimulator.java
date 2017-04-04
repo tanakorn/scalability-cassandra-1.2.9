@@ -52,21 +52,16 @@ public class BoundedClusterSimulator {
 	public void runCluster(Collection<InetAddress> all, Collection<InetAddress> seeds){
 		// populate initially
 		gossipTimer.scheduleAtFixedRate(new GossiperTimerTask(stubs), 0, 1000);
-		receiveTimer.scheduleAtFixedRate(new AckProcessorTimerTask(stubs), 0, 1000);
+		//receiveTimer.scheduleAtFixedRate(new AckProcessorTimerTask(stubs), 0, 1000);
 		new Thread(new RingInfoPrinter(stubs)).start();
 		new Thread(new SeedThread(getSeedStubs(stubs, seeds))).start();
 		new Thread(new FixerThread(all, seeds, stubs)).start();
 		// sleep a little
-		try{
-			while(true){
-				Runnable sendTask = sendTasks.take();
-				Runnable receiveTask = receiveTasks.take();
-				if(sendTask != null) executorSendService.execute(sendTask);
-				if(receiveTask != null) executorReceiveService.execute(receiveTask);
-			}
-		}
-		catch(InterruptedException ie){
-			// nothing here
+		while(true){
+			Runnable sendTask = sendTasks.poll();
+			Runnable receiveTask = receiveTasks.poll();
+			if(sendTask != null) executorSendService.submit(sendTask);
+			if(receiveTask != null) executorReceiveService.submit(receiveTask);
 		}
 	}
 	
@@ -90,6 +85,10 @@ public class BoundedClusterSimulator {
 		for(GossiperStub stub : stubs){
 			receiveTasks.add(new AckProcessorTask(stub.getInetAddress()));
 		}
+	}
+	
+	private static void addReceiveTask(InetAddress id){
+		receiveTasks.add(new AckProcessorTask(id));
 	}
 	
 	
@@ -260,7 +259,7 @@ public class BoundedClusterSimulator {
                  if (!msgQueue.add(synMsg)) {
                      logger.error("Cannot add more message to message queue");
                  } else {
-                	 
+                	 addReceiveTask(liveReceiver);
                  }
              } else {
             	 
@@ -275,6 +274,7 @@ public class BoundedClusterSimulator {
                      if (!msgQueue.add(synMsg)) {
                          logger.error("Cannot add more message to message queue");
                      } else {
+                    	 addReceiveTask(unreachableReceiver);
                      }
                  }
              }
@@ -303,7 +303,7 @@ public class BoundedClusterSimulator {
                                  if (!msgQueue.add(synMsg)) {
                                      logger.error("Cannot add more message to message queue");
                                  } else {
-                                	 
+                                	 addReceiveTask(seed);
                                  }
                              }
                          }
