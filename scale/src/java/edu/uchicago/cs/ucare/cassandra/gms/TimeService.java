@@ -2,14 +2,16 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TimeService {
 
 	private ThreadMXBean threadMxBean = null;
 	private long baseTimeStamp = 0L;
-	private Map<Long, Long> adjustedTime = new ConcurrentHashMap<Long, Long>(); 
+	private AtomicLong maxCpuTimeOfAllThreads = new AtomicLong(0);
 	
 	public TimeService(){
 		this.threadMxBean = ManagementFactory.getThreadMXBean();
@@ -19,20 +21,13 @@ public class TimeService {
 		this.baseTimeStamp = System.currentTimeMillis();
 	}
 	
-	public void adjustThreadTime(long threadId, long time){
-		Long oldTime = adjustedTime.get(threadId);
-		if(oldTime == null){
-			adjustedTime.put(threadId, time);
-		}
-		else{
-			adjustedTime.put(threadId, time + oldTime);
-		}
-		
+	public void adjustThreadTime(){
+		if(maxCpuTimeOfAllThreads.longValue() < threadMxBean.getCurrentThreadCpuTime()) 
+			maxCpuTimeOfAllThreads.set(threadMxBean.getCurrentThreadCpuTime());
 	}
 	
 	public long getAdjustedCurrentTimeMillis(){
-		long threadCpuTime = toMillis(threadMxBean.getCurrentThreadCpuTime());
-		return baseTimeStamp + threadCpuTime + toMillis((adjustedTime.get(Thread.currentThread().getId()) != null? adjustedTime.get(Thread.currentThread().getId()) : 0L));
+		return baseTimeStamp + toMillis(maxCpuTimeOfAllThreads.get());
 	}
 	
 	public long getCurrentTimeMillis(){

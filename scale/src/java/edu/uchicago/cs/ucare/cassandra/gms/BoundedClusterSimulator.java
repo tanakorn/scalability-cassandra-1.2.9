@@ -124,21 +124,6 @@ public class BoundedClusterSimulator {
 		
 	}
 	
-	public static class AckProcessorTimerTask extends TimerTask{
-
-		private List<GossiperStub> stubs = null;
-		
-		public AckProcessorTimerTask(List<GossiperStub> stubs){
-			this.stubs = stubs;
-		}
-		
-		@Override
-		public void run() {
-			populateWithReceiveTasks(stubs);
-		}
-		
-	}
-	
 	public static class SeedThread implements Runnable{
 
 		private Collection<GossiperStub> seedStubs = null;
@@ -238,6 +223,7 @@ public class BoundedClusterSimulator {
 	                AckProcessor.networkQueuedTime += networkQueuedTime;
 	                AckProcessor.processCount += 1;
 	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(WholeClusterSimulator.idGen.incrementAndGet()));
+	                WholeClusterSimulator.globalTimeService.adjustThreadTime();
                 }
             } 
             catch (InterruptedException e) {
@@ -324,6 +310,7 @@ public class BoundedClusterSimulator {
              performer.doStatusCheck();
              sentGossipCount.incrementAndGet();
              sentInterval.set(sentInterval.get() + 1000L);
+             WholeClusterSimulator.globalTimeService.adjustThreadTime();
 		}
 		
 	}
