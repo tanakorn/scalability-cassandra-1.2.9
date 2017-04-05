@@ -56,7 +56,14 @@ public class TimeManager {
 	public void adjustForHostsWithFixedValue(List<InetAddress> hosts, long fixedValue, TimeMeta meta){
 		for(InetAddress host : hosts){
 			HostTimeManager manager = timeServicePerHost.get(host);
-			manager.adjustForHostWithFixedValue(fixedValue, meta);
+			manager.adjustForHostsWithFixedValue(fixedValue, meta);
+		}
+	}
+	
+	public void adjustForHostsWithAverageCpuTime(List<InetAddress> hosts, TimeMeta meta){
+		for(InetAddress host : hosts){
+			HostTimeManager manager = timeServicePerHost.get(host);
+			manager.adjustForHostWithAverageCpuTime(hosts.size(), meta);
 		}
 	}
 	
@@ -155,8 +162,26 @@ public class TimeManager {
 			}
 		}
 		
+		// apropiate for ack processor threads
+		public void adjustForHostWithAverageCpuTime(long hostCount, TimeMeta meta){
+			try{
+				long currentThreadId = Thread.currentThread().getId();
+				long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId) / hostCount;
+				// update the threads per host
+				synchronized(threads){
+					threads.add(currentThreadId);
+				}
+				Map<Long, Long> timeMap = chooseTimeMap(meta);
+				timeMap.put(currentThreadId, threadCpuTime);
+			}
+			catch(RuntimeException e){
+				logger.error("Error here...", e);
+				throw e;
+			}
+		}
+		
 		// apropiate for gossiper stubs
-		public void adjustForHostWithFixedValue(long fixedNanos, TimeMeta meta){
+		public void adjustForHostsWithFixedValue(long fixedNanos, TimeMeta meta){
 			long currentThreadId = -1L;
 			// update the threads per host
 			synchronized(threads){
@@ -168,7 +193,6 @@ public class TimeManager {
 			if(time != null) fixedNanos += time; 
 			timeMap.put(currentThreadId, fixedNanos);
 		}
-		
 		
 		public long getCurrentTime(boolean timeAdjustEnabled, long baseTimeStamp, TimeMeta meta){
 			if(timeAdjustEnabled) {

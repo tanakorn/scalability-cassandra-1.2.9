@@ -208,8 +208,8 @@ public class WholeClusterSimulator {
         // @Cesar: and set the initial time
         // ##############################################################################
         TimeManager.instance.initTimeManager(WholeClusterSimulator.adjustThreadRunningTime, addressList);
-    	logger.info("@Cesar: adjustThreadRunningTime=" + adjustThreadRunningTime);
-    	logger.info("@Cesar: adjustSendTimeFixedNanos=" + adjustSendTimeFixedNanos);
+    	logger.info("@Cesar: adjustThreadRunningTime=" + WholeClusterSimulator.adjustThreadRunningTime);
+    	logger.info("@Cesar: adjustSendTimeFixedNanos=" + WholeClusterSimulator.adjustSendTimeFixedNanos);
         // ##############################################################################
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
@@ -237,10 +237,15 @@ public class WholeClusterSimulator {
             ii = (ii + 1) % numGossiper;
         }
         for (int i = 0; i < numGossiper; ++i) {
+            Thread t = new Thread(new ModifiedGossiperTask(subStub[i]));
+            t.start();
+        }
+        /*
+        for (int i = 0; i < numGossiper; ++i) {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
-        }
+        }*/
 //        timer.schedule(new MyGossiperTask(), 0, 1000);
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
@@ -322,6 +327,127 @@ public class WholeClusterSimulator {
             System.out.println(currentVersion + " " + numNormal);
         }
         return result;
+    }
+    
+public static class ModifiedGossiperTask implements Runnable {
+        
+        List<GossiperStub> stubs;
+        List<InetAddress> hostsInStubs = new ArrayList<InetAddress>();
+        long previousTime;
+        
+        long totalIntLength;
+        int sentCount;
+        
+        public ModifiedGossiperTask(List<GossiperStub> stubs) {
+            this.stubs = stubs;
+            previousTime = 0;
+            totalIntLength = 0;
+            sentCount = 0;
+            for(GossiperStub stub : stubs){
+            	hostsInStubs.add(stub.broadcastAddress);
+            }
+            
+        }
+
+        @Override
+        public void run() {
+        	while(true){
+	        	// ##############################################################################
+		        // @Cesar: Change time? Yes!
+		        // ##############################################################################
+	            long start = TimeManager.instance.getCurrentTime(hostsInStubs, TimeManager.timeMetaAdjustSendReduce);
+	            long interval = 0L;
+	            // ##############################################################################
+	            if (previousTime != 0) {
+	                interval = start - previousTime;
+	                interval = interval < 1000 ? 1000 : interval;
+	                totalIntLength += (interval * stubs.size());
+	                sentCount += stubs.size();
+	                percentSendLatenessList.add((((double) interval) - 1000.0) / 10.0);
+	            }
+	            previousTime = start;
+	            for (GossiperStub performer : stubs) {
+	                InetAddress performerAddress = performer.getInetAddress();
+	                performer.updateHeartBeat();
+	                boolean gossipToSeed = false;
+	                Set<InetAddress> liveEndpoints = performer.getLiveEndpoints();
+	                Set<InetAddress> seeds = performer.getSeeds();
+	                if (!liveEndpoints.isEmpty()) {
+	                    InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
+	                    gossipToSeed = seeds.contains(liveReceiver);
+	                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
+	                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
+	                    if (!msgQueue.add(synMsg)) {
+	                        logger.error("Cannot add more message to message queue");
+	                    } else {
+	                    	
+	                    }
+	                } else {
+	
+	                }
+	                Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
+	                if (!unreachableEndpoints.isEmpty()) {
+	                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+	                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
+	                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+	                    if (prob > random.nextDouble()) {
+	                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+	                        if (!msgQueue.add(synMsg)) {
+	                            logger.error("Cannot add more message to message queue");
+	                        } else {
+	                        }
+	                    }
+	                }
+	                if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
+	                    int size = seeds.size();
+	                    if (size > 0) {
+	                        if (size == 1 && seeds.contains(performerAddress)) {
+	
+	                        } else {
+	                            if (liveEndpoints.size() == 0) {
+	                                InetAddress seed = GossiperStub.getRandomAddress(seeds);
+	                                MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+	                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+	                                if (!msgQueue.add(synMsg)) {
+	                                    logger.error("Cannot add more message to message queue");
+	                                } else {
+	
+	                                }
+	                            } else {
+	                                double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
+	                                double randDbl = random.nextDouble();
+	                                if (randDbl <= probability) {
+	                                    InetAddress seed = GossiperStub.getRandomAddress(seeds);
+	                                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+	                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+	                                    if (!msgQueue.add(synMsg)) {
+	                                        logger.error("Cannot add more message to message queue");
+	                                    } else {
+	
+	                                    }
+	                                }
+	                            }
+	                        }
+	                    }
+	                }
+	                performer.doStatusCheck();
+	            }
+	            // ##############################################################################
+	            // @Cesar: adjust time for hosts
+	            // ##############################################################################
+	            TimeManager.instance.adjustForHostsWithAverageCpuTime(hostsInStubs, TimeManager.timeMetaAdjustSendSource);
+	        	// ##############################################################################   
+	            // and sleep
+	        	try{
+	        		Thread.sleep(interval);
+	        	}
+	        	catch(InterruptedException ie){
+	        		logger.error("@Cesar: A thread was interrupted...", ie);
+	        	}
+        	}
+        	
+        }
+        
     }
     
     public static class MyGossiperTask extends TimerTask {
