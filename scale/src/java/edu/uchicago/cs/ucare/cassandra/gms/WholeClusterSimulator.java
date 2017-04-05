@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -324,7 +325,7 @@ public class WholeClusterSimulator {
     public static class MyGossiperTask extends TimerTask {
         
         List<GossiperStub> stubs;
-        List<InetAddress> hostsInStubs;
+        List<InetAddress> hostsInStubs = new ArrayList<InetAddress>();
         long previousTime;
         
         long totalIntLength;
