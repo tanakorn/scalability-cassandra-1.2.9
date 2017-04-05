@@ -59,6 +59,7 @@ public class WholeClusterSimulator {
     // @Cesar: This are some properties
     // ##############################################################################
     public static boolean adjustThreadRunningTime = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.adjustThreadTime", "FALSE"));
+    public static long adjustSendTimeFixedNanos = Long.parseLong(System.getProperty("edu.uchicago.ucare.sck.adjustSendTimeFixedNanos", "1000000000"));
     // ##############################################################################
     
     
@@ -432,7 +433,7 @@ public class WholeClusterSimulator {
             // ##############################################################################
             // @Cesar: adjust time for hosts
             // ##############################################################################
-            TimeManager.instance.adjustForHostsWithFixedValue(hostsInStubs, 1000000000/hostsInStubs.size(), TimeManager.timeMetaAdjustSendSource);
+            TimeManager.instance.adjustForHostsWithFixedValue(hostsInStubs, adjustSendTimeFixedNanos/hostsInStubs.size(), TimeManager.timeMetaAdjustSendSource);
         	// ##############################################################################
             
         }
