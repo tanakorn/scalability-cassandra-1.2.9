@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,12 +30,17 @@ public class TimeManager {
 	private Map<InetAddress, HostTimeManager> timeServicePerHost = new HashMap<InetAddress, HostTimeManager>();
 	
 	public void initTimeManager(boolean timeAdjustEnabled, Collection<InetAddress> allHosts){
-		baseTimeStamp = System.currentTimeMillis();
-		threadMxBean = ManagementFactory.getThreadMXBean();
-		this.timeAdjustEnabled = timeAdjustEnabled;
 		for(InetAddress host : allHosts){
 			timeServicePerHost.put(host, new HostTimeManager(host, threadMxBean));
 		}
+		baseTimeStamp = System.currentTimeMillis();
+		threadMxBean = ManagementFactory.getThreadMXBean();
+		this.timeAdjustEnabled = timeAdjustEnabled;
+	}
+	
+	public StringBuilder dumpHostTimeManager(){
+		HostTimeManager manager = timeServicePerHost.get(host);
+		return manager.dumpHostTimeManager();
 	}
 	
 	public void adjustForHost(InetAddress host, TimeMeta meta){
@@ -85,6 +91,25 @@ public class TimeManager {
 									cpuSendTimePerThread : cpuReceiveTimePerThread) :
 							(cpuCommonTimePerThread);
 			return timeMap;
+		}
+		
+		private StringBuilder dumpMap(Map<Long, Long> map){
+			StringBuilder bld = new StringBuilder();
+			for(Entry<Long, Long> entry : map.entrySet()){
+				bld.append(String.format("%10d%10d\n", entry.getKey(), toMillis(entry.getValue())));
+			}
+			return bld;
+		}
+		
+		public StringBuilder dumpHostTimeManager(){
+			StringBuilder bld = new StringBuilder();
+			bld.append("cpuSendTimePerThread\n")
+			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
+			   .append(dumpMap(cpuSendTimePerThread))
+			   .append(cpuReceiveTimePerThread)
+			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
+			   .append(dumpMap(cpuReceiveTimePerThread));
+			return bld;
 		}
 		
 		private long getTimeForHost(TimeMeta meta, Map<Long, Long> map){

@@ -435,8 +435,7 @@ public class WholeClusterSimulator {
             // @Cesar: adjust time for hosts
             // ##############################################################################
             TimeManager.instance.adjustForHostsWithFixedValue(hostsInStubs, adjustSendTimeFixedNanos/hostsInStubs.size(), TimeManager.timeMetaAdjustSendSource);
-        	// ##############################################################################
-            
+        	// ##############################################################################   
         }
         
     }
@@ -526,6 +525,8 @@ public class WholeClusterSimulator {
                     }
 //                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
 //                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    logger.info("TimeManager for " + stub.broadcastAddress);
+                    logger.info(TimeManager.instance.dumpHostTimeManager().toString());
                     if (memberNode != numStubs || deadNode > 0) {
                         isStable = false;
                         break;
