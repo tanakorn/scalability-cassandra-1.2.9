@@ -50,6 +50,7 @@ public class WholeClusterSimulator {
     
     private static Timer[] timers;
     private static MyGossiperTask[] tasks;
+    private static ModifiedGossiperTask[] modifiedTasks;
     public static Random random = new Random();
     // ##############################################################################
     // @Cesar: This is going to be used as global time service
@@ -236,8 +237,10 @@ public class WholeClusterSimulator {
             subStub[ii].add(stub);
             ii = (ii + 1) % numGossiper;
         }
+        modifiedTasks = new ModifiedGossiperTask[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
-            Thread t = new Thread(new ModifiedGossiperTask(subStub[i]));
+        	modifiedTasks[i] = new ModifiedGossiperTask(subStub[i]);
+            Thread t = new Thread(modifiedTasks[i]);
             t.start();
         }
         /*
@@ -303,7 +306,8 @@ public class WholeClusterSimulator {
             }
         });
         otherThread.start();
-        Thread infoPrinter = new Thread(new RingInfoPrinter());
+        //Thread infoPrinter = new Thread(new RingInfoPrinter());
+        Thread infoPrinter = new Thread(new ModifiedRingInfoPrinter());
         infoPrinter.start();
 
     }
@@ -633,6 +637,141 @@ public static class ModifiedGossiperTask implements Runnable {
         }
         
     }
+    
+    public static class ModifiedRingInfoPrinter implements Runnable {
+        
+        @Override
+        public void run() {
+            while (true) {
+                boolean isStable = true;
+                for (GossiperStub stub : stubGroup) {
+//                    String thisAddress = stub.getInetAddress().toString();
+//                    int seenNode = stub.endpointStateMap.size();
+                    int memberNode = stub.getTokenMetadata().endpointWithTokens.size();
+                    int deadNode = 0;
+                    for (InetAddress address : stub.endpointStateMap.keySet()) {
+                        EndpointState state = stub.endpointStateMap.get(address);
+                        if (!state.isAlive()) {
+                            deadNode++;
+                        }
+                    }
+//                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
+//                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
+                    logger.info("TimeManager for " + stub.broadcastAddress);
+                    logger.info(TimeManager.instance.dumpHostTimeManager(stub.getInetAddress(), TimeManager.timeMetaAdjustMiscReduce).toString());
+                    if (memberNode != numStubs || deadNode > 0) {
+                        isStable = false;
+                        break;
+                    }
+                }
+                int flapping = 0;
+                for (GossiperStub stub : stubGroup) {
+                    flapping += stub.flapping;
+                }
+                long interval = 0;
+                int sentCount = 0;
+                for (ModifiedGossiperTask task : modifiedTasks) {
+                    interval += task.totalIntLength;
+                    sentCount += task.sentCount;
+                }
+                interval = sentCount == 0 ? 0 : interval / sentCount;
+                long avgProcLateness = numProc == 0 ? 0 : totalProcLateness / numProc;
+                double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
+                percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
+//                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
+                if (isStable) {
+                    logger.info("stable status yes " + flapping +
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
+                            " ; send lateness " + interval +
+                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                } else {
+                    logger.info("stable status no " + flapping + 
+                            " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
+                            " ; send lateness " + interval + 
+                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                }
+                for (GossiperStub stub : stubGroup) {
+                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+                    if (queue.size() > 100) {
+                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+                    }
+                }
+                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
+                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
+                if (tmpLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpLatenessList.size();
+                    for (Long l : tmpLatenessList) {
+                        if (!latenessDist.containsKey(l)) {
+                            latenessDist.put(l, 0.0);
+                        }
+                        latenessDist.put(l, latenessDist.get(l) + unit);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Long l : latenessDist.keySet()) {
+                        double dist = latenessDist.get(l);
+                        sb.append(l);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("abs_lateness " + sb.toString());
+                }
+                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
+                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
+                if (tmpPercentLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpPercentLatenessList.size();
+                    for (Double d : tmpPercentLatenessList) {
+                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+                        if (!percentLatenessDist.containsKey(roundedD)) {
+                            percentLatenessDist.put(roundedD, 0.0);
+                        }
+                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Double d : percentLatenessDist.keySet()) {
+                        double dist = percentLatenessDist.get(d);
+                        sb.append(d);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("perc_lateness " + sb.toString());
+                }
+                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
+                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
+                if (tmpPercentSendLatenessList.size() != 0) {
+                    double unit = 1.0 / tmpPercentSendLatenessList.size();
+                    for (Double d : tmpPercentSendLatenessList) {
+                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+                        if (!percentSendLatenessDist.containsKey(roundedD)) {
+                            percentSendLatenessDist.put(roundedD, 0.0);
+                        }
+                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    double totalCdf = 0.0;
+                    for (Double d : percentSendLatenessDist.keySet()) {
+                        double dist = percentSendLatenessDist.get(d);
+                        sb.append(d);
+                        sb.append("=");
+                        sb.append(totalCdf + dist);
+                        sb.append(",");
+                        totalCdf += dist;
+                    }
+                    logger.info("perc_send_lateness " + sb.toString());
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+	}
     
     public static class RingInfoPrinter implements Runnable {
         
