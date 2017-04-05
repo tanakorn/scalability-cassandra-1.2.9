@@ -120,12 +120,12 @@ public class TimeManager {
 			   .append(dumpMap(cpuSendTimePerThread))
 			   .append("cpuReceiveTimePerThread\n")
 			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
-			   .append(dumpMap(cpuReceiveTimePerThread))
-			   .append("TimeStamps\n")
-			   .append(String.format("%20s%20s\n", "Normal", "Adjusted"))
-			   .append(String.format("%20d%20d\n", 
-					   		System.currentTimeMillis(), 
-					   		getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta)));
+			   .append(dumpMap(cpuReceiveTimePerThread));
+			   //.append("TimeStamps\n")
+			   //.append(String.format("%20s%20s\n", "Normal", "Adjusted"))
+			   //.append(String.format("%20d%20d\n", 
+			   //		   		System.currentTimeMillis(), 
+			   //		   		getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta)));
 			return bld;
 		}
 		
