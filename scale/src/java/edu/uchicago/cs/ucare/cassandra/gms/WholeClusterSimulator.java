@@ -21,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -250,12 +251,12 @@ public class WholeClusterSimulator {
             timers[i].schedule(tasks[i], 0, 1000);
         }*/
 //        timer.schedule(new MyGossiperTask(), 0, 1000);
-        /*LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
             Thread t = new Thread(new AckProcessor(address));
             ackProcessThreadPool.add(t);
             t.start();
-        }*/
+        }
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -387,7 +388,7 @@ public class WholeClusterSimulator {
 	                    	// ##############################################################################
 	        	            // @Cesar: launch receiver for target
 	        	            // ##############################################################################
-	                    	new Thread(new ModifiedAckProcessor(liveReceiver)).start();
+	                    	// new Thread(new ModifiedAckProcessor(liveReceiver)).start();
 	                    	// ##############################################################################
 	                    }
 	                } else {
@@ -406,7 +407,7 @@ public class WholeClusterSimulator {
 	                        	// ##############################################################################
 		        	            // @Cesar: launch receiver for target
 		        	            // ##############################################################################
-		                    	new Thread(new ModifiedAckProcessor(unreachableReceiver)).start();
+		                    	// new Thread(new ModifiedAckProcessor(unreachableReceiver)).start();
 		                    	// ##############################################################################
 	                        }
 	                    }
@@ -427,7 +428,7 @@ public class WholeClusterSimulator {
 	                                	// ##############################################################################
 	    		        	            // @Cesar: launch receiver for target
 	    		        	            // ##############################################################################
-	    		                    	new Thread(new ModifiedAckProcessor(seed)).start();
+	    		                    	// new Thread(new ModifiedAckProcessor(seed)).start();
 	    		                    	// ##############################################################################
 	                                }
 	                            } else {
@@ -443,7 +444,7 @@ public class WholeClusterSimulator {
 	                                    	// ##############################################################################
 		    		        	            // @Cesar: launch receiver for target
 		    		        	            // ##############################################################################
-		    		                    	new Thread(new ModifiedAckProcessor(seed)).start();
+		    		                    	// new Thread(new ModifiedAckProcessor(seed)).start();
 		    		                    	// ##############################################################################
 	                                    }
 	                                }
@@ -666,32 +667,48 @@ public static class ModifiedAckProcessor implements Runnable {
         public void run() {
             LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
-                try {
-                MessageIn<?> ackMessage = msgQueue.take();
-                // ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
-                // ##############################################################################
-		        // @Cesar: Change time? Yes, relevant
-		        // ##############################################################################
-                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
-		        // ##############################################################################
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-                // ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
-                // ##############################################################################
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-//                if (msgQueue.size() > 100) {
-//                    logger.info("Backlog for " + address + " " + msgQueue.size());
-//                }
+                /*try {
+	                MessageIn<?> ackMessage = msgQueue.take();
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+			        // @Cesar: Change time? Yes, relevant
+			        // ##############################################################################
+	                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
+			        // ##############################################################################
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+	                } catch (InterruptedException e) {
+	                    e.printStackTrace();
+	                }*/
+            	MessageIn<?> ackMessage = msgQueue.poll(1000, TimeUnit.MILLISECONDS);
+            	if(ackMessage != null){
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+			        // @Cesar: Change time? Yes, relevant
+			        // ##############################################################################
+	                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
+			        // ##############################################################################
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+            	}
             }
         }
         
