@@ -904,7 +904,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 {
                     if ( reqdEndpointState == null )
                     {
-                        reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy());
+                        reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy(), whoAmI);
                     }
                     final ApplicationState key = entry.getKey();
                     if (logger.isTraceEnabled())
@@ -1023,7 +1023,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 //                System.out.println("b " + stub.getInetAddress() + " " + localVersion + " " + endpoint + " " + remoteVersion);
                 if ( remoteVersion > localVersion )
                 {
-                    localEndpointState.updateTimestamp();
+                    localEndpointState.updateTimestamp(stub.getInetAddress());
                     // just a version change, report to the fd
                     double[] updatedInfo = fd.report(stub.getInetAddress(), endpoint);
                     return updatedInfo;
