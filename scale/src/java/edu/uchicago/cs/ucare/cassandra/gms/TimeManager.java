@@ -13,6 +13,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.ArrayListMultimap;
 
 public class TimeManager {
@@ -23,6 +26,8 @@ public class TimeManager {
 	public static final TimeMeta timeMetaAdjustSendReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
 	public static final TimeMeta timeMetaAdjustReceiveReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
 	public static final TimeMeta timeMetaAdjustMiscReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
+	
+	private static Logger logger = LoggerFactory.getLogger(TimeManager.class);
 	
 	private long baseTimeStamp = 0L;
 	private ThreadMXBean threadMxBean = null;
@@ -103,10 +108,10 @@ public class TimeManager {
 		
 		public StringBuilder dumpHostTimeManager(){
 			StringBuilder bld = new StringBuilder();
-			bld.append("cpuSendTimePerThread\n")
+			bld.append("\ncpuSendTimePerThread\n")
 			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
 			   .append(dumpMap(cpuSendTimePerThread))
-			   .append(cpuReceiveTimePerThread)
+			   .append("cpuReceiveTimePerThread\n")
 			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
 			   .append(dumpMap(cpuReceiveTimePerThread));
 			return bld;
@@ -129,14 +134,20 @@ public class TimeManager {
 		
 		// apropiate for ack processor threads
 		public void adjustForHost(TimeMeta meta){
-			long currentThreadId = Thread.currentThread().getId();
-			long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
-			// update the threads per host
-			synchronized(threads){
-				threads.add(currentThreadId);
+			try{
+				long currentThreadId = Thread.currentThread().getId();
+				long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
+				// update the threads per host
+				synchronized(threads){
+					threads.add(currentThreadId);
+				}
+				Map<Long, Long> timeMap = chooseTimeMap(meta);
+				timeMap.put(currentThreadId, threadCpuTime);
 			}
-			Map<Long, Long> timeMap = chooseTimeMap(meta);
-			timeMap.put(currentThreadId, threadCpuTime);
+			catch(RuntimeException e){
+				logger.error("Error here...", e);
+				throw e;
+			}
 		}
 		
 		// apropiate for gossiper stubs
