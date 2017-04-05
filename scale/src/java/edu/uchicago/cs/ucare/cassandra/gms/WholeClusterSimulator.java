@@ -624,25 +624,26 @@ public static class ModifiedAckProcessor implements Runnable {
         public void run() {
         	try {
                 LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
-                MessageIn<?> ackMessage = msgQueue.take();
-                // ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
-                // ##############################################################################
-		        // @Cesar: Change time? Yes, relevant
-		        // ##############################################################################
-                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
-		        // ##############################################################################
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-                // ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
-                // ##############################################################################
+                if(msgQueue.size() > 0){
+	                MessageIn<?> ackMessage = msgQueue.take();
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+			        // @Cesar: Change time? Yes, relevant
+			        // ##############################################################################
+	                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
+			        // ##############################################################################
+	                AckProcessor.networkQueuedTime += networkQueuedTime;
+	                AckProcessor.processCount += 1;
+	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+	                // ##############################################################################
+	                // @Cesar: adjust time for host
+	                // ##############################################################################
+	                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+	                // ##############################################################################
+                }
             } 
         	catch (InterruptedException e) {
                     e.printStackTrace();
