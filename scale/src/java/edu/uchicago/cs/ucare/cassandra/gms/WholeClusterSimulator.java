@@ -526,7 +526,7 @@ public class WholeClusterSimulator {
 //                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
 //                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     logger.info("TimeManager for " + stub.broadcastAddress);
-                    logger.info(TimeManager.instance.dumpHostTimeManager(stub.getInetAddress()).toString());
+                    logger.info(TimeManager.instance.dumpHostTimeManager(stub.getInetAddress(), TimeManager.timeMetaAdjustMiscReduce).toString());
                     if (memberNode != numStubs || deadNode > 0) {
                         isStable = false;
                         break;
