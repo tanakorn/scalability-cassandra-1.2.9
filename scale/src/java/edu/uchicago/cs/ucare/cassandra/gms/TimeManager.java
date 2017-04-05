@@ -115,8 +115,8 @@ public class TimeManager {
 			   .append("cpuReceiveTimePerThread\n")
 			   .append(String.format("%10s%10s\n", "ThreadId", "Millis"))
 			   .append(dumpMap(cpuReceiveTimePerThread))
-			   .append(String.format("%10s%10s%10s\n", "Time", "Adj"))
-			   .append(String.format("%10d%10d%10d\n", 
+			   .append(String.format("%10s%10s\n", "Time", "Adj"))
+			   .append(String.format("%10d%10d\n", 
 					   		System.currentTimeMillis(), 
 					   		getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta)));
 			return bld;
