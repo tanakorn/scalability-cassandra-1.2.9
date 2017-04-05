@@ -480,7 +480,7 @@ public class WholeClusterSimulator {
                 // ##############################################################################
                 // @Cesar: adjust time for host
                 // ##############################################################################
-                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustSendSource);
+                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
                 // ##############################################################################
 		        // @Cesar: Change time? Yes, relevant
 		        // ##############################################################################
