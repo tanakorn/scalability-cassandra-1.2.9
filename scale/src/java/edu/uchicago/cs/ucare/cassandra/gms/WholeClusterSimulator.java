@@ -439,7 +439,7 @@ public static class ModifiedGossiperTask implements Runnable {
 	            // ##############################################################################
 	            // @Cesar: adjust time for hosts
 	            // ##############################################################################
-	            TimeManager.instance.adjustForHostsWithAverageCpuTime(hostsInStubs, TimeManager.timeMetaAdjustSendSource);
+	            TimeManager.instance.adjustForHostWithFixedValueAndThreadId(hostsInStubs, adjustSendTimeFixedNanos, TimeManager.timeMetaAdjustSendSource);
 	        	// ##############################################################################   
 	            // and sleep
 	        	try{

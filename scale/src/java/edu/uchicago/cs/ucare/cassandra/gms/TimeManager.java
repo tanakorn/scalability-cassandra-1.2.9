@@ -23,9 +23,9 @@ public class TimeManager {
 	public static final TimeManager instance = new TimeManager();
 	public static final TimeMeta timeMetaAdjustSendSource = new TimeMeta(TimeMeta.TimeSource.SEND);
 	public static final TimeMeta timeMetaAdjustReceiveSource = new TimeMeta(TimeMeta.TimeSource.RECEIVE);
-	public static final TimeMeta timeMetaAdjustSendReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
-	public static final TimeMeta timeMetaAdjustReceiveReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
-	public static final TimeMeta timeMetaAdjustMiscReduce = new TimeMeta(TimeMeta.TimeReduce.GREATER_OF_SEND_RECEIVE);
+	public static final TimeMeta timeMetaAdjustSendReduce = new TimeMeta(TimeMeta.TimeReduce.LEAST_OF_SEND_RECEIVE);
+	public static final TimeMeta timeMetaAdjustReceiveReduce = new TimeMeta(TimeMeta.TimeReduce.LEAST_OF_SEND_RECEIVE);
+	public static final TimeMeta timeMetaAdjustMiscReduce = new TimeMeta(TimeMeta.TimeReduce.LEAST_OF_SEND_RECEIVE);
 	
 	private static Logger logger = LoggerFactory.getLogger(TimeManager.class);
 	
@@ -60,10 +60,10 @@ public class TimeManager {
 		}
 	}
 	
-	public void adjustForHostsWithAverageCpuTime(List<InetAddress> hosts, TimeMeta meta){
+	public void adjustForHostWithFixedValueAndThreadId(List<InetAddress> hosts, long fixedValue, TimeMeta meta){
 		for(InetAddress host : hosts){
 			HostTimeManager manager = timeServicePerHost.get(host);
-			manager.adjustForHostWithAverageCpuTime(hosts.size(), meta);
+			manager.adjustForHostWithFixedValueAndThreadId(fixedValue, meta);
 		}
 	}
 	
@@ -163,21 +163,17 @@ public class TimeManager {
 		}
 		
 		// apropiate for ack processor threads
-		public void adjustForHostWithAverageCpuTime(long hostCount, TimeMeta meta){
-			try{
-				long currentThreadId = Thread.currentThread().getId();
-				long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId) / hostCount;
-				// update the threads per host
-				synchronized(threads){
-					threads.add(currentThreadId);
-				}
-				Map<Long, Long> timeMap = chooseTimeMap(meta);
-				timeMap.put(currentThreadId, threadCpuTime);
+		public void adjustForHostWithFixedValueAndThreadId(long fixedNanos, TimeMeta meta){
+			long currentThreadId = Thread.currentThread().getId();
+			// update the threads per host
+			synchronized(threads){
+				threads.add(currentThreadId);
 			}
-			catch(RuntimeException e){
-				logger.error("Error here...", e);
-				throw e;
-			}
+			Map<Long, Long> timeMap = chooseTimeMap(meta);
+			// this one adds
+			Long time = timeMap.get(currentThreadId);
+			if(time != null) fixedNanos += time; 
+			timeMap.put(currentThreadId, fixedNanos);
 		}
 		
 		// apropiate for gossiper stubs
@@ -214,6 +210,12 @@ public class TimeManager {
 						if(sendTime > receiveTime) time += sendTime;
 						else time += receiveTime;
 					}
+					else if(meta.reduce == TimeMeta.TimeReduce.LEAST_OF_SEND_RECEIVE){
+						long sendTime = getTimeForHost(meta, cpuSendTimePerThread);
+						long receiveTime = getTimeForHost(meta, cpuReceiveTimePerThread);
+						if(sendTime > receiveTime) time += receiveTime;
+						else time += sendTime;
+					}
 					return time;
 				}
 				else{
@@ -240,7 +242,8 @@ public class TimeManager {
 			ALL,
 			JUST_SEND,
 			JUST_RECEIVE,
-			GREATER_OF_SEND_RECEIVE
+			GREATER_OF_SEND_RECEIVE,
+			LEAST_OF_SEND_RECEIVE
 		}
 		
 		private TimeSource source = null;
