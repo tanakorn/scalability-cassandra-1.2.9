@@ -323,6 +323,7 @@ public class WholeClusterSimulator {
     public static class MyGossiperTask extends TimerTask {
         
         List<GossiperStub> stubs;
+        List<InetAddress> hostsInStubs;
         long previousTime;
         
         long totalIntLength;
@@ -333,14 +334,18 @@ public class WholeClusterSimulator {
             previousTime = 0;
             totalIntLength = 0;
             sentCount = 0;
+            for(GossiperStub stub : stubs){
+            	hostsInStubs.add(stub.broadcastAddress);
+            }
+            
         }
 
         @Override
         public void run() {
         	// ##############################################################################
-	        // @Cesar: Change time? No, this is not relevant on messaging
+	        // @Cesar: Change time? Yes!
 	        // ##############################################################################
-            long start = System.currentTimeMillis();
+            long start = TimeManager.instance.getCurrentTime(hostsInStubs, TimeManager.timeMetaAdjustSendReduce);
             long interval = 0L;
             // ##############################################################################
             if (previousTime != 0) {
@@ -352,11 +357,6 @@ public class WholeClusterSimulator {
             }
             previousTime = start;
             for (GossiperStub performer : stubs) {
-            	// ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(performer.getInetAddress(), TimeManager.timeMetaAdjustSendSource);
-            	// ##############################################################################
                 InetAddress performerAddress = performer.getInetAddress();
                 performer.updateHeartBeat();
                 boolean gossipToSeed = false;
@@ -421,11 +421,6 @@ public class WholeClusterSimulator {
                     }
                 }
                 performer.doStatusCheck();
-                // ##############################################################################
-                // @Cesar: adjust time for host
-                // ##############################################################################
-                TimeManager.instance.adjustForHost(performer.getInetAddress(), TimeManager.timeMetaAdjustSendSource);
-            	// ##############################################################################
             }
 //            long gossipingTime = System.currentTimeMillis() - start;
 //            if (gossipingTime > 1000) {
@@ -434,6 +429,11 @@ public class WholeClusterSimulator {
 //                logger.warn("Sending lateness " + lateness + " " + totalLateness);
 //            }
 //            logger.info("Gossip message in the queue " + msgQueue.size());
+            // ##############################################################################
+            // @Cesar: adjust time for hosts
+            // ##############################################################################
+            TimeManager.instance.adjustForHostsWithFixedValue(hostsInStubs, 1000000000/hostsInStubs.size(), TimeManager.timeMetaAdjustSendSource);
+        	// ##############################################################################
             
         }
         

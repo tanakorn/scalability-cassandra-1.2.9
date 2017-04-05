@@ -42,12 +42,27 @@ public class TimeManager {
 		manager.adjustForHost(meta);
 	}
 	
+	public void adjustForHostsWithFixedValue(List<InetAddress> hosts, long fixedValue, TimeMeta meta){
+		for(InetAddress host : hosts){
+			HostTimeManager manager = timeServicePerHost.get(host);
+			manager.adjustForHostWithFixedValue(fixedValue, meta);
+		}
+	}
 	
 	public long getCurrentTime(InetAddress host, TimeMeta meta){
 		HostTimeManager manager = timeServicePerHost.get(host);
 		return manager.getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta);
 	}
 	
+	public long getCurrentTime(List<InetAddress> hosts, TimeMeta meta){
+		long maxTime = Long.MIN_VALUE;
+		for(InetAddress host : hosts){
+			HostTimeManager manager = timeServicePerHost.get(host);
+			long time = manager.getCurrentTime(timeAdjustEnabled, baseTimeStamp, meta);
+			if(time > maxTime) maxTime = time;
+		}
+		return maxTime != Long.MIN_VALUE? maxTime : 0L;
+	}
 	
 	private static class HostTimeManager{
 		
@@ -87,25 +102,32 @@ public class TimeManager {
 			return value / 1000000L;
 		}
 		
+		// apropiate for ack processor threads
 		public void adjustForHost(TimeMeta meta){
 			long currentThreadId = Thread.currentThread().getId();
 			long threadCpuTime = threadMxBean.getThreadCpuTime(currentThreadId);
 			// update the threads per host
-			threads.add(currentThreadId);
-			// now check
 			synchronized(threads){
-				for(long threadId : threads){
-					if(threadId == currentThreadId){
-						Map<Long, Long> timeMap = chooseTimeMap(meta);
-						Long time = timeMap.get(threadId);
-						if((time != null && time <= threadCpuTime) || (time == null)){
-							timeMap.put(threadId, threadCpuTime);
-						}
-						break;
-					}
-				}
+				threads.add(currentThreadId);
 			}
+			Map<Long, Long> timeMap = chooseTimeMap(meta);
+			timeMap.put(currentThreadId, threadCpuTime);
 		}
+		
+		// apropiate for gossiper stubs
+		public void adjustForHostWithFixedValue(long fixedNanos, TimeMeta meta){
+			long currentThreadId = -1L;
+			// update the threads per host
+			synchronized(threads){
+				threads.add(currentThreadId);
+			}
+			Map<Long, Long> timeMap = chooseTimeMap(meta);
+			// this one adds
+			Long time = timeMap.get(currentThreadId);
+			if(time != null) time += fixedNanos; 
+			timeMap.put(currentThreadId, time);
+		}
+		
 		
 		public long getCurrentTime(boolean timeAdjustEnabled, long baseTimeStamp, TimeMeta meta){
 			if(timeAdjustEnabled) {
