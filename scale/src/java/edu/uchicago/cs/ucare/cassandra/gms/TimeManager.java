@@ -41,7 +41,6 @@ public class TimeManager {
 			timeServicePerHost.put(host, new HostTimeManager(host, threadMxBean));
 		}
 		baseTimeStamp = System.currentTimeMillis();
-		
 	}
 	
 	public StringBuilder dumpHostTimeManager(InetAddress host, TimeMeta meta){
@@ -198,6 +197,7 @@ public class TimeManager {
 				}
 			}
 			else{
+				logger.info("@Cesar: No time adjust enabled...");
 				return System.currentTimeMillis();
 			}
 			

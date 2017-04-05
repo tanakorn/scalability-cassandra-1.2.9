@@ -208,7 +208,9 @@ public class WholeClusterSimulator {
         // @Cesar: and set the initial time
         // ##############################################################################
         TimeManager.instance.initTimeManager(WholeClusterSimulator.adjustThreadRunningTime, addressList);
-    	// ##############################################################################
+    	logger.info("@Cesar: adjustThreadRunningTime=" + adjustThreadRunningTime);
+    	logger.info("@Cesar: adjustSendTimeFixedNanos=" + adjustSendTimeFixedNanos);
+        // ##############################################################################
         for (InetAddress address : addressList) {
             msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
         }
