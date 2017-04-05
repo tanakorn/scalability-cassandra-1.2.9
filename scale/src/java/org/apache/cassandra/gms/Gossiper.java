@@ -1681,7 +1681,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                     else if ( maxRemoteVersion < maxLocalVersion )
                     {
                         /* send all data with generation = localgeneration and version > maxRemoteVersion */
-                        sendAllStatic(endpointStateMap, gDigest, deltaEpStateMap, maxRemoteVersion);
+                        sendAllStatic(endpointStateMap, gDigest, deltaEpStateMap, maxRemoteVersion, stub.getInetAddress());
                     }
                 }
             }
