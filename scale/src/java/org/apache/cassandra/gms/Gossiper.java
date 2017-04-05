@@ -904,7 +904,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 {
                     if ( reqdEndpointState == null )
                     {
-                        reqdEndpointState = new EndpointState(epState.getHeartBeatState().copy(), whoAmI);
+                        reqdEndpointState = new EndpointState(whoAmI, epState.getHeartBeatState().copy());
                     }
                     final ApplicationState key = entry.getKey();
                     if (logger.isTraceEnabled())
