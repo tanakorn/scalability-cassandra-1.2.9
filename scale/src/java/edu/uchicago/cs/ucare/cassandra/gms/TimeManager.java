@@ -35,12 +35,13 @@ public class TimeManager {
 	private Map<InetAddress, HostTimeManager> timeServicePerHost = new HashMap<InetAddress, HostTimeManager>();
 	
 	public void initTimeManager(boolean timeAdjustEnabled, Collection<InetAddress> allHosts){
+		threadMxBean = ManagementFactory.getThreadMXBean();
+		this.timeAdjustEnabled = timeAdjustEnabled;
 		for(InetAddress host : allHosts){
 			timeServicePerHost.put(host, new HostTimeManager(host, threadMxBean));
 		}
 		baseTimeStamp = System.currentTimeMillis();
-		threadMxBean = ManagementFactory.getThreadMXBean();
-		this.timeAdjustEnabled = timeAdjustEnabled;
+		
 	}
 	
 	public StringBuilder dumpHostTimeManager(InetAddress host){
