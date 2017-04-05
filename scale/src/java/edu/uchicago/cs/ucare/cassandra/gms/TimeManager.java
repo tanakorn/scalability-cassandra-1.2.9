@@ -38,7 +38,7 @@ public class TimeManager {
 		this.timeAdjustEnabled = timeAdjustEnabled;
 	}
 	
-	public StringBuilder dumpHostTimeManager(){
+	public StringBuilder dumpHostTimeManager(InetAddress host){
 		HostTimeManager manager = timeServicePerHost.get(host);
 		return manager.dumpHostTimeManager();
 	}
