@@ -441,6 +441,10 @@ public static class ModifiedGossiperTask implements Runnable {
 	            // ##############################################################################
 	            TimeManager.instance.adjustForHostWithFixedValueAndThreadId(hostsInStubs, adjustSendTimeFixedNanos, TimeManager.timeMetaAdjustSendSource);
 	        	// ##############################################################################   
+	            // launch receive for each stub
+	            for(GossiperStub stub : stubs){
+	            	new Thread(new ModifiedAckProcessor(stub.getInetAddress())).start();
+	            }
 	            // and sleep
 	        	try{
 	        		Thread.sleep(interval);
@@ -591,6 +595,47 @@ public static class ModifiedGossiperTask implements Runnable {
 //        }
 //        
 //    }
+    
+public static class ModifiedAckProcessor implements Runnable {
+        
+        InetAddress address;
+        
+        public static long networkQueuedTime = 1;
+        public static int processCount = 1;
+        
+        public ModifiedAckProcessor(InetAddress address) {
+            this.address = address;
+        }
+
+        @Override
+        public void run() {
+        	try {
+                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+                MessageIn<?> ackMessage = msgQueue.take();
+                // ##############################################################################
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+                // ##############################################################################
+		        // @Cesar: Change time? Yes, relevant
+		        // ##############################################################################
+                long networkQueuedTime = TimeManager.instance.getCurrentTime(address, TimeManager.timeMetaAdjustReceiveReduce) - ackMessage.createdTime;    
+		        // ##############################################################################
+                AckProcessor.networkQueuedTime += networkQueuedTime;
+                AckProcessor.processCount += 1;
+//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
+                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                // ##############################################################################
+                // @Cesar: adjust time for host
+                // ##############################################################################
+                TimeManager.instance.adjustForHost(address, TimeManager.timeMetaAdjustReceiveSource);
+                // ##############################################################################
+            } 
+        	catch (InterruptedException e) {
+                    e.printStackTrace();
+            }
+        }
+    }
     
     public static class AckProcessor implements Runnable {
         
