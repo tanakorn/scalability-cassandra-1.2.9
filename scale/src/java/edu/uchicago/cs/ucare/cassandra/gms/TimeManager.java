@@ -83,7 +83,7 @@ public class TimeManager {
 					meta != null && meta.source != null? 
 							(meta.source == TimeMeta.TimeSource.SEND? 
 									cpuSendTimePerThread : cpuReceiveTimePerThread) :
-							cpuCommonTimePerThread;
+							(cpuCommonTimePerThread);
 			return timeMap;
 		}
 		
@@ -124,8 +124,8 @@ public class TimeManager {
 			Map<Long, Long> timeMap = chooseTimeMap(meta);
 			// this one adds
 			Long time = timeMap.get(currentThreadId);
-			if(time != null) time += fixedNanos; 
-			timeMap.put(currentThreadId, time);
+			if(time != null) fixedNanos += time; 
+			timeMap.put(currentThreadId, fixedNanos);
 		}
 		
 		
