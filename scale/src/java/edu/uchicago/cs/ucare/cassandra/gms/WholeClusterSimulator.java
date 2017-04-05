@@ -250,12 +250,12 @@ public class WholeClusterSimulator {
             timers[i].schedule(tasks[i], 0, 1000);
         }*/
 //        timer.schedule(new MyGossiperTask(), 0, 1000);
-        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
+        /*LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (InetAddress address : addressList) {
             Thread t = new Thread(new AckProcessor(address));
             ackProcessThreadPool.add(t);
             t.start();
-        }
+        }*/
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -333,7 +333,7 @@ public class WholeClusterSimulator {
         return result;
     }
     
-public static class ModifiedGossiperTask implements Runnable {
+    public static class ModifiedGossiperTask implements Runnable {
         
         List<GossiperStub> stubs;
         List<InetAddress> hostsInStubs = new ArrayList<InetAddress>();
@@ -384,7 +384,11 @@ public static class ModifiedGossiperTask implements Runnable {
 	                    if (!msgQueue.add(synMsg)) {
 	                        logger.error("Cannot add more message to message queue");
 	                    } else {
-	                    	
+	                    	// ##############################################################################
+	        	            // @Cesar: launch receiver for target
+	        	            // ##############################################################################
+	                    	new Thread(new ModifiedAckProcessor(liveReceiver)).start();
+	                    	// ##############################################################################
 	                    }
 	                } else {
 	
@@ -399,6 +403,11 @@ public static class ModifiedGossiperTask implements Runnable {
 	                        if (!msgQueue.add(synMsg)) {
 	                            logger.error("Cannot add more message to message queue");
 	                        } else {
+	                        	// ##############################################################################
+		        	            // @Cesar: launch receiver for target
+		        	            // ##############################################################################
+		                    	new Thread(new ModifiedAckProcessor(unreachableReceiver)).start();
+		                    	// ##############################################################################
 	                        }
 	                    }
 	                }
@@ -415,7 +424,11 @@ public static class ModifiedGossiperTask implements Runnable {
 	                                if (!msgQueue.add(synMsg)) {
 	                                    logger.error("Cannot add more message to message queue");
 	                                } else {
-	
+	                                	// ##############################################################################
+	    		        	            // @Cesar: launch receiver for target
+	    		        	            // ##############################################################################
+	    		                    	new Thread(new ModifiedAckProcessor(seed)).start();
+	    		                    	// ##############################################################################
 	                                }
 	                            } else {
 	                                double probability = seeds.size() / (double)( liveEndpoints.size() + unreachableEndpoints.size() );
@@ -427,7 +440,11 @@ public static class ModifiedGossiperTask implements Runnable {
 	                                    if (!msgQueue.add(synMsg)) {
 	                                        logger.error("Cannot add more message to message queue");
 	                                    } else {
-	
+	                                    	// ##############################################################################
+		    		        	            // @Cesar: launch receiver for target
+		    		        	            // ##############################################################################
+		    		                    	new Thread(new ModifiedAckProcessor(seed)).start();
+		    		                    	// ##############################################################################
 	                                    }
 	                                }
 	                            }
@@ -440,11 +457,7 @@ public static class ModifiedGossiperTask implements Runnable {
 	            // @Cesar: adjust time for hosts
 	            // ##############################################################################
 	            TimeManager.instance.adjustForHostWithFixedValueAndThreadId(hostsInStubs, adjustSendTimeFixedNanos, TimeManager.timeMetaAdjustSendSource);
-	        	// ##############################################################################   
-	            // launch receive for each stub
-	            for(GossiperStub stub : stubs){
-	            	new Thread(new ModifiedAckProcessor(stub.getInetAddress())).start();
-	            }
+	        	// ##############################################################################  
 	            // and sleep
 	        	try{
 	        		Thread.sleep(interval);
