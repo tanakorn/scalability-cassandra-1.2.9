@@ -227,15 +227,19 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
     {
         try
         {
-            submit((Callable)adder).get();
+           //submit((Callable)adder).get();
+        	submit((Callable)adder);
         }
-        catch (InterruptedException e)
+        /*catch (InterruptedException e)
         {
             throw new RuntimeException(e);
         }
         catch (ExecutionException e)
         {
             throw new RuntimeException(e);
+        }*/
+        finally{
+        	
         }
     }
 
