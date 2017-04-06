@@ -36,7 +36,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
     private Thread[] appendingThread;
     private ArrayList<CheaterFutureTask>[] incompleteTasks;
     private ArrayList[] taskValues; // TODO not sure how to generify this
-    private volatile boolean run = true;
+    private volatile boolean run = false;
 
     public BatchCommitLogExecutorService()
     {
