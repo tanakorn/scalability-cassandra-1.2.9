@@ -132,7 +132,9 @@ public class QueryProcessor
     {
         try
         {
-            ClientState state = new ClientState(true);
+            boolean execute = false;
+            if(!execute) return null;
+        	ClientState state = new ClientState(true);
             QueryState qState = new QueryState(state);
             state.setKeyspace(Table.SYSTEM_KS);
             CQLStatement statement = getStatement(query, state).statement;
