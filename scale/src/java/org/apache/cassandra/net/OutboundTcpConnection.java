@@ -124,6 +124,11 @@ public class OutboundTcpConnection extends Thread
 
     public void run()
     {
+    	// ####################################################################
+        // @Cesar: Just disconnect?
+        // ####################################################################
+    	disconnect();
+    	// ####################################################################
         while (true)
         {
             QueuedMessage qm = active.poll();

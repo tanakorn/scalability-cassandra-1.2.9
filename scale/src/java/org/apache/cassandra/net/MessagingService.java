@@ -314,7 +314,8 @@ public final class MessagingService implements MessagingServiceMBean
 
     private MessagingService()
     {
-        for (Verb verb : DROPPABLE_VERBS)
+    	
+    	for (Verb verb : DROPPABLE_VERBS)
         {
             droppedMessages.put(verb, new DroppedMessageMetrics(verb));
             lastDroppedInternal.put(verb, 0);
@@ -329,8 +330,10 @@ public final class MessagingService implements MessagingServiceMBean
                 logDroppedMessages();
             }
         };
-        StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
-
+        // ####################################################################
+        // @Cesar: Dont care of any of the commented stuff
+        // ####################################################################
+        // StorageService.scheduledTasks.scheduleWithFixedDelay(logDropped, LOG_DROPPED_INTERVAL_IN_MS, LOG_DROPPED_INTERVAL_IN_MS, TimeUnit.MILLISECONDS);
         Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, ?> timeoutReporter = new Function<Pair<String, ExpiringMap.CacheableObject<CallbackInfo>>, Object>()
         {
             public Object apply(Pair<String, ExpiringMap.CacheableObject<CallbackInfo>> pair)
