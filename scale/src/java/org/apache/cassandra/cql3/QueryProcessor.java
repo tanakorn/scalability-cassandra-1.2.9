@@ -132,8 +132,6 @@ public class QueryProcessor
     {
         try
         {
-            boolean execute = false;
-            if(!execute) return null;
         	ClientState state = new ClientState(true);
             QueryState qState = new QueryState(state);
             state.setKeyspace(Table.SYSTEM_KS);

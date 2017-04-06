@@ -1300,34 +1300,40 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     handleStateRelocating(endpoint, pieces);
                 break;
             case RELEASE_VERSION:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
-                }
+                }*/
                 break;
             case DC:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
-                }
+                }*/
                 break;
             case RACK:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
-                }
+                }*/
                 break;
             case RPC_ADDRESS:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
-                }
+                }*/
                 break;
             case SCHEMA:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
-                }
+                }*/
                 break;
             case HOST_ID:
-                synchronized (stub) {
+            	SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
+                /*synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
-                }
+                }*/
                 break;
         }
     }
