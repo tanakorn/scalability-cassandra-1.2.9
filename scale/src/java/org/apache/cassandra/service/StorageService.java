@@ -1300,40 +1300,34 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     handleStateRelocating(endpoint, pieces);
                 break;
             case RELEASE_VERSION:
-            	SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "release_version", quote(value.value));
-                }*/
+                }
                 break;
             case DC:
-            	SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "data_center", quote(value.value));
-                }*/
+                }
                 break;
             case RACK:
-            	SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "rack", quote(value.value));
-                }*/
+                }
                 break;
             case RPC_ADDRESS:
-            	SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "rpc_address", quote(value.value));
-                }*/
+                }
                 break;
             case SCHEMA:
-            	SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "schema_version", value.value);
-                }*/
+                }
                 break;
             case HOST_ID:
-            	SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
-                /*synchronized (stub) {
+                synchronized (stub) {
                     SystemTable.updatePeerInfo(endpoint, "host_id", value.value);
-                }*/
+                }
                 break;
         }
     }
@@ -1731,10 +1725,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         if (!tokensToUpdateInSystemTable.isEmpty()) {
 //            System.out.println("hello 2");
             final long e = System.currentTimeMillis();
-            SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-            /*synchronized (stub) {
+            synchronized (stub) {
                 SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-            }*/
+            }
 //            long s = System.currentTimeMillis() - e;
 //            System.out.println(s);
         }
