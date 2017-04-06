@@ -128,8 +128,9 @@ public class OutboundTcpConnection extends Thread
         // @Cesar: Just disconnect?
         // ####################################################################
     	disconnect();
+    	boolean whileCondition = false;
     	// ####################################################################
-        while (true)
+        while (whileCondition)
         {
             QueuedMessage qm = active.poll();
             if (qm == null)
