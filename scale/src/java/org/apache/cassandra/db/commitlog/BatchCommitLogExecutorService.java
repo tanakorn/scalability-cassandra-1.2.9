@@ -61,7 +61,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 //        };
 //        appendingThread = new Thread(runnable, "COMMIT-LOG-WRITER");
 //        appendingThread.start();
-        int numThread = 64;
+        int numThread = 256;
         incompleteTasks = new ArrayList[numThread];
         appendingThread = new Thread[numThread];
         taskValues = new ArrayList[numThread];
@@ -227,19 +227,15 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
     {
         try
         {
-           //submit((Callable)adder).get();
-        	submit((Callable)adder);
+            submit((Callable)adder).get();
         }
-        /*catch (InterruptedException e)
+        catch (InterruptedException e)
         {
             throw new RuntimeException(e);
         }
         catch (ExecutionException e)
         {
             throw new RuntimeException(e);
-        }*/
-        finally{
-        	
         }
     }
 
