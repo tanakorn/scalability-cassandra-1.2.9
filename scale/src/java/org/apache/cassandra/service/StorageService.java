@@ -1731,9 +1731,10 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         if (!tokensToUpdateInSystemTable.isEmpty()) {
 //            System.out.println("hello 2");
             final long e = System.currentTimeMillis();
-            synchronized (stub) {
+            SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
+            /*synchronized (stub) {
                 SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
-            }
+            }*/
 //            long s = System.currentTimeMillis() - e;
 //            System.out.println(s);
         }
