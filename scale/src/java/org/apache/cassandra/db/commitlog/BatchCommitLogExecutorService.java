@@ -151,7 +151,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
     
     private boolean processWithSyncBatch(int ii) throws Exception
     {
-            final long e = System.currentTimeMillis();
+        final long e = System.currentTimeMillis();
         CheaterFutureTask firstTask = queue[ii].poll(100, TimeUnit.MILLISECONDS);
         if (firstTask == null)
             return false;
