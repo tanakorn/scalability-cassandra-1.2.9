@@ -86,8 +86,8 @@ public class WholeClusterSimulator {
 //        }
 //
 //    });
-//    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
-    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
+    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
+//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -192,9 +192,9 @@ public class WholeClusterSimulator {
             int b = (i - 1) % 255 + 1;
             addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
-        for (InetAddress address : addressList) {
-            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-        }
+//        for (InetAddress address : addressList) {
+//            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+//        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
@@ -218,18 +218,22 @@ public class WholeClusterSimulator {
             subStub[ii].add(stub);
             ii = (ii + 1) % numGossiper;
         }
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (int i = 0; i < numGossiper; ++i) {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
-        }
-//        timer.schedule(new MyGossiperTask(), 0, 1000);
-        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
-        for (InetAddress address : addressList) {
-            Thread t = new Thread(new AckProcessor(address));
+//            Thread t = new Thread(new AckProcessor(subStub[i]));
+            Thread t = new Thread(new AckProcessor());
             ackProcessThreadPool.add(t);
             t.start();
         }
+//        timer.schedule(new MyGossiperTask(), 0, 1000);
+//        for (InetAddress address : addressList) {
+//            Thread t = new Thread(new AckProcessor(address));
+//            ackProcessThreadPool.add(t);
+//            t.start();
+//        }
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -349,7 +353,7 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
-                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
+//                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -364,7 +368,7 @@ public class WholeClusterSimulator {
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
-                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+//                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
                         if (!msgQueue.add(synMsg)) {
                             logger.error("Cannot add more message to message queue");
                         } else {
@@ -380,7 +384,7 @@ public class WholeClusterSimulator {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+//                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -392,7 +396,7 @@ public class WholeClusterSimulator {
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+//                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -438,18 +442,21 @@ public class WholeClusterSimulator {
     
     public static class AckProcessor implements Runnable {
         
-        InetAddress address;
+//        InetAddress address;
+//        List<GossiperStub> stubs;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
-        public AckProcessor(InetAddress address) {
-            this.address = address;
-        }
+//        public static Object notification = new Object();
+        
+//        public AckProcessor(List<GossiperStub> stubs) {
+//            this.stubs = stubs;
+//        }
 
         @Override
         public void run() {
-            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+//            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
                 MessageIn<?> ackMessage = msgQueue.take();
@@ -457,7 +464,8 @@ public class WholeClusterSimulator {
                 AckProcessor.networkQueuedTime += networkQueuedTime;
                 AckProcessor.processCount += 1;
 //                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+//                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
+                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -519,12 +527,12 @@ public class WholeClusterSimulator {
                             " ; send lateness " + interval + 
                             " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
                 }
-                for (GossiperStub stub : stubGroup) {
-                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-                    if (queue.size() > 100) {
-                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-                    }
-                }
+//                for (GossiperStub stub : stubGroup) {
+//                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+//                    if (queue.size() > 100) {
+//                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+//                    }
+//                }
                 List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
                 TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
                 if (tmpLatenessList.size() != 0) {
