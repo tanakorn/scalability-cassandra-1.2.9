@@ -363,18 +363,18 @@ public class WholeClusterSimulator {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
-                if (!unreachableEndpoints.isEmpty()) {
-                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
-                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
-                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
-                    if (prob > random.nextDouble()) {
-//                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
-                        if (!msgQueue.add(synMsg)) {
-                            logger.error("Cannot add more message to message queue");
-                        } else {
-                        }
-                    }
-                }
+//                if (!unreachableEndpoints.isEmpty()) {
+//                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+//                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
+//                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+//                    if (prob > random.nextDouble()) {
+////                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+//                        if (!msgQueue.add(synMsg)) {
+//                            logger.error("Cannot add more message to message queue");
+//                        } else {
+//                        }
+//                    }
+//                }
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     int size = seeds.size();
                     if (size > 0) {
@@ -533,74 +533,74 @@ public class WholeClusterSimulator {
 //                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
 //                    }
 //                }
-                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
-                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
-                if (tmpLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpLatenessList.size();
-                    for (Long l : tmpLatenessList) {
-                        if (!latenessDist.containsKey(l)) {
-                            latenessDist.put(l, 0.0);
-                        }
-                        latenessDist.put(l, latenessDist.get(l) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Long l : latenessDist.keySet()) {
-                        double dist = latenessDist.get(l);
-                        sb.append(l);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("abs_lateness " + sb.toString());
-                }
-                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
-                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
-                if (tmpPercentLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpPercentLatenessList.size();
-                    for (Double d : tmpPercentLatenessList) {
-                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-                        if (!percentLatenessDist.containsKey(roundedD)) {
-                            percentLatenessDist.put(roundedD, 0.0);
-                        }
-                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Double d : percentLatenessDist.keySet()) {
-                        double dist = percentLatenessDist.get(d);
-                        sb.append(d);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("perc_lateness " + sb.toString());
-                }
-                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
-                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
-                if (tmpPercentSendLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpPercentSendLatenessList.size();
-                    for (Double d : tmpPercentSendLatenessList) {
-                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-                        if (!percentSendLatenessDist.containsKey(roundedD)) {
-                            percentSendLatenessDist.put(roundedD, 0.0);
-                        }
-                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Double d : percentSendLatenessDist.keySet()) {
-                        double dist = percentSendLatenessDist.get(d);
-                        sb.append(d);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("perc_send_lateness " + sb.toString());
-                }
+//                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
+//                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
+//                if (tmpLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpLatenessList.size();
+//                    for (Long l : tmpLatenessList) {
+//                        if (!latenessDist.containsKey(l)) {
+//                            latenessDist.put(l, 0.0);
+//                        }
+//                        latenessDist.put(l, latenessDist.get(l) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Long l : latenessDist.keySet()) {
+//                        double dist = latenessDist.get(l);
+//                        sb.append(l);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("abs_lateness " + sb.toString());
+//                }
+//                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
+//                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
+//                if (tmpPercentLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpPercentLatenessList.size();
+//                    for (Double d : tmpPercentLatenessList) {
+//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+//                        if (!percentLatenessDist.containsKey(roundedD)) {
+//                            percentLatenessDist.put(roundedD, 0.0);
+//                        }
+//                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Double d : percentLatenessDist.keySet()) {
+//                        double dist = percentLatenessDist.get(d);
+//                        sb.append(d);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("perc_lateness " + sb.toString());
+//                }
+//                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
+//                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
+//                if (tmpPercentSendLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpPercentSendLatenessList.size();
+//                    for (Double d : tmpPercentSendLatenessList) {
+//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+//                        if (!percentSendLatenessDist.containsKey(roundedD)) {
+//                            percentSendLatenessDist.put(roundedD, 0.0);
+//                        }
+//                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Double d : percentSendLatenessDist.keySet()) {
+//                        double dist = percentSendLatenessDist.get(d);
+//                        sb.append(d);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("perc_send_lateness " + sb.toString());
+//                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
