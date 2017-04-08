@@ -200,21 +200,15 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         gDigestAck2Message.createdTime = System.currentTimeMillis();
-<<<<<<< HEAD
         // ##########################################################################
         // @Cesar: Only if we are not replaying
     	// ##########################################################################
         if(!WholeClusterSimulator.isReplayEnabled){
-        	WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
+        	WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         }
      // ##########################################################################
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
         long ackHandlerTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - receiveTime;
-=======
-//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
-        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
-        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
->>>>>>> all-minus-pil
         if (result != null) {
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];
