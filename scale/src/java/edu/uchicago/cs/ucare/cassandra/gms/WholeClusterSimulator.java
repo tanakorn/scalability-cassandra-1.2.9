@@ -18,7 +18,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,7 +28,6 @@ import org.apache.cassandra.gms.EndpointState;
 import org.apache.cassandra.gms.GossipDigestSyn;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.net.MessageIn;
-import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.cassandra.service.StorageService;
@@ -93,23 +91,7 @@ public class WholeClusterSimulator {
     public static final GossipProtocolStateSnaphotManager stateManager = new GossipProtocolStateSnaphotManager(); 
     // ##########################################################################
     
-    
-//    public static double[] normalGossipExecSdRecords;
-    
-//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> ackQueues = 
-//            new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
-
-//    public static PriorityBlockingQueue<MessageIn<?>> ackQueue = 
-//            new PriorityBlockingQueue<MessageIn<?>>(100, new Comparator<MessageIn<?>>() {
-//
-//        @Override
-//        public int compare(MessageIn<?> o1, MessageIn<?> o2) {
-//            return (int) (o1.getWakeUpTime() - o2.getWakeUpTime());
-//        }
-//
-//    });
     public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
-//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -158,7 +140,6 @@ public class WholeClusterSimulator {
         {
             // first try URL.getFile() which works for opaque URLs (file:foo) and paths without spaces
             configFileName = configLocation.getFile();
-//            System.out.println(configFileName);
             File configFile = new File(configFileName);
             // then try alternative approach which works for all hierarchical URLs with or without spaces
             if (!configFile.exists())
@@ -181,9 +162,7 @@ public class WholeClusterSimulator {
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[1024];
-//        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
-//        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
@@ -214,9 +193,6 @@ public class WholeClusterSimulator {
             int b = (i - 1) % 255 + 1;
             addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
-//        for (InetAddress address : addressList) {
-//            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-//        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
         // ##########################################################################
         // @Cesar:Print properties
@@ -248,8 +224,6 @@ public class WholeClusterSimulator {
         stubGroup.prepareInitialState();
         // I should start MyGossiperTask here
         
-//        int numGossiper = numStubs / 100;
-//        int numGossiper = 2;
         int numGossiper = Integer.parseInt(args[3]);
         numGossiper = numGossiper == 0 ? 1 : numGossiper;
         timers = new Timer[numGossiper];
@@ -268,17 +242,10 @@ public class WholeClusterSimulator {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
-//            Thread t = new Thread(new AckProcessor(subStub[i]));
-            Thread t = new Thread(new AckProcessor());
+            Thread t = new Thread(new AckProcessor(subStub[i]));
             ackProcessThreadPool.add(t);
             t.start();
         }
-//        timer.schedule(new MyGossiperTask(), 0, 1000);
-//        for (InetAddress address : addressList) {
-//            Thread t = new Thread(new AckProcessor(address));
-//            ackProcessThreadPool.add(t);
-//            t.start();
-//        }
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -335,33 +302,6 @@ public class WholeClusterSimulator {
 
     }
     
-    public static <T> MessageIn<T> convertOutToIn(MessageOut<T> msgOut) {
-        MessageIn<T> msgIn = MessageIn.create(msgOut.from, msgOut.payload, msgOut.parameters, msgOut.verb, MessagingService.VERSION_12);
-        return msgIn;
-    }
-    
-    static Random rand = new Random();
-    public static long getExecTimeNormal(int currentVersion, int numNormal) {
-        if (numNormal > numStubs - currentVersion) {
-            numNormal = numStubs - currentVersion;
-            numNormal = (numNormal / 4) * 4;
-        }
-        if (numNormal == 0) {
-            return 0;
-        }
-        Long result = normalGossipExecRecords.get(currentVersion).get(numNormal);
-        if (result == null) {
-            System.out.println(currentVersion + " " + numNormal);
-        }
-        return result;
-//        long execTimeMilli = execTime < 0 ? 0 : (long) (execTime * 1000);
-//        return execTimeMilli;
-//        double sdExecTime = normalGossipExecSdRecords[numNormal];
-//        double gaussian = rand.nextGaussian();
-//        double adjustedExecTime = execTime + sdExecTime * gaussian;
-//        return adjustedExecTime < 0 ? 0 : (long) (adjustedExecTime * 1000);
-    }
-    
     public static class MyGossiperTask extends TimerTask {
         
         List<GossiperStub> stubs;
@@ -416,6 +356,7 @@ public class WholeClusterSimulator {
 	                	// get the messages and replay
 	                	GossipMessage toLiveMember = round.getToLiveMember();
 	                	GossipMessage toUnreachableMember = round.getToUnreachableMember();
+	                	assert toUnreachableMember == null;
 	                	GossipMessage toSeed = round.getToSeed();
 	                	if(toLiveMember != null){
 //	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
@@ -469,6 +410,7 @@ public class WholeClusterSimulator {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
+                assert unreachableEndpoints.isEmpty();
 //                if (!unreachableEndpoints.isEmpty()) {
 //                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
 //                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
@@ -570,39 +512,16 @@ public class WholeClusterSimulator {
         
     }
     
-//    public static class SyncProcessor implements Runnable {
-//
-//        @Override
-//        public void run() {
-//            while (true) {
-//                try {
-//                    MessageIn<GossipDigestSyn> syncMessage = syncQueue.take();
-////                    logger.debug("Processing " + syncMessage.verb + " from " + syncMessage.from + " to " + syncMessage.getTo());
-//                    MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(syncMessage, Integer.toString(idGen.incrementAndGet()));
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                if (syncQueue.size() > 1000) {
-//                    logger.warn("Sync queue size is greater than 1000");
-//                }
-//            }
-//        }
-//        
-//    }
-    
     public static class AckProcessor implements Runnable {
         
-//        InetAddress address;
-//        List<GossiperStub> stubs;
+        List<GossiperStub> stubs;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
-//        public static Object notification = new Object();
-        
-//        public AckProcessor(List<GossiperStub> stubs) {
-//            this.stubs = stubs;
-//        }
+        public AckProcessor(List<GossiperStub> stubs) {
+            this.stubs = stubs;
+        }
 
         @Override
         public void run() {
@@ -642,43 +561,46 @@ public class WholeClusterSimulator {
 	            	// ##########################################################################
 	                else if(WholeClusterSimulator.isReplayEnabled){
 	                	// reconstruct the message
-	                	ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address, WholeClusterSimulator.serializationFilePrefix);
-	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
-	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
-	                	if(nextMessage == null){
-	                		// message for this guy is null, so no more messages to receive
-	                		messageManager.removeReceivedMessageQueue(address);
-	                		// so, do we have any queues left?
-	                		if(!messageManager.receivedMessageQueuesLeft()){
-	                			// always fail when no more message queues
-	                			logger.error("@Cesar: Failing cause there are no more messages to receive in any queue");
-	                			System.exit(0);
-	                		}
-	                	}
-	                	else{
-	                		// wait the period for receive
-	                		try{
-	                			Thread.sleep(nextMessage.getWaitForNext());
-	                		}
-	                		catch(InterruptedException ie){
-	                			logger.error("@Cesar: Interrupted while waiting!");
-	                		}
-	                		// and now do it
-	                		ackMessage = nextMessage.getMessageIn();
-		                	// save the time and stuff
-		                	long networkQueuedTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - ackMessage.createdTime;
-		                	AckProcessor.networkQueuedTime += networkQueuedTime;
-		                	AckProcessor.processCount += 1;
-		                	// process the message
-		                	try{
-		                		MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(nextMessage.getGeneratedId()));
-		                	}
-		                	catch(Exception e){
-		                		logger.error("@Cesar: Unexpected exception while processing message <" + ackMessage + ">", e);
-		                		System.exit(0);
-		                	}
-		                	// continue the cycle
-	                	}
+	                    for (GossiperStub stub : stubs) {
+	                        InetAddress address = stub.getInetAddress();
+                            ReceivedMessage nextMessage = messageManager.pollNextReceivedMessage(address, WholeClusterSimulator.serializationFilePrefix);
+                            if(logger.isDebugEnabled()) logger.debug("@Cesar: Message to replay, round <" + nextMessage.getMessageRound() + ">");
+                            if(logger.isDebugEnabled()) logger.debug("@Cesar: message from: " + (nextMessage.getMessageIn() != null? nextMessage.getMessageIn().from : null));
+                            if(nextMessage == null){
+                                // message for this guy is null, so no more messages to receive
+                                messageManager.removeReceivedMessageQueue(address);
+                                // so, do we have any queues left?
+                                if(!messageManager.receivedMessageQueuesLeft()){
+                                    // always fail when no more message queues
+                                    logger.error("@Cesar: Failing cause there are no more messages to receive in any queue");
+                                    System.exit(0);
+                                }
+                            }
+                            else{
+                                // wait the period for receive
+                                try{
+                                    Thread.sleep(nextMessage.getWaitForNext());
+                                }
+                                catch(InterruptedException ie){
+                                    logger.error("@Cesar: Interrupted while waiting!");
+                                }
+                                // and now do it
+                                ackMessage = nextMessage.getMessageIn();
+                                // save the time and stuff
+                                long networkQueuedTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled) - ackMessage.createdTime;
+                                AckProcessor.networkQueuedTime += networkQueuedTime;
+                                AckProcessor.processCount += 1;
+                                // process the message
+                                try{
+                                    MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(nextMessage.getGeneratedId()));
+                                }
+                                catch(Exception e){
+                                    logger.error("@Cesar: Unexpected exception while processing message <" + ackMessage + ">", e);
+                                    System.exit(0);
+                                }
+                                // continue the cycle
+                            }
+	                    }
 	                	continue;
 	                }
 	                // operate normally
@@ -686,13 +608,9 @@ public class WholeClusterSimulator {
 	                AckProcessor.networkQueuedTime += networkQueuedTime;
 	                AckProcessor.processCount += 1;
 	                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
-	                // ##########################################################################
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-//                if (msgQueue.size() > 100) {
-//                    logger.info("Backlog for " + address + " " + msgQueue.size());
-//                }
             }
         }
         
@@ -705,8 +623,6 @@ public class WholeClusterSimulator {
             while (true) {
                 boolean isStable = true;
                 for (GossiperStub stub : stubGroup) {
-//                    String thisAddress = stub.getInetAddress().toString();
-//                    int seenNode = stub.endpointStateMap.size();
                     int memberNode = stub.getTokenMetadata().endpointWithTokens.size();
                     int deadNode = 0;
                     for (InetAddress address : stub.endpointStateMap.keySet()) {
@@ -715,8 +631,6 @@ public class WholeClusterSimulator {
                             deadNode++;
                         }
                     }
-//                    logger.info("ringinfo of " + thisAddress + " seen nodes = " + seenNode + 
-//                            ", member nodes = " + memberNode + ", dead nodes = " + deadNode);
                     if (memberNode != numStubs || deadNode > 0) {
                         isStable = false;
                         break;
@@ -736,7 +650,6 @@ public class WholeClusterSimulator {
                 long avgProcLateness = numProc == 0 ? 0 : totalProcLateness / numProc;
                 double percentLateness = totalExpectedSleep == 0 ? 0 : ((double) totalRealSleep) / (double) totalExpectedSleep;
                 percentLateness = percentLateness == 0 ? 0 : (percentLateness - 1) * 100;
-//                long avgProcLateness = totalExpectedSleep == 0 ? 0 : totalRealSleep / totalExpectedSleep;
                 if (isStable) {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
@@ -748,80 +661,6 @@ public class WholeClusterSimulator {
                             " ; send lateness " + interval + 
                             " ; network lateness " + (AckProcessor.processCount != 0? AckProcessor.networkQueuedTime / AckProcessor.processCount : 0));
                 }
-//                for (GossiperStub stub : stubGroup) {
-//                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-//                    if (queue.size() > 100) {
-//                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-//                    }
-//                }
-//                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
-//                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
-//                if (tmpLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpLatenessList.size();
-//                    for (Long l : tmpLatenessList) {
-//                        if (!latenessDist.containsKey(l)) {
-//                            latenessDist.put(l, 0.0);
-//                        }
-//                        latenessDist.put(l, latenessDist.get(l) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Long l : latenessDist.keySet()) {
-//                        double dist = latenessDist.get(l);
-//                        sb.append(l);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("abs_lateness " + sb.toString());
-//                }
-//                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
-//                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
-//                if (tmpPercentLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpPercentLatenessList.size();
-//                    for (Double d : tmpPercentLatenessList) {
-//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-//                        if (!percentLatenessDist.containsKey(roundedD)) {
-//                            percentLatenessDist.put(roundedD, 0.0);
-//                        }
-//                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Double d : percentLatenessDist.keySet()) {
-//                        double dist = percentLatenessDist.get(d);
-//                        sb.append(d);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("perc_lateness " + sb.toString());
-//                }
-//                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
-//                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
-//                if (tmpPercentSendLatenessList.size() != 0) {
-//                    double unit = 1.0 / tmpPercentSendLatenessList.size();
-//                    for (Double d : tmpPercentSendLatenessList) {
-//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-//                        if (!percentSendLatenessDist.containsKey(roundedD)) {
-//                            percentSendLatenessDist.put(roundedD, 0.0);
-//                        }
-//                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
-//                    }
-//                    StringBuilder sb = new StringBuilder();
-//                    double totalCdf = 0.0;
-//                    for (Double d : percentSendLatenessDist.keySet()) {
-//                        double dist = percentSendLatenessDist.get(d);
-//                        sb.append(d);
-//                        sb.append("=");
-//                        sb.append(totalCdf + dist);
-//                        sb.append(",");
-//                        totalCdf += dist;
-//                    }
-//                    logger.info("perc_send_lateness " + sb.toString());
-//                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
