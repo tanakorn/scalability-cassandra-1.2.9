@@ -23,7 +23,7 @@ public class TimePreservingService {
     }
     
     public static long getCurrentTimeMillis(boolean isReplayEnabled){
-    	if(isReplayEnabled){
+    	if(false && isReplayEnabled ){
     		// is this is enabled, then we have to return time passed relative
     		// to out beggining
     		long elapsed = System.currentTimeMillis() - relativeTimeStamp;
