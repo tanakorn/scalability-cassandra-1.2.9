@@ -108,8 +108,8 @@ public class WholeClusterSimulator {
 //        }
 //
 //    });
-//    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
-    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
+    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
+//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -214,9 +214,9 @@ public class WholeClusterSimulator {
             int b = (i - 1) % 255 + 1;
             addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
-        for (InetAddress address : addressList) {
-            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-        }
+//        for (InetAddress address : addressList) {
+//            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+//        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
         // ##########################################################################
         // @Cesar:Print properties
@@ -263,18 +263,22 @@ public class WholeClusterSimulator {
             subStub[ii].add(stub);
             ii = (ii + 1) % numGossiper;
         }
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (int i = 0; i < numGossiper; ++i) {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
-        }
-//        timer.schedule(new MyGossiperTask(), 0, 1000);
-        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
-        for (InetAddress address : addressList) {
-            Thread t = new Thread(new AckProcessor(address));
+//            Thread t = new Thread(new AckProcessor(subStub[i]));
+            Thread t = new Thread(new AckProcessor());
             ackProcessThreadPool.add(t);
             t.start();
         }
+//        timer.schedule(new MyGossiperTask(), 0, 1000);
+//        for (InetAddress address : addressList) {
+//            Thread t = new Thread(new AckProcessor(address));
+//            ackProcessThreadPool.add(t);
+//            t.start();
+//        }
         Thread seedThread = new Thread(new Runnable() {
             
             @Override
@@ -414,15 +418,15 @@ public class WholeClusterSimulator {
 	                	GossipMessage toUnreachableMember = round.getToUnreachableMember();
 	                	GossipMessage toSeed = round.getToSeed();
 	                	if(toLiveMember != null){
-	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
+//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
 	                		msgQueue.add(toLiveMember.getMessage());
 	                	}
 	                	if(toUnreachableMember != null){
-	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toUnreachableMember.getToWho());
+//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toUnreachableMember.getToWho());
 	                		msgQueue.add(toUnreachableMember.getMessage());
 	                	}
 	                	if(toSeed != null){
-	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toSeed.getToWho());
+//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toSeed.getToWho());
 	                		msgQueue.add(toSeed.getMessage());
 	                	}
 	                	// do status check
@@ -447,7 +451,7 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
-                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
+//                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -465,26 +469,38 @@ public class WholeClusterSimulator {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
-                if (!unreachableEndpoints.isEmpty()) {
-                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
-                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
-                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
-                    if (prob > random.nextDouble()) {
-                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
-                        if (!msgQueue.add(synMsg)) {
-                            logger.error("Cannot add more message to message queue");
-                        } else {
-                        	// ##########################################################################
-                            // @Cesar: gossip to unreachable member
-                        	// ##########################################################################
-                        	if(WholeClusterSimulator.isSerializationEnabled){
-    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
-    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
-                        	}
-                        	// ##########################################################################
-                        }
-                    }
-                }
+//                if (!unreachableEndpoints.isEmpty()) {
+//                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+//                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
+//                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+//                    if (prob > random.nextDouble()) {
+//                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+//                        if (!msgQueue.add(synMsg)) {
+//                            logger.error("Cannot add more message to message queue");
+//                        } else {
+//                        	// ##########################################################################
+//                            // @Cesar: gossip to unreachable member
+//                        	// ##########################################################################
+//                        	if(WholeClusterSimulator.isSerializationEnabled){
+//    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
+//    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
+//                        	}
+//                        	// ##########################################################################
+//                        }
+//                    }
+//                }
+//                if (!unreachableEndpoints.isEmpty()) {
+//                    InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
+//                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
+//                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+//                    if (prob > random.nextDouble()) {
+////                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+//                        if (!msgQueue.add(synMsg)) {
+//                            logger.error("Cannot add more message to message queue");
+//                        } else {
+//                        }
+//                    }
+//                }
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     int size = seeds.size();
                     if (size > 0) {
@@ -494,7 +510,7 @@ public class WholeClusterSimulator {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+//                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -513,7 +529,7 @@ public class WholeClusterSimulator {
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+//                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -576,18 +592,21 @@ public class WholeClusterSimulator {
     
     public static class AckProcessor implements Runnable {
         
-        InetAddress address;
+//        InetAddress address;
+//        List<GossiperStub> stubs;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
-        public AckProcessor(InetAddress address) {
-            this.address = address;
-        }
+//        public static Object notification = new Object();
+        
+//        public AckProcessor(List<GossiperStub> stubs) {
+//            this.stubs = stubs;
+//        }
 
         @Override
         public void run() {
-            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+//            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
 	                MessageIn<?> ackMessage = null;
@@ -602,6 +621,7 @@ public class WholeClusterSimulator {
 	                	ackMessage = msgQueue.take();
 	                	// finish waiting
 	                	long endWaiting = System.currentTimeMillis();
+	                	InetAddress address = ackMessage.to;
 	                	// save
 	                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
 	                	received.setMessageIn(ackMessage);
@@ -728,88 +748,80 @@ public class WholeClusterSimulator {
                             " ; send lateness " + interval + 
                             " ; network lateness " + (AckProcessor.processCount != 0? AckProcessor.networkQueuedTime / AckProcessor.processCount : 0));
                 }
-                for (GossiperStub stub : stubGroup) {
-                	if(WholeClusterSimulator.isReplayEnabled){
-                		int backlog = messageManager.getReceivedMessageQueueSize(stub.getInetAddress());
-                		if (backlog > 100) {
-	                        logger.info("Backlog of " + stub.getInetAddress() + " " + backlog);
-	                    }
-                	}
-                	else{
-	                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
-	                    if (queue.size() > 100) {
-	                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
-	                    }
-                	}
-                }
-                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
-                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
-                if (tmpLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpLatenessList.size();
-                    for (Long l : tmpLatenessList) {
-                        if (!latenessDist.containsKey(l)) {
-                            latenessDist.put(l, 0.0);
-                        }
-                        latenessDist.put(l, latenessDist.get(l) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Long l : latenessDist.keySet()) {
-                        double dist = latenessDist.get(l);
-                        sb.append(l);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("abs_lateness " + sb.toString());
-                }
-                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
-                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
-                if (tmpPercentLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpPercentLatenessList.size();
-                    for (Double d : tmpPercentLatenessList) {
-                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-                        if (!percentLatenessDist.containsKey(roundedD)) {
-                            percentLatenessDist.put(roundedD, 0.0);
-                        }
-                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Double d : percentLatenessDist.keySet()) {
-                        double dist = percentLatenessDist.get(d);
-                        sb.append(d);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("perc_lateness " + sb.toString());
-                }
-                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
-                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
-                if (tmpPercentSendLatenessList.size() != 0) {
-                    double unit = 1.0 / tmpPercentSendLatenessList.size();
-                    for (Double d : tmpPercentSendLatenessList) {
-                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
-                        if (!percentSendLatenessDist.containsKey(roundedD)) {
-                            percentSendLatenessDist.put(roundedD, 0.0);
-                        }
-                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
-                    }
-                    StringBuilder sb = new StringBuilder();
-                    double totalCdf = 0.0;
-                    for (Double d : percentSendLatenessDist.keySet()) {
-                        double dist = percentSendLatenessDist.get(d);
-                        sb.append(d);
-                        sb.append("=");
-                        sb.append(totalCdf + dist);
-                        sb.append(",");
-                        totalCdf += dist;
-                    }
-                    logger.info("perc_send_lateness " + sb.toString());
-                }
+//                for (GossiperStub stub : stubGroup) {
+//                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
+//                    if (queue.size() > 100) {
+//                        logger.info("Backlog of " + stub.getInetAddress() + " " + queue.size());
+//                    }
+//                }
+//                List<Long> tmpLatenessList = new LinkedList<Long>(procLatenessList);
+//                TreeMap<Long, Double> latenessDist = new TreeMap<Long, Double>();
+//                if (tmpLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpLatenessList.size();
+//                    for (Long l : tmpLatenessList) {
+//                        if (!latenessDist.containsKey(l)) {
+//                            latenessDist.put(l, 0.0);
+//                        }
+//                        latenessDist.put(l, latenessDist.get(l) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Long l : latenessDist.keySet()) {
+//                        double dist = latenessDist.get(l);
+//                        sb.append(l);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("abs_lateness " + sb.toString());
+//                }
+//                List<Double> tmpPercentLatenessList = new LinkedList<Double>(percentProcLatenessList);
+//                TreeMap<Double, Double> percentLatenessDist = new TreeMap<Double, Double>();
+//                if (tmpPercentLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpPercentLatenessList.size();
+//                    for (Double d : tmpPercentLatenessList) {
+//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+//                        if (!percentLatenessDist.containsKey(roundedD)) {
+//                            percentLatenessDist.put(roundedD, 0.0);
+//                        }
+//                        percentLatenessDist.put(roundedD, percentLatenessDist.get(roundedD) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Double d : percentLatenessDist.keySet()) {
+//                        double dist = percentLatenessDist.get(d);
+//                        sb.append(d);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("perc_lateness " + sb.toString());
+//                }
+//                List<Double> tmpPercentSendLatenessList = new LinkedList<Double>(percentSendLatenessList);
+//                TreeMap<Double, Double> percentSendLatenessDist = new TreeMap<Double, Double>();
+//                if (tmpPercentSendLatenessList.size() != 0) {
+//                    double unit = 1.0 / tmpPercentSendLatenessList.size();
+//                    for (Double d : tmpPercentSendLatenessList) {
+//                        Double roundedD = (double) Math.round(d * 100.0) / 100.0;
+//                        if (!percentSendLatenessDist.containsKey(roundedD)) {
+//                            percentSendLatenessDist.put(roundedD, 0.0);
+//                        }
+//                        percentSendLatenessDist.put(roundedD, percentSendLatenessDist.get(roundedD) + unit);
+//                    }
+//                    StringBuilder sb = new StringBuilder();
+//                    double totalCdf = 0.0;
+//                    for (Double d : percentSendLatenessDist.keySet()) {
+//                        double dist = percentSendLatenessDist.get(d);
+//                        sb.append(d);
+//                        sb.append("=");
+//                        sb.append(totalCdf + dist);
+//                        sb.append(",");
+//                        totalCdf += dist;
+//                    }
+//                    logger.info("perc_send_lateness " + sb.toString());
+//                }
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {

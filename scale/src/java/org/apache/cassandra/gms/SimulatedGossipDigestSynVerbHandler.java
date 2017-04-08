@@ -136,6 +136,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
+<<<<<<< HEAD
         gDigestAckMessage.createdTime = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);;
         // ##########################################################################
         // @Cesar: Only if we are not replaying
@@ -145,6 +146,11 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
         }
         // ##########################################################################
 //        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+=======
+        gDigestAckMessage.createdTime = System.currentTimeMillis();
+//        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
+        WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
+>>>>>>> all-minus-pil
     }
 
     /*

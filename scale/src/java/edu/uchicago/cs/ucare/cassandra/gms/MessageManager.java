@@ -14,24 +14,25 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+
 import org.apache.cassandra.net.MessageIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MessageManager{
 
-	private static final int INITIAL_CAPACITY = 100;
+//	private static final int INITIAL_CAPACITY = 100;
 	private static final Logger logger = LoggerFactory.getLogger(MessageManager.class);
 	
-	private Map<InetAddress, ArrayList> sentMessagesPerHost =
-				new HashMap<InetAddress, ArrayList>();
-	private Map<InetAddress, ArrayList> receivedMessagesPerHost =
-				new HashMap<InetAddress, ArrayList>();
+	private Map<InetAddress, List> sentMessagesPerHost =
+				new HashMap<InetAddress, List>();
+	private Map<InetAddress, List> receivedMessagesPerHost =
+				new HashMap<InetAddress, List>();
 	
 	private Map<InetAddress, Integer> gossipRoundsPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
@@ -47,7 +48,7 @@ public class MessageManager{
 		return queuesLeft(receivedMessagesPerHost);
 	}
 	
-	private boolean queuesLeft(Map<InetAddress, ArrayList> map){
+	private boolean queuesLeft(Map<InetAddress, List> map){
 		return map.size() > 0;
 	}
 	
@@ -60,8 +61,8 @@ public class MessageManager{
 	}
 	
 	private void removeMessageQueue(InetAddress host, 
-									Map<InetAddress, ArrayList> map){
-		ArrayList q = map.get(host);
+									Map<InetAddress, List> map){
+		List q = map.get(host);
 		if(q != null && q.size() == 0){
 			synchronized(map) {
 				map.remove(host);
@@ -102,7 +103,7 @@ public class MessageManager{
 	}
 	
 	private int getSizeOf(InetAddress host, 
-						  Map<InetAddress, ArrayList> map){
+						  Map<InetAddress, List> map){
 		return map.containsKey(host)? map.get(host).size() : 0;
 	}
 	
@@ -186,9 +187,9 @@ public class MessageManager{
 	}
 	
 	private Integer pollNext(InetAddress host, 
-						Map<InetAddress, ArrayList> map){
+						Map<InetAddress, List> map){
 		if(!map.containsKey(host)) return null;
-		ArrayList target = map.get(host);
+		List target = map.get(host);
 		if(target.size() > 0){
 			Integer value = (Integer)target.get(0);
 			target.remove(0);
@@ -209,12 +210,12 @@ public class MessageManager{
 	
 	private void addToQueue(InetAddress host, 
 							int message, 
-							Map<InetAddress, ArrayList> map){
+							Map<InetAddress, List> map){
 		if (map.containsKey(host)){
 			map.get(host).add(message);
 		}
 		else{
-			ArrayList pq = new ArrayList();
+			List pq = new LinkedList();
 			pq.add(message);
 			map.put(host, pq);
 			
