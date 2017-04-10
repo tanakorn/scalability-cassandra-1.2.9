@@ -28,7 +28,7 @@ import org.apache.cassandra.net.CompactEndpointSerializationHelper;
  * Contains information about a specified list of Endpoints and the largest version
  * of the state they have generated as known by the local endpoint.
  */
-public class GossipDigest implements Comparable<GossipDigest>
+public class GossipDigest implements Comparable<GossipDigest>,  Serializable
 {
     public static final IVersionedSerializer<GossipDigest> serializer = new GossipDigestSerializer();
 

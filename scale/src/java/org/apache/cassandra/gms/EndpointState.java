@@ -32,7 +32,7 @@ import org.cliffc.high_scale_lib.NonBlockingHashMap;
  */
 
 
-public class EndpointState
+public class EndpointState implements Serializable
 {
     protected static final Logger logger = LoggerFactory.getLogger(EndpointState.class);
 

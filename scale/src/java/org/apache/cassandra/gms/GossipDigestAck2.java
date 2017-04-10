@@ -31,7 +31,7 @@ import org.apache.cassandra.net.CompactEndpointSerializationHelper;
  * This ack gets sent out as a result of the receipt of a GossipDigestAckMessage. This the
  * last stage of the 3 way messaging of the Gossip protocol.
  */
-public class GossipDigestAck2
+public class GossipDigestAck2 implements Serializable
 {
     public static final IVersionedSerializer<GossipDigestAck2> serializer = new GossipDigestAck2Serializer();
 

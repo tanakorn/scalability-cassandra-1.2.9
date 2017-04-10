@@ -89,6 +89,13 @@ public class WholeClusterSimulator {
     public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
 //    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
+    
+    // #############################################################
+    // @Cesar: Properties
+    // #############################################################
+    public static final boolean recordEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.recordEnabled", "FALSE"));
+    public static final boolean replayEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.replayEnabled", "FALSE"));
+    // #############################################################
     public static final Set<InetAddress> observedNodes;
     static {
         observedNodes = new HashSet<InetAddress>();
@@ -353,6 +360,11 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
+                    // #############################################################################################
+                    // @Cesar: After how long was this message created (from cluster start)
+                    // #############################################################################################
+                    synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                    // #############################################################################################
 //                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
@@ -384,6 +396,11 @@ public class WholeClusterSimulator {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
+                                // #############################################################################################
+                                // @Cesar: After how long was this message created (from cluster start)
+                                // #############################################################################################
+                                synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                                // #############################################################################################
 //                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
@@ -396,7 +413,12 @@ public class WholeClusterSimulator {
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-//                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+                                    // #############################################################################################
+                                    // @Cesar: After how long was this message created (from cluster start)
+                                    // #############################################################################################
+                                    synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                                    // #############################################################################################
+                                    //                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -459,19 +481,55 @@ public class WholeClusterSimulator {
 //            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
-                MessageIn<?> ackMessage = msgQueue.take();
-                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-                AckProcessor.networkQueuedTime += networkQueuedTime;
-                AckProcessor.processCount += 1;
-//                logger.info("Doing " + ackMessage.verb + " for " + ackMessage.to); 
-//                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(idGen.incrementAndGet()));
-                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-//                if (msgQueue.size() > 100) {
-//                    logger.info("Backlog for " + address + " " + msgQueue.size());
-//                }
+	                if(WholeClusterSimulator.recordEnabled){
+	                	// #################################################################
+		                // @Cesar: Record here
+		                // #################################################################
+	                	MessageIn<?> ackMessage = msgQueue.take();
+	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, idGen.incrementAndGet());
+		                MessageManager.instance.getReceivedMessageManager().saveReceivedMessageToFile(newMessage);
+		                // @Cesar: and process
+		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                AckProcessor.networkQueuedTime += networkQueuedTime;
+		                AckProcessor.processCount += 1;
+		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+	                	// #################################################################
+	                }
+	                else if(WholeClusterSimulator.replayEnabled){
+	                	// #################################################################
+		                // @Cesar: Replay here
+		                // #################################################################
+	                	ReceivedMessageManager.ReceivedMessage newMessage = MessageManager.instance.getReceivedMessageManager().pollNextReceivedMessage();
+	                	if(newMessage != null){
+	                		MessageIn<?> ackMessage = newMessage.getMessageIn();
+			                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+			                AckProcessor.networkQueuedTime += networkQueuedTime;
+			                AckProcessor.processCount += 1;
+			                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+	                	}
+	                	else{
+	                		// fail when no more messages to replay
+	                		logger.error("@Cesar: Failing cause there are no more messages to replay");
+	                		System.exit(0);
+	                	}
+	                	// #################################################################
+	                }
+	                else{
+	                	// #################################################################
+	                	// @Cesar: Normal
+	                	// #################################################################
+	                	MessageIn<?> ackMessage = msgQueue.take();
+		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                AckProcessor.networkQueuedTime += networkQueuedTime;
+		                AckProcessor.processCount += 1;
+		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+		                // #################################################################
+	                }
+	                
+	            } 
+                catch (InterruptedException e) {
+	                    e.printStackTrace();
+	            }
             }
         }
         
