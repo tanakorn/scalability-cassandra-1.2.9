@@ -183,6 +183,7 @@ public class WholeClusterSimulator {
         // #############################################################
         MessageManager.instance.initMessageManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
         TimeManager.instance.initTimeManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
+        TimeManager.instance.saveInitialTime();
         // #############################################################
         
         buffReader = new BufferedReader(new FileReader(args[2]));
@@ -494,7 +495,7 @@ public class WholeClusterSimulator {
 		                // @Cesar: Record here
 		                // #################################################################
 	                	MessageIn<?> ackMessage = msgQueue.take();
-	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, idGen.incrementAndGet());
+	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, idGen.incrementAndGet(), ackMessage.to);
 		                MessageManager.instance.getReceivedMessageManager().saveReceivedMessageToFile(newMessage);
 		                // @Cesar: and process
 		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;

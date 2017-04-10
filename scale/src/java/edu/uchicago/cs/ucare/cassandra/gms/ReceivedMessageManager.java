@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.cassandra.net.MessageIn;
@@ -34,8 +35,8 @@ public class ReceivedMessageManager{
 	}
 	
 	public void saveReceivedMessageToFile(final ReceivedMessage message){
-		String fileName = MessageUtil.buildReceivedMessageFilePathForRound(message, messageBasePath);
-		String mapFileName = MessageUtil.buildReceivedMessageFilePathForMap(messageBasePath);
+		String fileName = MessageUtil.buildReceivedMessageFilePathForRound(message, messageBasePath, message.messageOwner);
+		String mapFileName = MessageUtil.buildReceivedMessageFilePathForMap(messageBasePath, message.messageOwner);
 		PrintWriter pr = null;
 		ObjectOutputStream out = null;
 		FileOutputStream fopt = null;
@@ -134,14 +135,16 @@ public class ReceivedMessageManager{
 		private int messageRound = 0;
 		private MessageIn<?> messageIn = null;
 		private int messageId = 0; 
+		private InetAddress messageOwner = null;
 		
 		public ReceivedMessage(){
 			// nothing here
 		}
 		
-		public ReceivedMessage(MessageIn<?> messageIn, int messageId){
+		public ReceivedMessage(MessageIn<?> messageIn, int messageId, InetAddress messageOwner){
 			this.messageId = messageId;
 			this.messageIn = messageIn;
+			this.messageOwner = messageOwner;
 			messageRound = ROUND;
 			++ROUND;
 		}
