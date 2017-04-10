@@ -127,7 +127,7 @@ public class OutboundTcpConnection extends Thread
         while (true)
         {
         	// ###################################################
-            //  @Cesar: Disconnect now
+            //  @Cesar: Disconnect now, this guys should not be running
         	// ###################################################
         	disconnect();
         	boolean run = false;
