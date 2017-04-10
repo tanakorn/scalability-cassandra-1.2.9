@@ -95,6 +95,7 @@ public class WholeClusterSimulator {
     // #############################################################
     public static final boolean recordEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.recordEnabled", "FALSE"));
     public static final boolean replayEnabled = Boolean.parseBoolean(System.getProperty("edu.uchicago.ucare.sck.replayEnabled", "FALSE"));
+    public static final String baseMessageFolder = System.getProperty("edu.uchicago.ucare.sck.baseMessageFolder", "");
     // #############################################################
     public static final Set<InetAddress> observedNodes;
     static {
@@ -177,6 +178,13 @@ public class WholeClusterSimulator {
             bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
+        // #############################################################
+        // @Cesar: Init the managers
+        // #############################################################
+        MessageManager.instance.initMessageManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
+        TimeManager.instance.initTimeManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
+        // #############################################################
+        
         buffReader = new BufferedReader(new FileReader(args[2]));
         while ((line = buffReader.readLine()) != null) {
             String[] tokens = line.split(" ");

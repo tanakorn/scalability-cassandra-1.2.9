@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class TimeManager {
 
-	public static TimeManager instance = new TimeManager();
+	public static final TimeManager instance = new TimeManager();
 	private static Logger logger = LoggerFactory.getLogger(TimeManager.class);
 	
 	private long baseTimeStamp = 0L;
