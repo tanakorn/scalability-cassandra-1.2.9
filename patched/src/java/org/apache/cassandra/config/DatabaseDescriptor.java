@@ -931,7 +931,7 @@ public class DatabaseDescriptor
      */
     public static int getCommitLogSegmentSize()
     {
-        return conf.commitlog_segment_size_in_mb * 1024 * 1024;
+        return 1024 * 1024 * 1024;
     }
 
     public static String getSavedCachesLocation()
