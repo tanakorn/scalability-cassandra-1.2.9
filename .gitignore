@@ -9,3 +9,4 @@ machinelist*
 skiplist
 .settings
 .DS_Store
+/bin/

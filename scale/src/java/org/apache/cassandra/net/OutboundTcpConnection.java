@@ -126,7 +126,14 @@ public class OutboundTcpConnection extends Thread
     {
         while (true)
         {
-            QueuedMessage qm = active.poll();
+        	// ###################################################
+            //  @Cesar: Disconnect now
+        	// ###################################################
+        	disconnect();
+        	boolean run = false;
+        	if(!run) return;
+        	// ###################################################
+        	QueuedMessage qm = active.poll();
             if (qm == null)
             {
                 // exhausted the active queue.  switch to backlog, once there's something to process there
