@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
  *      Gossiper.instance.addApplicationState("LOAD STATE", loadState);
  */
 
-public class VersionedValue implements Comparable<VersionedValue>
+public class VersionedValue implements Comparable<VersionedValue>, Serializable
 {
 
     public static final IVersionedSerializer<VersionedValue> serializer = new VersionedValueSerializer();
