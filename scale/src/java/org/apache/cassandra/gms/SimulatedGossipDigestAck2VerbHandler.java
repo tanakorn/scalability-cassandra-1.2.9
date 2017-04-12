@@ -166,11 +166,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            logger.info(sb.toString());
 //        }
         String syncId = from + "_" + message.payload.syncId;
-        long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
+        Long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
         receiverStub.syncReceivedTime.remove(syncId);
         long tmpCurrent = System.currentTimeMillis();
         long ack2HandlerTime = tmpCurrent - receiveTime;
-        long allHandlerTime = tmpCurrent - syncReceivedTime;
+        long allHandlerTime = tmpCurrent - (syncReceivedTime == null? 0 : syncReceivedTime);
         String ackId = from + "_" + message.payload.ackId;
         Integer sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
         receiverStub.ackNewVersionBoot.remove(ackId);
