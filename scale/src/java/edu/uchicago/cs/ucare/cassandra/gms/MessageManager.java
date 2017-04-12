@@ -1,5 +1,7 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import java.net.InetAddress;
+import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +14,7 @@ public class MessageManager {
 	private ReceivedMessageManager receivedMessageManager = null;
 	
 	
-	public void initMessageManager(boolean isReplayEnabled, String messagingBasePath ){
+	public void initMessageManager(boolean isReplayEnabled, String messagingBasePath){
 		this.isReplayEnabled = isReplayEnabled;
 		if(messagingBasePath != null){
 			receivedMessageManager = new ReceivedMessageManager(messagingBasePath);

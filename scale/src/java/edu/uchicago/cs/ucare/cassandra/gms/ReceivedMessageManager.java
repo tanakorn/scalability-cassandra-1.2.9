@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.cassandra.net.MessageIn;
@@ -24,7 +25,7 @@ public class ReceivedMessageManager{
 
 	private static Logger logger = LoggerFactory.getLogger(ReceivedMessageManager.class);
 	
-	private LinkedBlockingQueue<Integer> msgQueue = null;
+	private Queue<Integer> msgQueue = null;
 	private String messageBasePath = null;
 	
 	public ReceivedMessageManager(String messageBasePath){
@@ -35,8 +36,8 @@ public class ReceivedMessageManager{
 	}
 	
 	public void saveReceivedMessageToFile(final ReceivedMessage message){
-		String fileName = MessageUtil.buildReceivedMessageFilePathForRound(message, messageBasePath, message.messageOwner);
-		String mapFileName = MessageUtil.buildReceivedMessageFilePathForMap(messageBasePath, message.messageOwner);
+		String fileName = MessageUtil.buildReceivedMessageFilePathForRound(message, messageBasePath);
+		String mapFileName = MessageUtil.buildReceivedMessageFilePathForMap(messageBasePath);
 		PrintWriter pr = null;
 		ObjectOutputStream out = null;
 		FileOutputStream fopt = null;
@@ -135,16 +136,14 @@ public class ReceivedMessageManager{
 		private int messageRound = 0;
 		private MessageIn<?> messageIn = null;
 		private int messageId = 0; 
-		private InetAddress messageOwner = null;
 		
 		public ReceivedMessage(){
 			// nothing here
 		}
 		
-		public ReceivedMessage(MessageIn<?> messageIn, int messageId, InetAddress messageOwner){
+		public ReceivedMessage(MessageIn<?> messageIn, int messageId){
 			this.messageId = messageId;
 			this.messageIn = messageIn;
-			this.messageOwner = messageOwner;
 			messageRound = ROUND;
 			++ROUND;
 		}
