@@ -49,7 +49,7 @@ public class ReceivedMessageManager{
 			out.writeObject(message);
 			// also, print and concat the id to a file
 			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
-			pr.println(message.getMessageRound());
+			pr.println(message.getMessageRound() + MessageUtil.STATE_FIELD_SEP + message.getMessageId());
 			if(logger.isDebugEnabled()) logger.debug("@Cesar: Message <" + message.getMessageRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
 		}
 		catch(Exception ioe){
@@ -135,7 +135,7 @@ public class ReceivedMessageManager{
 		
 		private int messageRound = 0;
 		private MessageIn<?> messageIn = null;
-		private int messageId = 0; 
+		private long messageId = 0; 
 		
 		public ReceivedMessage(){
 			// nothing here
@@ -168,7 +168,7 @@ public class ReceivedMessageManager{
 			this.messageIn = messageIn;
 		}
 
-		public int getMessageId() {
+		public long getMessageId() {
 			return messageId;
 		}
 
