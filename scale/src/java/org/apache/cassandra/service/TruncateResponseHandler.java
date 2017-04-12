@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,12 +45,12 @@ public class TruncateResponseHandler implements IAsyncCallback
         assert 1 <= responseCount: "invalid response count " + responseCount;
 
         this.responseCount = responseCount;
-        startTime = System.currentTimeMillis();
+        startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     }
 
     public void get() throws TimeoutException
     {
-        long timeout = DatabaseDescriptor.getTruncateRpcTimeout() - (System.currentTimeMillis() - startTime);
+        long timeout = DatabaseDescriptor.getTruncateRpcTimeout() - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime);
         boolean success;
         try
         {

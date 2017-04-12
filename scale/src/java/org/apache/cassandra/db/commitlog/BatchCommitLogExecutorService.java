@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.commitlog;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.*;
@@ -111,7 +112,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 //    private final ArrayList taskValues = new ArrayList(); // TODO not sure how to generify this
 //    private boolean processWithSyncBatch() throws Exception
 //    {
-//            final long e = System.currentTimeMillis();
+//            final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //        CheaterFutureTask firstTask = queue.poll(100, TimeUnit.MILLISECONDS);
 //        if (firstTask == null)
 //            return false;
@@ -148,14 +149,14 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 //        {
 //            incompleteTasks.get(i).set(taskValues.get(i));
 //        }
-//                    long s = System.currentTimeMillis() - e;
+//                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 ////                    System.out.println(s);
 //        return true;
 //    }
     
     private boolean processWithSyncBatch(int ii) throws Exception
     {
-        final long e = System.currentTimeMillis();
+        final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         CheaterFutureTask firstTask = queue[ii].poll(100, TimeUnit.MILLISECONDS);
         if (firstTask == null)
             return false;
@@ -192,7 +193,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
         {
             incompleteTasks[ii].get(i).set(taskValues[ii].get(i));
         }
-                    long s = System.currentTimeMillis() - e;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    System.out.println(s);
         return true;
     }

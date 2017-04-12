@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.compaction;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.*;
 
 import com.google.common.util.concurrent.RateLimiter;
@@ -176,7 +177,7 @@ public abstract class AbstractCompactionStrategy
         // since we use estimations to calculate, there is a chance that compaction will not drop tombstones actually.
         // if that happens we will end up in infinite compaction loop, so first we check enough if enough time has
         // elapsed since SSTable created.
-        if (System.currentTimeMillis() < sstable.getCreationTimeFor(Component.DATA) + tombstoneCompactionInterval * 1000)
+        if (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() < sstable.getCreationTimeFor(Component.DATA) + tombstoneCompactionInterval * 1000)
            return false;
 
         double droppableRatio = sstable.getEstimatedDroppableTombstoneRatio(gcBefore);

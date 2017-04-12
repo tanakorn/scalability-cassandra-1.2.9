@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -50,7 +51,7 @@ public class SSTableMetadataViewer
             out.printf("Partitioner: %s%n", metadata.partitioner);
             out.printf("Maximum timestamp: %s%n", metadata.maxTimestamp);
             out.printf("Compression ratio: %s%n", metadata.compressionRatio);
-            out.printf("Estimated droppable tombstones: %s%n", metadata.getEstimatedDroppableTombstoneRatio((int) (System.currentTimeMillis() / 1000)));
+            out.printf("Estimated droppable tombstones: %s%n", metadata.getEstimatedDroppableTombstoneRatio((int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000)));
             out.println(metadata.replayPosition);
             printHistograms(metadata, out);
         }

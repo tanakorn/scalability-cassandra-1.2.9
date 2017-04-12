@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.cql3;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -373,7 +374,7 @@ public abstract class Lists
                 return;
 
             assert value instanceof Lists.Value;
-            long time = PrecisionTime.REFERENCE_TIME - (System.currentTimeMillis() - PrecisionTime.REFERENCE_TIME);
+            long time = PrecisionTime.REFERENCE_TIME - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - PrecisionTime.REFERENCE_TIME);
 
             List<ByteBuffer> toAdd = ((Lists.Value)value).elements;
             ColumnNameBuilder column = prefix.add(columnName.key);

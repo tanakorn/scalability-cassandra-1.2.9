@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -44,10 +46,10 @@ public class SimpleCondition implements Condition
         // micro/nanoseconds not supported
         assert unit == TimeUnit.DAYS || unit == TimeUnit.HOURS || unit == TimeUnit.MINUTES || unit == TimeUnit.SECONDS || unit == TimeUnit.MILLISECONDS;
 
-        long end = System.currentTimeMillis() + unit.convert(time, TimeUnit.MILLISECONDS);
-        while (!set && end > System.currentTimeMillis())
+        long end = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + unit.convert(time, TimeUnit.MILLISECONDS);
+        while (!set && end > TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp())
         {
-            TimeUnit.MILLISECONDS.timedWait(this, end - System.currentTimeMillis());
+            TimeUnit.MILLISECONDS.timedWait(this, end - TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         }
         return set;
     }

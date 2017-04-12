@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -353,7 +354,7 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            long start = System.currentTimeMillis();
+            long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             if (previousTime != 0) {
                 long interval = start - previousTime;
                 interval = interval < 1000 ? 1000 : interval;
@@ -375,7 +376,7 @@ public class WholeClusterSimulator {
                     // #############################################################################################
                     // @Cesar: After how long was this message created (from cluster start)
                     // #############################################################################################
-                    synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                    synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                     // #############################################################################################
 //                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
@@ -411,7 +412,7 @@ public class WholeClusterSimulator {
                                 // #############################################################################################
                                 // @Cesar: After how long was this message created (from cluster start)
                                 // #############################################################################################
-                                synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                                synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                                 // #############################################################################################
 //                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
@@ -428,7 +429,7 @@ public class WholeClusterSimulator {
                                     // #############################################################################################
                                     // @Cesar: After how long was this message created (from cluster start)
                                     // #############################################################################################
-                                    synMsg.createdAfter = System.currentTimeMillis() - TimeManager.instance.getRelativeTimeStamp();
+                                    synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                                     // #############################################################################################
                                     //                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
@@ -443,7 +444,7 @@ public class WholeClusterSimulator {
                 }
                 performer.doStatusCheck();
             }
-//            long gossipingTime = System.currentTimeMillis() - start;
+//            long gossipingTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start;
 //            if (gossipingTime > 1000) {
 //                long lateness = gossipingTime - 1000;
 //                long totalLateness = lateness * stubs.size();
@@ -503,7 +504,7 @@ public class WholeClusterSimulator {
 	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, System.nanoTime());
 		                MessageManager.instance.getReceivedMessageManager().saveReceivedMessageToFile(newMessage);
 		                // @Cesar: and process
-		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                long networkQueuedTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - ackMessage.createdTime;
 		                AckProcessor.networkQueuedTime += networkQueuedTime;
 		                AckProcessor.processCount += 1;
 		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
@@ -523,8 +524,8 @@ public class WholeClusterSimulator {
 	                		// lock the host
 		                	SynchronizationManager.instance.lockHost(ackMessage.to);
 		                	// only process if this is the next message
-		                	if(SynchronizationManager.instance.determineNextMessageForHost(newMessage.getMessageRound(), ackMessage.to.toString())){
-			                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                	if(SynchronizationManager.instance.isNextMessageForHost(newMessage.getMessageRound(), ackMessage.to.toString())){
+			                	long networkQueuedTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - ackMessage.createdTime;
 				                AckProcessor.networkQueuedTime += networkQueuedTime;
 				                AckProcessor.processCount += 1;
 				                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
@@ -549,7 +550,7 @@ public class WholeClusterSimulator {
 	                	// @Cesar: Normal
 	                	// #################################################################
 	                	MessageIn<?> ackMessage = msgQueue.take();
-		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                long networkQueuedTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - ackMessage.createdTime;
 		                AckProcessor.networkQueuedTime += networkQueuedTime;
 		                AckProcessor.processCount += 1;
 		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");

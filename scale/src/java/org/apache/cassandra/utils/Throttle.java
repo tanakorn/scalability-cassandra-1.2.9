@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,12 +69,12 @@ public class Throttle
             logger.debug("{} target throughput now {} bytes/ms.", this, newTargetBytesPerMS);
             targetBytesPerMS = newTargetBytesPerMS;
             bytesAtLastDelay += bytesDelta;
-            timeAtLastDelay = System.currentTimeMillis();
+            timeAtLastDelay = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             return;
         }
 
         // time passed since last delay
-        long msSinceLast = System.currentTimeMillis() - timeAtLastDelay;
+        long msSinceLast = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - timeAtLastDelay;
         // the excess bytes in this period
         long excessBytes = bytesDelta - msSinceLast * targetBytesPerMS;
 
@@ -94,7 +95,7 @@ public class Throttle
             }
         }
         bytesAtLastDelay += bytesDelta;
-        timeAtLastDelay = System.currentTimeMillis();
+        timeAtLastDelay = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     }
 
     @Override

@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.UUID;
@@ -176,7 +177,7 @@ public class ColumnFamily extends AbstractColumnContainer implements IRowCacheEn
     public void addCounter(QueryPath path, long value)
     {
         assert path.columnName != null : path;
-        addColumn(path.superColumnName, new CounterUpdateColumn(path.columnName, value, System.currentTimeMillis()));
+        addColumn(path.superColumnName, new CounterUpdateColumn(path.columnName, value, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()));
     }
 
     public void addTombstone(QueryPath path, ByteBuffer localDeletionTime, long timestamp)

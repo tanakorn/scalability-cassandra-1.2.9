@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.compaction;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -572,7 +573,7 @@ public class CompactionManager implements CompactionManagerMBean
             }
 
             CompactionController controller = new CompactionController(cfs, Collections.singletonList(sstable), getDefaultGcBefore(cfs));
-            long startTime = System.currentTimeMillis();
+            long startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             long totalkeysWritten = 0;
 
@@ -673,7 +674,7 @@ public class CompactionManager implements CompactionManagerMBean
                 results.add(newSstable);
 
                 String format = "Cleaned up to %s.  %,d to %,d (~%d%% of original) bytes for %,d keys.  Time: %,dms.";
-                long dTime = System.currentTimeMillis() - startTime;
+                long dTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime;
                 long startsize = sstable.onDiskLength();
                 long endsize = newSstable.onDiskLength();
                 double ratio = (double)endsize / (double)startsize;
@@ -889,8 +890,8 @@ public class CompactionManager implements CompactionManagerMBean
         // 2ndary indexes have ExpiringColumns too, so we need to purge tombstones deleted before now. We do not need to
         // add any GcGrace however since 2ndary indexes are local to a node.
         return cfs.isIndex()
-               ? (int) (System.currentTimeMillis() / 1000)
-               : (int) (System.currentTimeMillis() / 1000) - cfs.metadata.getGcGraceSeconds();
+               ? (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000)
+               : (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) - cfs.metadata.getGcGraceSeconds();
     }
 
     private static class ValidationCompactionIterable extends CompactionIterable

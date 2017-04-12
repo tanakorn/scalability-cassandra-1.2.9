@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -446,12 +447,12 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
         if (!isRowCacheEnabled())
             return;
 
-        long start = System.currentTimeMillis();
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         int cachedRowsRead = CacheService.instance.rowCache.loadSaved(this);
         if (cachedRowsRead > 0)
             logger.info(String.format("completed loading (%d ms; %d keys) row cache for %s.%s",
-                        System.currentTimeMillis() - start,
+                        TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start,
                         cachedRowsRead,
                         table.name,
                         columnFamily));
@@ -633,9 +634,9 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 {
 //                    System.out.println("b");
 //                    logger.info("Enqueuing flush of {}", memtable);
-                    long e = System.currentTimeMillis();
+                    long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                     memtable.flushAndSignal(latch, ctx);
-                    long s = System.currentTimeMillis() - e;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    System.out.println(s);
 //                    logger.info("ww 1 " + s);
                 }
@@ -652,11 +653,11 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             {
                 public void runMayThrow() throws InterruptedException, ExecutionException
                 {
-                    long e = System.currentTimeMillis();
+                    long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                     latch.await();
-                    long s = System.currentTimeMillis() - e;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("ww 1 " + s);
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
                     if (!icc.isEmpty())
                     {
@@ -669,17 +670,17 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                             index.forceBlockingFlush();
                         }
                     }
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("ww 2 " + s);
 
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                     if (writeCommitLog)
                     {
                         // if we're not writing to the commit log, we are replaying the log, so marking
                         // the log header with "you can discard anything written before the context" is not valid
                         CommitLog.instance.discardCompletedSegments(metadata.cfId, ctx.get());
                     }
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("ww 3 " + s);
                 }
             });
@@ -989,7 +990,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
     {
         // skip snapshot creation during scrub, SEE JIRA 5891
         if(!disableSnapshot)
-            snapshotWithoutFlush("pre-scrub-" + System.currentTimeMillis());
+            snapshotWithoutFlush("pre-scrub-" + TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         CompactionManager.instance.performScrub(ColumnFamilyStore.this);
     }
 
@@ -1146,7 +1147,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
 
     public int gcBefore()
     {
-        return (int) (System.currentTimeMillis() / 1000) - metadata.getGcGraceSeconds();
+        return (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) - metadata.getGcGraceSeconds();
     }
 
     /**
@@ -1441,7 +1442,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
         try
         {
             final CloseableIterator<Row> iterator = RowIteratorFactory.getIterator(view.memtables, view.sstables, startWith, stopAt, filter, this);
-            final int gcBefore = (int)(System.currentTimeMillis() / 1000) - metadata.getGcGraceSeconds();
+            final int gcBefore = (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) - metadata.getGcGraceSeconds();
 
             return new AbstractScanIterator()
             {
@@ -1780,8 +1781,8 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             // that was part of the flushed we forced; otherwise on a tie, it won't get deleted.
             try
             {
-                long starttime = System.currentTimeMillis();
-                while ((System.currentTimeMillis() - starttime) < 1)
+                long starttime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+                while ((TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - starttime) < 1)
                 {
                     Thread.sleep(1);
                 }
@@ -1812,7 +1813,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             }
         }
 
-        long truncatedAt = System.currentTimeMillis();
+        long truncatedAt = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         if (DatabaseDescriptor.isAutoSnapshot())
             snapshot(Table.getTimestampedSnapshotName(columnFamily));
 

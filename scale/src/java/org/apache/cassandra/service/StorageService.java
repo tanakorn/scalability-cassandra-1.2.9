@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
@@ -301,7 +302,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         if (!initialized)
         {
             logger.warn("Starting gossip by operator request");
-            Gossiper.instance.start((int)(System.currentTimeMillis() / 1000));
+            Gossiper.instance.start((int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000));
             initialized = true;
         }
     }
@@ -438,7 +439,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Gossiper.registerStatic(this);
         Gossiper.instance.register(migrationManager);
         Gossiper.registerStatic(migrationManager);
-        Gossiper.instance.start((int) (System.currentTimeMillis() / 1000)); // needed for node-ring gathering.
+        Gossiper.instance.start((int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000)); // needed for node-ring gathering.
         Gossiper.instance.addLocalApplicationState(ApplicationState.NET_VERSION, valueFactory.networkVersion());
 
         MessagingService.instance().listen(FBUtilities.getLocalAddress());
@@ -626,7 +627,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                 SystemTable.setBootstrapState(SystemTable.BootstrapState.IN_PROGRESS);
             setMode(Mode.JOINING, "waiting for ring information", true);
             // first sleep the delay to make sure we see all our peers
-            long start = System.currentTimeMillis();
+            long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             for (int i = 0; i < delay; i += 1000)
             {
                 // if we see schema, we can proceed to the next check directly
@@ -644,7 +645,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     throw new AssertionError(e);
                 }
             }
-            long time = System.currentTimeMillis() - start;
+            long time = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start;
             // if our schema hasn't matched yet, keep sleeping until it does
             // (post CASSANDRA-1391 we don't expect this to be necessary very often, but it doesn't hurt to be careful)
             while (!MigrationManager.isReadyForBootstrap())
@@ -710,7 +711,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                     InetAddress existing = tokenMetadata.getEndpoint(token);
                     if (existing != null)
                     {
-                        if (Gossiper.instance.getEndpointStateForEndpoint(existing).getUpdateTimestamp() > (System.currentTimeMillis() - delay))
+                        if (Gossiper.instance.getEndpointStateForEndpoint(existing).getUpdateTimestamp() > (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - delay))
                             throw new UnsupportedOperationException("Cannnot replace a token for a Live node... ");
                         current.add(existing);
                     }
@@ -723,9 +724,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
                 setMode(Mode.JOINING, "Replacing a node with token: " + tokens, true);
             }
 
-            start = System.currentTimeMillis();
+            start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             bootstrap(tokens);
-            time = System.currentTimeMillis() - start;
+            time = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start;
             assert !isBootstrapMode; // bootstrap will block until finished
         }
         else
@@ -1630,9 +1631,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         Set<Token> localTokensToRemove = new HashSet<Token>();
         Set<InetAddress> endpointsToRemove = new HashSet<InetAddress>();
 //        Multimap<InetAddress, Token> epToTokenCopy = getTokenMetadata().getEndpointToTokenMapForReading();
-//        long et = System.currentTimeMillis();
+//        long et = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         Multimap<InetAddress, Token> epToTokenCopy = tokenMetadata.getEndpointToTokenMapForReading();
-//        et = System.currentTimeMillis() - et;
+//        et = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - et;
 //        System.out.println(et);
 
         for (final Token token : tokens)
@@ -1724,11 +1725,11 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         }
         if (!tokensToUpdateInSystemTable.isEmpty()) {
 //            System.out.println("hello 2");
-            final long e = System.currentTimeMillis();
+            final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             synchronized (stub) {
                 SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
             }
-//            long s = System.currentTimeMillis() - e;
+//            long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            System.out.println(s);
         }
         if (!localTokensToRemove.isEmpty()) {

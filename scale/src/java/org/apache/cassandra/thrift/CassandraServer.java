@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.thrift;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -1556,7 +1557,7 @@ public class CassandraServer implements Cassandra.Iface
 
         try
         {
-            internal_remove(key, path, System.currentTimeMillis(), consistency_level, true);
+            internal_remove(key, path, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(), consistency_level, true);
         }
         catch (RequestValidationException e)
         {

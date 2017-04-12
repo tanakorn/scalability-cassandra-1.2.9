@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.*;
 
 import org.apache.cassandra.db.columniterator.IColumnIteratorFactory;
@@ -77,7 +78,7 @@ public class RowIteratorFactory
         // reduce rows from all sources into a single row
         return MergeIterator.get(iterators, COMPARE_BY_KEY, new MergeIterator.Reducer<OnDiskAtomIterator, Row>()
         {
-            private final int gcBefore = (int) (System.currentTimeMillis() / 1000) - cfs.metadata.getGcGraceSeconds();
+            private final int gcBefore = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) - cfs.metadata.getGcGraceSeconds();
             private final List<OnDiskAtomIterator> colIters = new ArrayList<OnDiskAtomIterator>();
             private DecoratedKey key;
             private ColumnFamily returnCF;

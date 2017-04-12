@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+        long receiveTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack");
@@ -90,11 +91,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //                    long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
 //                    long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
 //                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-//                    long realSleep = System.currentTimeMillis();
+//                    long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //                    if (sleepTime > 0) {
 //                        Thread.sleep(sleepTime);
 //                    }
-//                    realSleep = System.currentTimeMillis() - realSleep;
+//                    realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
 //                    long lateness = realSleep - sleepTime;
 //                    lateness = lateness < 0 ? 0 : lateness;
 //                    WholeClusterSimulator.totalRealSleep += realSleep;
@@ -112,9 +113,9 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //                    }
 ////                    logger.info("Processing lateness " + lateness);
 //                }
-//                long realSleep = System.currentTimeMillis();
+//                long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //                Thread.sleep(sleepTime);
-//                realSleep = System.currentTimeMillis() - realSleep;
+//                realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
 //                long lateness = realSleep - sleepTime;
 //                lateness = lateness < 0 ? 0 : lateness;
 //                logger.info("Processing lateness " + lateness);
@@ -122,7 +123,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //                // TODO Auto-generated catch block
 //                e.printStackTrace();
 //            }
-//            long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+//            long mockExecTime = message.getWakeUpTime() - TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //            if (mockExecTime >= 0) {
 //                try {
 ////                    Thread.sleep(mockExecTime);
@@ -192,16 +193,16 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
 //        int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
 
 //        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
+//        long wakeUpTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + sleepTime;
 //        gDigestAck2Message.setWakeUpTime(wakeUpTime);
 //        gDigestAck2Message.setSleepTime(sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
-        gDigestAck2Message.createdTime = System.currentTimeMillis();
+        gDigestAck2Message.createdTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //        WholeClusterSimulator.msgQueues.get(from).add(gDigestAck2Message);
         WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
-        long ackHandlerTime = System.currentTimeMillis() - receiveTime;
+        long ackHandlerTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - receiveTime;
         if (result != null) {
             bootstrapCount = (int) result[5];
             normalCount = (int) result[6];

@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.streaming;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -69,7 +70,7 @@ public class IncomingStreamReader
                 StreamReply reply = new StreamReply("", header.sessionId, StreamReply.Status.SESSION_FAILURE);
                 OutboundTcpConnection.write(reply.createMessage(),
                                             header.sessionId.toString(),
-                                            System.currentTimeMillis(),
+                                            TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                                             new DataOutputStream(socket.getOutputStream()),
                                             MessagingService.instance().getVersion(host));
                 throw new IOException("Session " + header.sessionId + " already closed.");

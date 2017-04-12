@@ -18,6 +18,7 @@
 
 package org.apache.cassandra.locator;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -201,7 +202,7 @@ public class DynamicEndpointSnitch extends AbstractEndpointSnitch implements ILa
 
     public void receiveTiming(InetAddress host, long latency) // this is cheap
     {
-        lastReceived.put(host, System.currentTimeMillis());
+        lastReceived.put(host, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
 
         ExponentiallyDecayingSample sample = samples.get(host);
         if (sample == null)
@@ -237,8 +238,8 @@ public class DynamicEndpointSnitch extends AbstractEndpointSnitch implements ILa
             double mean = entry.getValue().getSnapshot().getMedian();
             if (mean > maxLatency)
                 maxLatency = mean;
-            long timePenalty = lastReceived.containsKey(entry.getKey()) ? lastReceived.get(entry.getKey()) : System.currentTimeMillis();
-            timePenalty = System.currentTimeMillis() - timePenalty;
+            long timePenalty = lastReceived.containsKey(entry.getKey()) ? lastReceived.get(entry.getKey()) : TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+            timePenalty = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - timePenalty;
             timePenalty = timePenalty > UPDATE_INTERVAL_IN_MS ? UPDATE_INTERVAL_IN_MS : timePenalty;
             // a convenient place to remember this since we've already calculated it and need it later
             penalties.put(entry.getKey(), timePenalty);

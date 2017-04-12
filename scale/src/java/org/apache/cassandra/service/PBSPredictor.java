@@ -18,6 +18,7 @@
 
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -460,7 +461,7 @@ public class PBSPredictor implements PBSPredictorMBean
         if (!logLatencies)
             return;
 
-        startWriteOperation(id, System.currentTimeMillis());
+        startWriteOperation(id, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     public void startWriteOperation(String id, long startTime)
@@ -488,7 +489,7 @@ public class PBSPredictor implements PBSPredictorMBean
         if (!logLatencies)
             return;
 
-        startReadOperation(id, System.currentTimeMillis());
+        startReadOperation(id, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     public void startReadOperation(String id, long startTime)
@@ -515,7 +516,7 @@ public class PBSPredictor implements PBSPredictorMBean
         if (!logLatencies)
             return;
 
-        logWriteResponse(id, constructionTime, System.currentTimeMillis());
+        logWriteResponse(id, constructionTime, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     public void logWriteResponse(String id, long responseCreationTime, long receivedTime)
@@ -539,7 +540,7 @@ public class PBSPredictor implements PBSPredictorMBean
         if (!logLatencies)
             return;
 
-        logReadResponse(id, constructionTime, System.currentTimeMillis());
+        logReadResponse(id, constructionTime, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     public void logReadResponse(String id, long responseCreationTime, long receivedTime)

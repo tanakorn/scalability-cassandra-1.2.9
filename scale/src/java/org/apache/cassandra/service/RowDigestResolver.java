@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 
 import org.apache.cassandra.db.ColumnFamily;
@@ -61,7 +62,7 @@ public class RowDigestResolver extends AbstractRowResolver
         if (logger.isDebugEnabled())
             logger.debug("resolving " + replies.size() + " responses");
 
-        long startTime = System.currentTimeMillis();
+        long startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         // validate digests against each other; throw immediately on mismatch.
         // also extract the data reply, if any.
@@ -105,7 +106,7 @@ public class RowDigestResolver extends AbstractRowResolver
         }
 
         if (logger.isDebugEnabled())
-            logger.debug("resolve: " + (System.currentTimeMillis() - startTime) + " ms.");
+            logger.debug("resolve: " + (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime) + " ms.");
         return new Row(key, data);
     }
 

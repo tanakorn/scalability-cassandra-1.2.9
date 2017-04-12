@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.thrift;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -369,7 +370,7 @@ public class ThriftValidation
         if (metadata.getDefaultValidator().isCommutative())
         {
             // forcing server timestamp even if a timestamp was set for coherence with other counter operation
-            del.timestamp = System.currentTimeMillis();
+            del.timestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         }
         else if (!del.isSetTimestamp())
         {

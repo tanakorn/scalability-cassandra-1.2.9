@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.cache;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -100,7 +102,7 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
     public int loadSaved(ColumnFamilyStore cfs)
     {
         int count = 0;
-        long start = System.currentTimeMillis();
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         // old cache format that only saves keys
         File path = getCachePath(cfs.table.name, cfs.columnFamily, null);
@@ -167,7 +169,7 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
         }
         if (logger.isDebugEnabled())
             logger.debug(String.format("completed reading (%d ms; %d keys) saved cache %s",
-                    System.currentTimeMillis() - start, count, path));
+                    TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start, count, path));
         return count;
     }
 
@@ -239,7 +241,7 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
                 return;
             }
 
-            long start = System.currentTimeMillis();
+            long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             HashMap<Pair<String, String>, SequentialWriter> writers = new HashMap<Pair<String, String>, SequentialWriter>();
 
@@ -286,7 +288,7 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
                     logger.error("Unable to rename " + tmpFile + " to " + cacheFile);
             }
 
-            logger.info(String.format("Saved %s (%d items) in %d ms", cacheType, keys.size(), System.currentTimeMillis() - start));
+            logger.info(String.format("Saved %s (%d items) in %d ms", cacheType, keys.size(), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start));
         }
 
         private SequentialWriter tempCacheFile(Pair<String, String> pathInfo)

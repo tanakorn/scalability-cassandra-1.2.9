@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.compaction;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -92,7 +93,7 @@ public class CompactionTask extends AbstractCompactionTask
         assert sstables != null && sstableDirectory != null;
 
         if (DatabaseDescriptor.isSnapshotBeforeCompaction())
-            cfs.snapshotWithoutFlush(System.currentTimeMillis() + "-compact-" + cfs.columnFamily);
+            cfs.snapshotWithoutFlush(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + "-compact-" + cfs.columnFamily);
 
         // sanity check: all sstables must belong to the same cfs
         for (SSTableReader sstable : toCompact)
@@ -104,7 +105,7 @@ public class CompactionTask extends AbstractCompactionTask
         // all the sstables (that existed when we started)
 //        logger.info("Compacting {}", toCompact);
 
-        long startTime = System.currentTimeMillis();
+        long startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         long totalkeysWritten = 0;
 
         AbstractCompactionStrategy strategy = cfs.getCompactionStrategy();
@@ -238,7 +239,7 @@ public class CompactionTask extends AbstractCompactionTask
         if (logger.isInfoEnabled())
         {
             // log a bunch of statistics about the result
-            long dTime = System.currentTimeMillis() - startTime;
+            long dTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime;
             long startsize = SSTable.getTotalBytes(toCompact);
             long endsize = SSTable.getTotalBytes(sstables);
             double ratio = (double)endsize / (double)startsize;

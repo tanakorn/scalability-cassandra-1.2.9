@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -37,7 +38,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 
     public void doVerb(MessageIn<GossipDigestSyn> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+        long receiveTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb syn");
@@ -127,7 +128,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
 //        int roundCurrentVersion = (currentVersion / 8) * 8 + 1;
 //        int roundNormalVersion = (normalNodeNum / 4) * 4 + 1;
 //        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//        long wakeUpTime = System.currentTimeMillis() + sleepTime;
+//        long wakeUpTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + sleepTime;
 //        gDigestAckMessage.setWakeUpTime(wakeUpTime);
 //        gDigestAckMessage.setSleepTime(sleepTime);
         gDigestAckMessage.setTo(from);
@@ -135,7 +136,7 @@ public class SimulatedGossipDigestSynVerbHandler implements IVerbHandler<GossipD
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         // TODO Can I comment this out?
         Gossiper.instance.checkSeedContact(from);
-        gDigestAckMessage.createdTime = System.currentTimeMillis();
+        gDigestAckMessage.createdTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //        WholeClusterSimulator.msgQueues.get(from).add(gDigestAckMessage);
         WholeClusterSimulator.msgQueue.add(gDigestAckMessage);
     }

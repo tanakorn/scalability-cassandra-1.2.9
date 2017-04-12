@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.outdated;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class WorstCaseGossiperStub {
 			broadcastAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
 			addressSet.add(broadcastAddresses[i]);
 			rpcAddresses[i] = InetAddress.getByName(addressPrefix + (i + 3));
-			heartBeats[i] = new HeartBeatState((int) System.currentTimeMillis());
+			heartBeats[i] = new HeartBeatState((int) TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
 			states[i] = new EndpointState(heartBeats[i]);
 			valueFactories[i] = new VersionedValueFactory(partitioner);
             states[i].addApplicationState(ApplicationState.DC, valueFactories[i].datacenter(localDataCenter));

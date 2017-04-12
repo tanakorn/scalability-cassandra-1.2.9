@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.config;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -148,7 +149,7 @@ public class ColumnDefinition
     public void deleteFromSchema(RowMutation rm, String cfName, AbstractType<?> comparator, long timestamp)
     {
         ColumnFamily cf = rm.addOrGet(CFMetaData.SchemaColumnsCf);
-        int ldt = (int) (System.currentTimeMillis() / 1000);
+        int ldt = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
 
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, comparator.getString(name), ""));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, comparator.getString(name), "validator"));
@@ -161,7 +162,7 @@ public class ColumnDefinition
     public void toSchema(RowMutation rm, String cfName, AbstractType<?> comparator, long timestamp)
     {
         ColumnFamily cf = rm.addOrGet(CFMetaData.SchemaColumnsCf);
-        int ldt = (int) (System.currentTimeMillis() / 1000);
+        int ldt = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
 
         cf.addColumn(Column.create("", timestamp, cfName, comparator.getString(name), ""));
         cf.addColumn(Column.create(validator.toString(), timestamp, cfName, comparator.getString(name), "validator"));

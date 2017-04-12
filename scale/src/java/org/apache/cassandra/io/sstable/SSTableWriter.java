@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.io.sstable;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.nio.channels.ClosedChannelException;
 import java.util.*;
@@ -317,7 +318,7 @@ public class SSTableWriter extends SSTable
 
     public SSTableReader closeAndOpenReader()
     {
-        return closeAndOpenReader(System.currentTimeMillis());
+        return closeAndOpenReader(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     public SSTableReader closeAndOpenReader(long maxDataAge)
@@ -328,34 +329,34 @@ public class SSTableWriter extends SSTable
         dataFile.close();
         // write sstable statistics
         SSTableMetadata sstableMetadata = sstableMetadataCollector.finalizeMetadata(partitioner.getClass().getCanonicalName());
-                    long e = System.currentTimeMillis();
+                    long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         writeMetadata(descriptor, sstableMetadata, sstableMetadataCollector.ancestors);
-                    long s = System.currentTimeMillis() - e;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 1 " + s);
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         maybeWriteDigest();
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 2 " + s);
 
         // save the table of components
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         SSTable.appendTOC(descriptor, components);
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 3 " + s);
 
         // remove the 'tmp' marker from all components
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         final Descriptor newdesc = rename(descriptor, components);
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 4 " + s);
 
         // finalize in-memory state for the reader
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         SegmentedFile ifile = iwriter.builder.complete(newdesc.filenameFor(SSTable.COMPONENT_INDEX));
         SegmentedFile dfile = dbuilder.complete(newdesc.filenameFor(SSTable.COMPONENT_DATA));
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 5 " + s);
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         SSTableReader sstable = SSTableReader.internalOpen(newdesc,
                                                            components,
                                                            metadata,
@@ -366,16 +367,16 @@ public class SSTableWriter extends SSTable
                                                            iwriter.bf,
                                                            maxDataAge,
                                                            sstableMetadata);
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 6 " + s);
-                    e = System.currentTimeMillis();
+                    e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         sstable.first = getMinimalKey(first);
         sstable.last = getMinimalKey(last);
         // try to save the summaries to disk
         SSTableReader.saveSummary(sstable, iwriter.builder, dbuilder);
         iwriter = null;
         dbuilder = null;
-                    s = System.currentTimeMillis() - e;
+                    s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor 7 " + s);
         return sstable;
     }
@@ -404,15 +405,15 @@ public class SSTableWriter extends SSTable
 
     private static void writeMetadata(Descriptor desc, SSTableMetadata sstableMetadata, Set<Integer> ancestors)
     {
-        long e = System.currentTimeMillis();
+        long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         SequentialWriter out = SequentialWriter.open(new File(desc.filenameFor(SSTable.COMPONENT_STATS)), true);
-        long s = System.currentTimeMillis() - e;
+        long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //        logger.info("WMD 1 " + s);
         try
         {
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             SSTableMetadata.serializer.serialize(sstableMetadata, ancestors, out.stream);
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("WMD 2 " + s);
         }
         catch (IOException ex)

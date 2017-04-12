@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -165,7 +166,7 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
         UUID hostId = StorageService.instance.getTokenMetadata().getHostId(endpoint);
         ByteBuffer hostIdBytes = ByteBuffer.wrap(UUIDGen.decompose(hostId));
         final RowMutation rm = new RowMutation(Table.SYSTEM_KS, hostIdBytes);
-        rm.delete(new QueryPath(SystemTable.HINTS_CF), System.currentTimeMillis());
+        rm.delete(new QueryPath(SystemTable.HINTS_CF), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
 
         // execute asynchronously to avoid blocking caller (which may be processing gossip)
         Runnable runnable = new Runnable()
@@ -194,7 +195,7 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
         ArrayList<Descriptor> descriptors = new ArrayList<Descriptor>();
         for (SSTable sstable : hintStore.getSSTables())
             descriptors.add(sstable.descriptor);
-        return CompactionManager.instance.submitUserDefined(hintStore, descriptors, (int) (System.currentTimeMillis() / 1000));
+        return CompactionManager.instance.submitUserDefined(hintStore, descriptors, (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000));
     }
 
     private static boolean pagingFinished(ColumnFamily hintColumnFamily, ByteBuffer startColumn)
@@ -316,7 +317,7 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
                                                             pageSize);
 
             ColumnFamily hintsPage = ColumnFamilyStore.removeDeleted(hintStore.getColumnFamily(filter),
-                                                                     (int) (System.currentTimeMillis() / 1000));
+                                                                     (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000));
 
             if (pagingFinished(hintsPage, startColumn))
                 break;

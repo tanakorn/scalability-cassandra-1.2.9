@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import static org.apache.cassandra.utils.ByteBufferUtil.hexToBytes;
 
 import java.io.File;
@@ -322,7 +323,7 @@ public class SSTableImport
     private int importUnsorted(String jsonFile, ColumnFamily columnFamily, String ssTablePath, IPartitioner<?> partitioner) throws IOException
     {
         int importedKeys = 0;
-        long start = System.currentTimeMillis();
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         JsonParser parser = getParser(jsonFile);
 
@@ -361,7 +362,7 @@ public class SSTableImport
 
             importedKeys++;
 
-            long current = System.currentTimeMillis();
+            long current = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             if (current - start >= 5000) // 5 secs.
             {
@@ -382,7 +383,7 @@ public class SSTableImport
             IPartitioner<?> partitioner) throws IOException
     {
         int importedKeys = 0; // already imported keys count
-        long start = System.currentTimeMillis();
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         JsonParser parser = getParser(jsonFile);
 
@@ -442,7 +443,7 @@ public class SSTableImport
             importedKeys++;
             lineNumber++;
 
-            long current = System.currentTimeMillis();
+            long current = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             if (current - start >= 5000) // 5 secs.
             {

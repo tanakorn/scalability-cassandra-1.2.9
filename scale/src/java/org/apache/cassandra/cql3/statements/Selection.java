@@ -37,6 +37,7 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 public abstract class Selection
 {
     private static final Logger logger = LoggerFactory.getLogger(Selection.class);
@@ -259,7 +260,7 @@ public abstract class Selection
             {
                 int ttl = -1;
                 if (!isDead(c) && c instanceof ExpiringColumn)
-                    ttl = ((ExpiringColumn)c).getLocalDeletionTime() - (int) (System.currentTimeMillis() / 1000);
+                    ttl = ((ExpiringColumn)c).getLocalDeletionTime() - (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
                 ttls[current.size() - 1] = ttl;
             }
         }

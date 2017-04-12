@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.net;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class MessageDeliveryTask implements Runnable
     {
         MessagingService.Verb verb = message.verb;
         if (MessagingService.DROPPABLE_VERBS.contains(verb)
-            && System.currentTimeMillis() > constructionTime + message.getTimeout())
+            && TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() > constructionTime + message.getTimeout())
         {
             MessagingService.instance().incrementDroppedMessages(verb);
             return;
@@ -53,9 +54,9 @@ public class MessageDeliveryTask implements Runnable
             return;
         }
 
-        long s = System.currentTimeMillis();
+        long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         verbHandler.doVerb(message, id);
-        long t = System.currentTimeMillis() - s;
+        long t = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - s;
         logger.info("sc_debug: Doing verb \"" + verb + "\" from " + message.from + " took " + t + " ms");
     }
    

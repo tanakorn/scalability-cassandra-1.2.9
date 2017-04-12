@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -1032,7 +1033,7 @@ public class StorageProxy implements StorageProxyMBean
     {
         private final ReadCommand command;
         private final ReadCallback<ReadResponse, Row> handler;
-        private final long start = System.currentTimeMillis();
+        private final long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         LocalReadRunnable(ReadCommand command, ReadCallback<ReadResponse, Row> handler)
         {
@@ -1046,7 +1047,7 @@ public class StorageProxy implements StorageProxyMBean
             Table table = Table.open(command.table);
             Row r = command.getRow(table);
             ReadResponse result = ReadVerbHandler.getResponse(command, r);
-            MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), System.currentTimeMillis() - start);
+            MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start);
             handler.response(result);
         }
     }
@@ -1055,7 +1056,7 @@ public class StorageProxy implements StorageProxyMBean
     {
         private final RangeSliceCommand command;
         private final ReadCallback<RangeSliceReply, Iterable<Row>> handler;
-        private final long start = System.currentTimeMillis();
+        private final long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         LocalRangeSliceRunnable(RangeSliceCommand command, ReadCallback<RangeSliceReply, Iterable<Row>> handler)
         {
@@ -1067,7 +1068,7 @@ public class StorageProxy implements StorageProxyMBean
         protected void runMayThrow() throws ExecutionException, InterruptedException
         {
             RangeSliceReply result = new RangeSliceReply(RangeSliceVerbHandler.executeLocally(command));
-            MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), System.currentTimeMillis() - start);
+            MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start);
             handler.response(result);
         }
     }
@@ -1572,7 +1573,7 @@ public class StorageProxy implements StorageProxyMBean
      */
     private static abstract class DroppableRunnable implements Runnable
     {
-        private final long constructionTime = System.currentTimeMillis();
+        private final long constructionTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         private final MessagingService.Verb verb;
 
         public DroppableRunnable(MessagingService.Verb verb)
@@ -1582,7 +1583,7 @@ public class StorageProxy implements StorageProxyMBean
 
         public final void run()
         {
-            if (System.currentTimeMillis() > constructionTime + DatabaseDescriptor.getTimeout(verb))
+            if (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() > constructionTime + DatabaseDescriptor.getTimeout(verb))
             {
                 MessagingService.instance().incrementDroppedMessages(verb);
                 return;
@@ -1607,11 +1608,11 @@ public class StorageProxy implements StorageProxyMBean
      */
     private static abstract class LocalMutationRunnable implements Runnable
     {
-        private final long constructionTime = System.currentTimeMillis();
+        private final long constructionTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         public final void run()
         {
-            if (System.currentTimeMillis() > constructionTime + DatabaseDescriptor.getTimeout(MessagingService.Verb.MUTATION))
+            if (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() > constructionTime + DatabaseDescriptor.getTimeout(MessagingService.Verb.MUTATION))
             {
                 MessagingService.instance().incrementDroppedMessages(MessagingService.Verb.MUTATION);
                 HintRunnable runnable = new HintRunnable(FBUtilities.getBroadcastAddress())

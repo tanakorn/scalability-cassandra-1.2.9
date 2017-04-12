@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.db;
 
+
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -115,7 +117,7 @@ public class Column implements IColumn
 
     public boolean isMarkedForDelete()
     {
-        return (int) (System.currentTimeMillis() / 1000) >= getLocalDeletionTime();
+        return (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) >= getLocalDeletionTime();
     }
 
     public long getMarkedForDeleteAt()

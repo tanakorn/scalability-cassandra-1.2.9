@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 

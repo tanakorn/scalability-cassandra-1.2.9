@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -130,7 +131,7 @@ public class Memtable
     public Memtable(ColumnFamilyStore cfs)
     {
         this.cfs = cfs;
-        this.creationTime = System.currentTimeMillis();
+        this.creationTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         this.initialComparator = cfs.metadata.comparator;
 
         Callable<Set<Object>> provider = new Callable<Set<Object>>()
@@ -203,7 +204,7 @@ public class Memtable
                 {
                     activelyMeasuring = Memtable.this;
 
-                    long start = System.currentTimeMillis();
+                    long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                     // ConcurrentSkipListMap has cycles, so measureDeep will have to track a reference to EACH object it visits.
                     // So to reduce the memory overhead of doing a measurement, we break it up to row-at-a-time.
                     long deepSize = meter.measure(columnFamilies);
@@ -234,7 +235,7 @@ public class Memtable
                         cfs.liveRatio = (cfs.liveRatio + newRatio) / 2.0;
 
                     logger.info("{} liveRatio is {} (just-counted was {}).  calculation took {}ms for {} columns",
-                                cfs, cfs.liveRatio, newRatio, System.currentTimeMillis() - start, objects);
+                                cfs, cfs.liveRatio, newRatio, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start, objects);
                     activelyMeasuring = null;
                 }
                 finally
@@ -434,7 +435,7 @@ public class Memtable
                                     + keySize // keys in data file
                                     + currentSize.get()) // data
                                     * 1.2); // bloom filter and row index overhead
-            createdTime = System.currentTimeMillis();
+            createdTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         }
 
         public long getExpectedWriteSize()
@@ -444,21 +445,21 @@ public class Memtable
 
         protected void runWith(File sstableDirectory) throws Exception
         {
-//            long e = System.currentTimeMillis() - createdTime;
+//            long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - createdTime;
 //            System.out.println(e);
 
-            long e = System.currentTimeMillis();
+            long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             assert sstableDirectory != null : "Flush task is not bound to any disk";
-            long s = System.currentTimeMillis() - e;
+            long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("ww 1 " + s);
 
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             SSTableReader sstable = writeSortedContents(context, sstableDirectory);
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("ww 2 " + s);
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             cfs.replaceFlushed(Memtable.this, sstable);
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("ww 3 " + s);
             latch.countDown();
         }
@@ -509,9 +510,9 @@ public class Memtable
 
                 if (writer.getFilePointer() > 0)
                 {
-                    long e = System.currentTimeMillis();
+                    long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                     ssTable = writer.closeAndOpenReader();
-                    long s = System.currentTimeMillis() - e;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //                    logger.info("caor " + s);
 //                    logger.info(String.format("Completed flushing %s (%d bytes) for commitlog position %s",
 //                                              ssTable.getFilename(), new File(ssTable.getFilename()).length(), context.get()));

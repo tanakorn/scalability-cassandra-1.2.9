@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -159,7 +160,7 @@ public class BatchlogManager implements BatchlogManagerMBean
         try
         {
             for (UntypedResultSet.Row row : process("SELECT id, written_at FROM %s.%s", Table.SYSTEM_KS, SystemTable.BATCHLOG_CF))
-                if (System.currentTimeMillis() > row.getLong("written_at") + TIMEOUT)
+                if (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() > row.getLong("written_at") + TIMEOUT)
                     replayBatch(row.getUUID("id"));
             cleanup();
         }
@@ -273,7 +274,7 @@ public class BatchlogManager implements BatchlogManagerMBean
     // this ensures that deletes aren't "undone" by an old batch replay.
     private int calculateHintTTL(RowMutation mutation, long writtenAt)
     {
-        return (int) ((mutation.calculateHintTTL() * 1000 - (System.currentTimeMillis() - writtenAt)) / 1000);
+        return (int) ((mutation.calculateHintTTL() * 1000 - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - writtenAt)) / 1000);
     }
 
     private static ByteBuffer columnName(String name)

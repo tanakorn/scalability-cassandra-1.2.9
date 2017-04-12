@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.marshal;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import static org.apache.cassandra.cql.jdbc.JdbcDate.iso8601Patterns;
 
 import java.nio.ByteBuffer;
@@ -89,7 +90,7 @@ public class DateType extends AbstractType<Date>
 
       if (source.toLowerCase().equals("now"))
       {
-          millis = System.currentTimeMillis();
+          millis = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
       }
       // Milliseconds since epoch?
       else if (source.matches("^\\d+$"))

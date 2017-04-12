@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -387,7 +388,7 @@ public class DataTracker
     {
         double allDroppable = 0;
         long allColumns = 0;
-        int localTime = (int)(System.currentTimeMillis()/1000);
+        int localTime = (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()/1000);
 
         for (SSTableReader sstable : getSSTables())
         {

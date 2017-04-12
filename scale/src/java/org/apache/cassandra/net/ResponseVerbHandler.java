@@ -17,18 +17,20 @@
  */
 package org.apache.cassandra.net;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import org.apache.cassandra.tracing.Tracing;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 public class ResponseVerbHandler implements IVerbHandler
 {
     private static final Logger logger = LoggerFactory.getLogger( ResponseVerbHandler.class );
 
     public void doVerb(MessageIn message, String id)
     {
-        long latency = System.currentTimeMillis() - MessagingService.instance().getRegisteredCallbackAge(id);
+        long latency = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - MessagingService.instance().getRegisteredCallbackAge(id);
         CallbackInfo callbackInfo = MessagingService.instance().removeRegisteredCallback(id);
         if (callbackInfo == null)
         {

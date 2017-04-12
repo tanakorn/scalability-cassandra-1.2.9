@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -241,10 +242,10 @@ public class ScaleSimulator {
                                 GossiperStub receivingStub = stubGroup.getRandomStub();
                                 MessageIn<GossipDigestSyn> msgIn = convertOutToIn(sendingStub.genGossipDigestSyncMsg());
                                 msgIn.setTo(receivingStub.getInetAddress());
-                                long s = System.currentTimeMillis();
+                                long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                                 MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN)
                                         .doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-                                long t = System.currentTimeMillis() - s;
+                                long t = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - s;
                                 logger.info("sc_debug: Doing verb \"" + Verb.GOSSIP_DIGEST_SYN + "\" from " + msgIn.from + " took " + t + " ms");
                                 logger.info("sc_debug: Receiving stub is " + receivingStub.getInetAddress() + " with ring " + receivingStub.getEndpointStateMap().keySet());
                                 sendingStub = receivingStub;
@@ -259,7 +260,7 @@ public class ScaleSimulator {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        logger.info("Forwarding to observer:" + observer + " at " + System.currentTimeMillis());
+                        logger.info("Forwarding to observer:" + observer + " at " + TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
                         sendingStub.sendGossip(observer);
                     } catch (InterruptedException e) {
                         e.printStackTrace();

@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -359,7 +360,7 @@ public class FBUtilities
     {
         // we use microsecond resolution for compatibility with other client libraries, even though
         // we can't actually get microsecond precision.
-        return System.currentTimeMillis() * 1000;
+        return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() * 1000;
     }
 
     public static void waitOnFutures(Iterable<Future<?>> futures)

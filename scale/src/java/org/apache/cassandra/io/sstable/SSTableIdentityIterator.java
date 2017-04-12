@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.io.sstable;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 
 import org.slf4j.Logger;
@@ -108,7 +109,7 @@ public class SSTableIdentityIterator implements Comparable<SSTableIdentityIterat
         this.key = key;
         this.dataStart = dataStart;
         this.dataSize = dataSize;
-        this.expireBefore = (int)(System.currentTimeMillis() / 1000);
+        this.expireBefore = (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         this.flag = flag;
         this.validateColumns = checkData;
         this.dataVersion = sstable == null ? Descriptor.Version.CURRENT : sstable.descriptor.version;

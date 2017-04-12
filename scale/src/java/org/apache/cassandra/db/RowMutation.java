@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -110,7 +111,7 @@ public class RowMutation implements IMutation
                                        HintedHandOffManager.comparator.decompose(hintId, MessagingService.current_version));
         rm.add(path,
                ByteBuffer.wrap(FBUtilities.serialize(this, serializer, MessagingService.current_version)),
-               System.currentTimeMillis(),
+               TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                ttl);
 
         return rm;
@@ -220,7 +221,7 @@ public class RowMutation implements IMutation
     {
         UUID id = Schema.instance.getId(table, path.columnFamilyName);
 
-        int localDeleteTime = (int) (System.currentTimeMillis() / 1000);
+        int localDeleteTime = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
 
         ColumnFamily columnFamily = modifications.get(id);
         if (columnFamily == null)

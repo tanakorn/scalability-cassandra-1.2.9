@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
     @SuppressWarnings("unchecked")
     public void doVerb(MessageIn<GossipDigestAck2> message, String id)
     {
-        long receiveTime = System.currentTimeMillis();
+        long receiveTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     	InetAddress from = message.from;
         InetAddress to = message.to;
 //        logger.info(to + " doVerb ack2");
@@ -74,11 +75,11 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //                long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
 //                long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
 //                sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-//                long realSleep = System.currentTimeMillis();
+//                long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //                if (sleepTime > 0) {
 //                    Thread.sleep(sleepTime);
 //                }
-//                realSleep = System.currentTimeMillis() - realSleep;
+//                realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
 //                long lateness = realSleep - sleepTime;
 //                lateness = lateness < 0 ? 0 : lateness;
 //                WholeClusterSimulator.totalRealSleep += realSleep;
@@ -97,9 +98,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //            }
 //            Thread.sleep(message.getSleepTime());
 //            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//            long realSleep = System.currentTimeMillis();
+//            long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //            Thread.sleep(sleepTime);
-//            realSleep = System.currentTimeMillis() - realSleep;
+//            realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
 //            long lateness = realSleep - sleepTime;
 //            lateness = lateness < 0 ? 0 : lateness;
 //            logger.info("Processing lateness " + lateness);
@@ -114,7 +115,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //                System.out.println(i + " index is not the same");
 //            }
 //        }
-//        long mockExecTime = message.getWakeUpTime() - System.currentTimeMillis();
+//        long mockExecTime = message.getWakeUpTime() - TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //        if (mockExecTime >= 0) {
 //            try {
 ////                Thread.sleep(mockExecTime);
@@ -168,7 +169,7 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         String syncId = from + "_" + message.payload.syncId;
         Long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
         receiverStub.syncReceivedTime.remove(syncId);
-        long tmpCurrent = System.currentTimeMillis();
+        long tmpCurrent = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - (syncReceivedTime == null? 0 : syncReceivedTime);
         String ackId = from + "_" + message.payload.ackId;

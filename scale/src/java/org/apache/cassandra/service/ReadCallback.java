@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +75,7 @@ public class ReadCallback<TMessage, TResolved> implements IAsyncCallback<TMessag
         this.blockfor = blockfor;
         this.consistencyLevel = consistencyLevel;
         this.resolver = resolver;
-        this.startTime = System.currentTimeMillis();
+        this.startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         this.endpoints = endpoints;
     }
 
@@ -85,7 +86,7 @@ public class ReadCallback<TMessage, TResolved> implements IAsyncCallback<TMessag
 
     public TResolved get() throws ReadTimeoutException, DigestMismatchException
     {
-        long timeout = command.getTimeout() - (System.currentTimeMillis() - startTime);
+        long timeout = command.getTimeout() - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime);
         boolean success;
         try
         {

@@ -19,6 +19,7 @@
  */
 package org.apache.cassandra.tracing;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -101,7 +102,7 @@ public class Tracing
 
     private static void addColumn(ColumnFamily cf, ByteBuffer name, ByteBuffer value)
     {
-        cf.addColumn(new ExpiringColumn(name, value, System.currentTimeMillis(), TTL));
+        cf.addColumn(new ExpiringColumn(name, value, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(), TTL));
     }
 
     public void addParameterColumns(ColumnFamily cf, Map<String, String> rawPayload)
@@ -109,7 +110,7 @@ public class Tracing
         for (Map.Entry<String, String> entry : rawPayload.entrySet())
         {
             cf.addColumn(new ExpiringColumn(buildName(cf.metadata(), bytes("parameters"), bytes(entry.getKey())),
-                                            bytes(entry.getValue()), System.currentTimeMillis(), TTL));
+                                            bytes(entry.getValue()), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(), TTL));
         }
     }
 
@@ -208,7 +209,7 @@ public class Tracing
     {
         assert isTracing();
 
-        final long started_at = System.currentTimeMillis();
+        final long started_at = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         final ByteBuffer sessionIdBytes = state.get().sessionIdBytes;
 
         StageManager.getStage(Stage.TRACING).execute(new WrappedRunnable()

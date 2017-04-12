@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -49,7 +50,7 @@ public class ExpiringColumn extends Column
 
     public ExpiringColumn(ByteBuffer name, ByteBuffer value, long timestamp, int timeToLive)
     {
-      this(name, value, timestamp, timeToLive, (int) (System.currentTimeMillis() / 1000) + timeToLive);
+      this(name, value, timestamp, timeToLive, (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000) + timeToLive);
     }
 
     public ExpiringColumn(ByteBuffer name, ByteBuffer value, long timestamp, int timeToLive, int localExpirationTime)

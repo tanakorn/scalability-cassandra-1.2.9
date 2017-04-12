@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.context;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -576,7 +577,7 @@ public class CounterContext implements IContext
      */
     public ByteBuffer computeOldShardMerger(ByteBuffer context, List<CounterId.CounterIdRecord> oldIds, long mergeBefore)
     {
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         int hlength = headerLength(context);
         CounterId localId = CounterId.getLocalId();
 

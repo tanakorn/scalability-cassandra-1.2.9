@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.io.sstable;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -151,7 +152,7 @@ public abstract class AbstractSSTableSimpleWriter
      */
     public void addCounterColumn(ByteBuffer name, long value)
     {
-        addColumn(new CounterColumn(name, CounterContext.instance().create(counterid, 1L, value, false), System.currentTimeMillis()));
+        addColumn(new CounterColumn(name, CounterContext.instance().create(counterid, 1L, value, false), TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()));
     }
 
     /**

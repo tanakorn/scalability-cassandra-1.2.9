@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -94,7 +95,7 @@ public class ColumnFamilySerializer implements IVersionedSerializer<ColumnFamily
         ColumnFamily cf = ColumnFamily.create(deserializeCfId(dis, version), factory);
         IColumnSerializer columnSerializer = cf.getColumnSerializer();
         cf.delete(DeletionInfo.serializer().deserialize(dis, version, cf.getComparator()));
-        int expireBefore = (int) (System.currentTimeMillis() / 1000);
+        int expireBefore = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         int size = dis.readInt();
         for (int i = 0; i < size; ++i)
         {
@@ -153,7 +154,7 @@ public class ColumnFamilySerializer implements IVersionedSerializer<ColumnFamily
     {
         cf.delete(DeletionTime.serializer.deserialize(dis));
         int size = dis.readInt();
-        int expireBefore = (int) (System.currentTimeMillis() / 1000);
+        int expireBefore = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         deserializeColumnsFromSSTable(dis, cf, size, flag, expireBefore, version);
     }
 

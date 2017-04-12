@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.outdated;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class OneNodeGossiperStub {
 	public static void main(String[] args) throws UnknownHostException, ConfigurationException, InterruptedException {
 //		Map<ApplicationState, VersionedValue> appStates = new HashMap<ApplicationState, VersionedValue>();
 //		appStates.put(key, value)
-		heartBeatState = new HeartBeatState(((int) System.currentTimeMillis()));
+		heartBeatState = new HeartBeatState(((int) TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()));
 		ConcurrentMap<InetAddress, EndpointState> endpointStateMap = new ConcurrentHashMap<InetAddress, EndpointState>();
 		state = new EndpointState(heartBeatState);
 		IPartitioner partitioner = DatabaseDescriptor.getPartitioner();

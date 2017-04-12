@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.streaming;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -150,7 +151,7 @@ public class StreamInSession extends AbstractStreamSession
         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
         OutboundTcpConnection.write(message,
                                     String.valueOf(getSessionId()),
-                                    System.currentTimeMillis(),
+                                    TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                                     out,
                                     MessagingService.instance().getVersion(getHost()));
         out.flush();
@@ -202,7 +203,7 @@ public class StreamInSession extends AbstractStreamSession
                 if (socket != null)
                     OutboundTcpConnection.write(reply.createMessage(),
                                                 sessionId.toString(),
-                                                System.currentTimeMillis(),
+                                                TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                                                 new DataOutputStream(socket.getOutputStream()),
                                                 MessagingService.instance().getVersion(getHost()));
                 else

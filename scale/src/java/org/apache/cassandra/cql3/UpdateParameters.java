@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.cql3;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ public class UpdateParameters
         this.variables = variables;
         this.timestamp = timestamp;
         this.ttl = ttl;
-        this.localDeletionTime = (int)(System.currentTimeMillis() / 1000);
+        this.localDeletionTime = (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         this.prefetchedLists = prefetchedLists;
     }
 

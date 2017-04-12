@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -127,7 +128,7 @@ public class BulkLoader
 
         public void start()
         {
-            startTime = System.currentTimeMillis();
+            startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         }
 
         public boolean printProgress()
@@ -158,7 +159,7 @@ public class BulkLoader
                 sb.append(" ").append(completed).append("/").append(pendings.size());
                 sb.append(" (").append(size == 0 ? 100L : progress * 100L / size).append(")] ");
             }
-            long time = System.currentTimeMillis();
+            long time = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             long deltaTime = time - lastTime;
             lastTime = time;
             long deltaProgress = totalProgress - lastProgress;

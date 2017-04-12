@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +67,7 @@ public abstract class AbstractWriteResponseHandler implements IAsyncCallback
     {
         this.table = table;
         this.pendingEndpoints = pendingEndpoints;
-        this.startTime = System.currentTimeMillis();
+        this.startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         this.consistencyLevel = consistencyLevel;
         this.naturalEndpoints = naturalEndpoints;
         this.callback = callback;
@@ -75,7 +76,7 @@ public abstract class AbstractWriteResponseHandler implements IAsyncCallback
 
     public void get() throws WriteTimeoutException
     {
-        long timeout = DatabaseDescriptor.getWriteRpcTimeout() - (System.currentTimeMillis() - startTime);
+        long timeout = DatabaseDescriptor.getWriteRpcTimeout() - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime);
 
         boolean success;
         try

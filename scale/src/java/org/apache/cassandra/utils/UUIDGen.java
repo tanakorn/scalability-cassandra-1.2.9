@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -210,7 +211,7 @@ public class UUIDGen
 
     private static long makeClockSeqAndNode()
     {
-        long clock = new Random(System.currentTimeMillis()).nextLong();
+        long clock = new Random(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()).nextLong();
 
         long lsb = 0;
         lsb |= 0x8000000000000000L;                 // variant (2 bits)
@@ -223,7 +224,7 @@ public class UUIDGen
     // we can generate at most 10k UUIDs per ms.
     private synchronized long createTimeSafe()
     {
-        long nanosSince = (System.currentTimeMillis() - START_EPOCH) * 10000;
+        long nanosSince = (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - START_EPOCH) * 10000;
         if (nanosSince > lastNanos)
             lastNanos = nanosSince;
         else

@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.commitlog;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.*;
@@ -29,6 +30,8 @@ import javax.management.ObjectName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 
 import org.apache.cassandra.config.Config;
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -200,13 +203,13 @@ public class CommitLog implements CommitLogMBean
      */
     public void discardCompletedSegments(final UUID cfId, final ReplayPosition context)
     {
-            final long t = System.currentTimeMillis();
+            final long t = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         Callable task = new Callable()
         {
             public Object call()
             {
 
-                    long s = System.currentTimeMillis() - t;
+                    long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - t;
 //                    logger.info("DC " + s);
                 logger.debug("discard completed log segments for {}, column family {}", context, cfId);
 
@@ -252,9 +255,9 @@ public class CommitLog implements CommitLogMBean
 
         try
         {
-            long x = System.currentTimeMillis();
+            long x = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             executor.submit(task).get();
-            long y = System.currentTimeMillis() - x;
+            long y = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - x;
 //            System.out.println(y);
         }
         catch (InterruptedException e)

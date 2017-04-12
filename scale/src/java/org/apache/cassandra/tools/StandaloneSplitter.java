@@ -18,6 +18,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -116,7 +117,7 @@ public class StandaloneSplitter
             Table table = Table.openWithoutSSTables(ksName);
             ColumnFamilyStore cfs = table.getColumnFamilyStore(cfName);
 
-            String snapshotName = "pre-split-" + System.currentTimeMillis();
+            String snapshotName = "pre-split-" + TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             List<SSTableReader> sstables = new ArrayList<SSTableReader>();
             for (Map.Entry<Descriptor, Set<Component>> fn : parsedFilenames.entrySet())

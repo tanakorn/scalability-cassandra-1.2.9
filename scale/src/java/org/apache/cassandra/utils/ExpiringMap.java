@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +48,7 @@ public class ExpiringMap<K, V>
             assert value != null;
             this.value = value;
             this.timeout = timeout;
-            this.createdAt = System.currentTimeMillis();
+            this.createdAt = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         }
 
         private boolean isReadyToDieAt(long time)
@@ -83,7 +85,7 @@ public class ExpiringMap<K, V>
         {
             public void run()
             {
-                long start = System.currentTimeMillis();
+                long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
                 int n = 0;
                 for (Map.Entry<K, CacheableObject<V>> entry : cache.entrySet())
                 {

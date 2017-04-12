@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.commitlog;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -52,7 +53,7 @@ public class CommitLogSegment
 {
     private static final Logger logger = LoggerFactory.getLogger(CommitLogSegment.class);
 
-    private final static long idBase = System.currentTimeMillis();
+    private final static long idBase = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     // The commit log entry overhead in bytes (int: length + long: head checksum + long: tail checksum)

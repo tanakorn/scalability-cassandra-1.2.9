@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -70,7 +71,7 @@ public interface OnDiskAtom
 
         public OnDiskAtom deserializeFromSSTable(DataInput dis, Descriptor.Version version) throws IOException
         {
-            return deserializeFromSSTable(dis, IColumnSerializer.Flag.LOCAL, (int)(System.currentTimeMillis() / 1000), version);
+            return deserializeFromSSTable(dis, IColumnSerializer.Flag.LOCAL, (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000), version);
         }
 
         public OnDiskAtom deserializeFromSSTable(DataInput dis, IColumnSerializer.Flag flag, int expireBefore, Descriptor.Version version) throws IOException

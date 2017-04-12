@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -133,9 +134,9 @@ public class GossipProcessingMetric {
         int gossipeeSize = gossipee.getEndpointStateMap().size();
         MessageIn<GossipDigestSyn> msgIn = convertOutToIn(gossiper.genGossipDigestSyncMsg());
         msgIn.setTo(gossipeeAddress);
-        long s = System.currentTimeMillis();
+        long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         MessagingService.instance().getVerbHandler(Verb.GOSSIP_DIGEST_SYN).doVerb(msgIn, Integer.toString(idGen.incrementAndGet()));
-        long e = System.currentTimeMillis();
+        long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         System.out.println((gossiperSize - gossipeeSize) + " " + (e - s));
     }
     

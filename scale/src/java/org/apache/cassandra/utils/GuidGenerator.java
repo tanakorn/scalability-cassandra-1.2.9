@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.utils;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -72,7 +73,7 @@ public class GuidGenerator {
     public static ByteBuffer guidAsBytes()
     {
         StringBuilder sbValueBeforeMD5 = new StringBuilder();
-        long time = System.currentTimeMillis();
+        long time = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         long rand = 0;
         rand = myRand.nextLong();
         sbValueBeforeMD5.append(s_id)

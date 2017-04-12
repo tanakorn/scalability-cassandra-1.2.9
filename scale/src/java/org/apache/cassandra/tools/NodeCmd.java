@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.lang.management.MemoryUsage;
 import java.net.ConnectException;
@@ -1447,7 +1448,7 @@ public class NodeCmd
         {
             case SNAPSHOT :
                 if (tag == null || tag.equals(""))
-                    tag = new Long(System.currentTimeMillis()).toString();
+                    tag = new Long(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()).toString();
                 probe.takeSnapshot(tag, columnFamily, keyspaces);
                 System.out.println("Snapshot directory: " + tag);
                 break;

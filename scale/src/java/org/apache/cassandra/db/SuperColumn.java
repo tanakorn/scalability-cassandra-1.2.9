@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -408,7 +409,7 @@ class SuperColumnSerializer implements IColumnSerializer
 
     public IColumn deserialize(DataInput dis, IColumnSerializer.Flag flag) throws IOException
     {
-        return deserialize(dis, flag, (int)(System.currentTimeMillis() / 1000));
+        return deserialize(dis, flag, (int)(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000));
     }
 
     public IColumn deserialize(DataInput dis, IColumnSerializer.Flag flag, int expireBefore) throws IOException

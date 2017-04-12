@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -178,7 +179,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     {
         if (logger.isTraceEnabled())
             logger.trace("reporting {}", ep);
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         if (WholeClusterSimulator.observedNodes.contains(ep)) {
         	logger.info("See " + ep + " at time " + now);
         }
@@ -192,7 +193,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
     }
     
     public double[] report(InetAddress observer, InetAddress ep) {
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         ArrivalWindow heartbeatWindow = arrivalSamples.get(ep);
         if ( heartbeatWindow == null )
         {
@@ -211,7 +212,7 @@ public class FailureDetector implements IFailureDetector, FailureDetectorMBean
         {
             return 0;
         }
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         double phi = hbWnd.phi(now, address, ep);
         if (logger.isTraceEnabled())
             logger.trace("PHI for " + ep + " : " + phi);

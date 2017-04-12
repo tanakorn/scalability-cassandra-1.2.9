@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -316,9 +317,9 @@ public class SystemTable
 
         String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
         processInternal(String.format(req, PEERS_CF, ep.getHostAddress(), tokensAsSet(tokens)));
-        final long e = System.currentTimeMillis();
+        final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         forceBlockingFlush(PEERS_CF);
-        long s = System.currentTimeMillis() - e;
+        long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //        System.out.println(s);
 //        logger.info("WT " + s);
     }
@@ -410,21 +411,21 @@ public class SystemTable
     public static void forceBlockingFlush(String cfname)
     {
         if (!Boolean.getBoolean("cassandra.unsafesystem")) {
-            long e = System.currentTimeMillis();
+            long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             Table table = Table.open(Table.SYSTEM_KS);
-            long s = System.currentTimeMillis() - e;
+            long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("WW 1 " + s);
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             ColumnFamilyStore columnFamilyStore = table.getColumnFamilyStore(cfname);
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("WW 2 " + s);
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             Future<?> future = columnFamilyStore.forceFlush();
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("WW 3 " + s);
-            e = System.currentTimeMillis();
+            e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             FBUtilities.waitOnFuture(future);
-            s = System.currentTimeMillis() - e;
+            s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            logger.info("WW 4 " + s);
         }
     }
@@ -574,13 +575,13 @@ public class SystemTable
             // seconds-since-epoch isn't a foolproof new generation
             // (where foolproof is "guaranteed to be larger than the last one seen at this ip address"),
             // but it's as close as sanely possible
-            generation = (int) (System.currentTimeMillis() / 1000);
+            generation = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         }
         else
         {
             // Other nodes will ignore gossip messages about a node that have a lower generation than previously seen.
             final int storedGeneration = result.one().getInt("gossip_generation") + 1;
-            final int now = (int) (System.currentTimeMillis() / 1000);
+            final int now = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
             if (storedGeneration >= now)
             {
                 logger.warn("Using stored Gossip Generation {} as it is greater than current system time {}.  See CASSANDRA-3654 if you experience problems",

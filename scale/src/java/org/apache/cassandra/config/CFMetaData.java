@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.config;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -1291,7 +1292,7 @@ public final class CFMetaData
     {
         RowMutation rm = new RowMutation(Table.SYSTEM_KS, SystemTable.getSchemaKSKey(ksName));
         ColumnFamily cf = rm.addOrGet(SchemaColumnFamiliesCf);
-        int ldt = (int) (System.currentTimeMillis() / 1000);
+        int ldt = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
 
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, ""));
         cf.addColumn(DeletedColumn.create(ldt, timestamp, cfName, "id"));
@@ -1337,7 +1338,7 @@ public final class CFMetaData
         // For property that can be null (and can be changed), we insert tombstones, to make sure
         // we don't keep a property the user has removed
         ColumnFamily cf = rm.addOrGet(SchemaColumnFamiliesCf);
-        int ldt = (int) (System.currentTimeMillis() / 1000);
+        int ldt = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
 
         Integer oldId = Schema.instance.convertNewCfId(cfId);
         if (oldId != null) // keep old ids (see CASSANDRA-3794 for details)

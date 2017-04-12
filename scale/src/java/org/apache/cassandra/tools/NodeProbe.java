@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
@@ -977,7 +978,7 @@ class RepairRunner implements NotificationListener
         }
         else
         {
-            String message = String.format("[%s] Nothing to repair for keyspace '%s'", format.format(System.currentTimeMillis()), keyspace);
+            String message = String.format("[%s] Nothing to repair for keyspace '%s'", format.format(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()), keyspace);
             out.println(message);
         }
         return success;
@@ -992,7 +993,7 @@ class RepairRunner implements NotificationListener
         }
         else
         {
-            String message = String.format("[%s] Nothing to repair for keyspace '%s'", format.format(System.currentTimeMillis()), keyspace);
+            String message = String.format("[%s] Nothing to repair for keyspace '%s'", format.format(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()), keyspace);
             out.println(message);
         }
         return success;

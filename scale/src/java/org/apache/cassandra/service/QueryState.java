@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.service;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.util.UUID;
 
 import org.apache.cassandra.tracing.Tracing;
@@ -47,7 +48,7 @@ public class QueryState
      */
     public long getTimestamp()
     {
-        long current = System.currentTimeMillis() * 1000;
+        long current = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() * 1000;
         clock = clock >= current ? clock + 1 : current;
         return clock;
     }

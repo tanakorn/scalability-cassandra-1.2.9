@@ -17,11 +17,15 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
+
 import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.cliffc.high_scale_lib.NonBlockingHashMap;
@@ -50,7 +54,7 @@ public class EndpointState implements Serializable
     public EndpointState(HeartBeatState initialHbState)
     {
         hbState = initialHbState;
-        updateTimestamp = System.currentTimeMillis();
+        updateTimestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         isAlive = true;
         hopNum = 0;
     }
@@ -108,7 +112,7 @@ public class EndpointState implements Serializable
 
     public void updateTimestamp()
     {
-        updateTimestamp = System.currentTimeMillis();
+        updateTimestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     }
 
     public boolean isAlive()

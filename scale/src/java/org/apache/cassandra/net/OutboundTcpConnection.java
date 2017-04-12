@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.net;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,6 +49,8 @@ import org.apache.cassandra.config.Config;
 import org.apache.cassandra.config.DatabaseDescriptor;
 
 import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
+
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 
 public class OutboundTcpConnection extends Thread
 {
@@ -160,14 +163,14 @@ public class OutboundTcpConnection extends Thread
                     break;
                 continue;
             }
-//            if (qm.timestamp < System.currentTimeMillis() - m.getTimeout())
+//            if (qm.timestamp < TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - m.getTimeout())
 //                dropped.incrementAndGet();
 //            else if (socket != null || connectFor(sendBy))
 //                writeConnected(qm);
 //            else
 //                // clear out the queue, else gossip messages back up.
 //                active.clear();
-            if (qm.timestamp < System.currentTimeMillis() - m.getTimeout()) {
+            if (qm.timestamp < TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - m.getTimeout()) {
                 dropped.incrementAndGet();
             } else if (connectedSocketMap.containsKey(sendBy) || connectFor(sendBy)) {
                 writeConnectedBy(qm, sendBy);
@@ -335,8 +338,8 @@ public class OutboundTcpConnection extends Thread
         if (logger.isDebugEnabled())
             logger.debug("attempting to connect to " + poolReference.endPoint());
 
-        long start = System.currentTimeMillis();
-        while (System.currentTimeMillis() < start + DatabaseDescriptor.getRpcTimeout())
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+        while (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() < start + DatabaseDescriptor.getRpcTimeout())
         {
             targetVersion = MessagingService.instance().getVersion(poolReference.endPoint());
             Socket socket;
@@ -478,7 +481,7 @@ public class OutboundTcpConnection extends Thread
         while (true)
         {
             QueuedMessage qm = backlog.peek();
-            if (qm == null || qm.timestamp >= System.currentTimeMillis() - qm.message.getTimeout())
+            if (qm == null || qm.timestamp >= TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - qm.message.getTimeout())
                 break;
 
             QueuedMessage qm2 = backlog.poll();
@@ -507,7 +510,7 @@ public class OutboundTcpConnection extends Thread
         {
             this.message = message;
             this.id = id;
-            this.timestamp = System.currentTimeMillis();
+            this.timestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         }
 
         boolean shouldRetry()

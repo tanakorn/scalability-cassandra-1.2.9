@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -326,7 +327,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     {
         Long downtime = unreachableEndpoints.get(ep);
         if (downtime != null)
-            return System.currentTimeMillis() - downtime;
+            return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - downtime;
         else
             return 0L;
     }
@@ -417,7 +418,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      */
     private void quarantineEndpoint(InetAddress endpoint)
     {
-        justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
+        justRemovedEndpoints.put(endpoint, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     /**
@@ -548,7 +549,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         logger.warn("Assassinating {} via gossip", endpoint);
         if (epState == null)
         {
-            epState = new EndpointState(new HeartBeatState((int)((System.currentTimeMillis() + 60000) / 1000), 9999));
+            epState = new EndpointState(new HeartBeatState((int)((TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + 60000) / 1000), 9999));
         }
         else
         {
@@ -688,7 +689,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
     private void doStatusCheck()
     {
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         Set<InetAddress> eps = endpointStateMap.keySet();
         for ( InetAddress endpoint : eps )
@@ -1053,7 +1054,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             logger.trace("marking as down {}", addr);
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, System.currentTimeMillis());
+        unreachableEndpoints.put(addr, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         logger.info("InetAddress {} is now DOWN", addr);
         for (IEndpointStateChangeSubscriber subscriber : subscribers)
             subscriber.onDead(addr, localState);
@@ -1067,7 +1068,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             logger.trace("marking as down {}", addr);
         localState.markDead();
 //        liveEndpoints.remove(addr);
-//        unreachableEndpoints.put(addr, System.currentTimeMillis());
+//        unreachableEndpoints.put(addr, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         logger.info("InetAddress {} is now DOWN", addr);
         for (IScaleEndpointStateChangeSubscriber subscriber : subscribersStatic)
             subscriber.onDead(stub, addr, localState);
@@ -1739,7 +1740,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
         epState.markDead();
         endpointStateMap.put(ep, epState);
-        unreachableEndpoints.put(ep, System.currentTimeMillis());
+        unreachableEndpoints.put(ep, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         if (logger.isTraceEnabled())
             logger.trace("Adding saved endpoint " + ep + " " + epState.getHeartBeatState().getGeneration());
     }
@@ -1815,7 +1816,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     }
 
     public static long computeExpireTime() {
-        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+        return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + Gossiper.aVeryLongTime;
     }
 
 }

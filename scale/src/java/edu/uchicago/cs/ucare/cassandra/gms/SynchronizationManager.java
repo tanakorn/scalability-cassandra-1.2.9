@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,7 +55,7 @@ public class SynchronizationManager {
 		if(hostLock != null) hostLock.unlock();
 	}
 	
-	public boolean determineNextMessageForHost(int messageRound, String host){
+	public boolean isNextMessageForHost(int messageRound, String host){
 		ArrayList<Integer> hostQueue = processingOrderPerHost.get(host);
 		if(hostQueue.size() > 0){
 			if(hostQueue.get(0) != messageRound){

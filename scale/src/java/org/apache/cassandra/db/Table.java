@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -204,7 +205,7 @@ public class Table
      */
     public static String getTimestampedSnapshotName(String clientSuppliedName)
     {
-        String snapshotName = Long.toString(System.currentTimeMillis());
+        String snapshotName = Long.toString(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
         if (clientSuppliedName != null && !clientSuppliedName.equals(""))
         {
             snapshotName = snapshotName + "-" + clientSuppliedName;

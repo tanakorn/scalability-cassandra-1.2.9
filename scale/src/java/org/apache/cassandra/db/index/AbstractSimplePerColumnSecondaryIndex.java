@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db.index;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 
@@ -92,7 +93,7 @@ public abstract class AbstractSimplePerColumnSecondaryIndex extends PerColumnSec
             return;
 
         DecoratedKey valueKey = getIndexKeyFor(column.value());
-        int localDeletionTime = (int) (System.currentTimeMillis() / 1000);
+        int localDeletionTime = (int) (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() / 1000);
         ColumnFamily cfi = ColumnFamily.create(indexCfs.metadata);
         ByteBuffer name = makeIndexColumnName(rowKey, column);
         assert name.remaining() > 0 && name.remaining() <= IColumn.MAX_NAME_LENGTH : name.remaining();

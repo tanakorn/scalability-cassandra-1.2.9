@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.io.sstable;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -164,7 +165,7 @@ public class SSTableReader extends SSTable
                                                   components,
                                                   null,
                                                   partitioner,
-                                                  System.currentTimeMillis(),
+                                                  TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                                                   sstableMetadata);
         sstable.bf = new AlwaysPresentFilter();
         sstable.loadForBatch();
@@ -177,7 +178,7 @@ public class SSTableReader extends SSTable
                                       IPartitioner partitioner,
                                       boolean validate) throws IOException
     {
-        long start = System.currentTimeMillis();
+        long start = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 //        logger.info("Opening {} ({} bytes)", descriptor, new File(descriptor.filenameFor(COMPONENT_DATA)).length());
 
         SSTableMetadata sstableMetadata = openMetadata(descriptor, components, partitioner);
@@ -186,7 +187,7 @@ public class SSTableReader extends SSTable
                                                   components,
                                                   metadata,
                                                   partitioner,
-                                                  System.currentTimeMillis(),
+                                                  TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp(),
                                                   sstableMetadata);
         // versions before 'c' encoded keys as utf-16 before hashing to the filter
         if (descriptor.version.hasStringsInBloomFilter)
@@ -203,7 +204,7 @@ public class SSTableReader extends SSTable
             sstable.validate();
 
         if (logger.isDebugEnabled())
-            logger.debug("INDEX LOAD TIME for " + descriptor + ": " + (System.currentTimeMillis() - start) + " ms.");
+            logger.debug("INDEX LOAD TIME for " + descriptor + ": " + (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - start) + " ms.");
 
         if (logger.isDebugEnabled() && sstable.getKeyCache() != null)
             logger.debug(String.format("key cache contains %s/%s keys", sstable.getKeyCache().size(), sstable.getKeyCache().getCapacity()));

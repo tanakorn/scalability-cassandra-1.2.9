@@ -20,7 +20,7 @@ package org.apache.cassandra.tools;
  * 
  */
 
-
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -76,7 +76,7 @@ public class Shuffle extends AbstractJmxClient
     private static final String epSnitchObjName = "org.apache.cassandra.db:type=EndpointSnitchInfo";
 
     private StorageServiceMBean ssProxy = null;
-    private Random rand = new Random(System.currentTimeMillis());
+    private Random rand = new Random(TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     private final String thriftHost;
     private final int thriftPort;
     private final boolean thriftFramed;

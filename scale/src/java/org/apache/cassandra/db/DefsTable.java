@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -129,7 +130,7 @@ public class DefsTable
     /* saves keyspace definitions to system schema columnfamilies */
     public static synchronized void save(Collection<KSMetaData> keyspaces)
     {
-        long timestamp = System.currentTimeMillis();
+        long timestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         for (KSMetaData ksMetaData : keyspaces)
             ksMetaData.toSchema(timestamp).apply();

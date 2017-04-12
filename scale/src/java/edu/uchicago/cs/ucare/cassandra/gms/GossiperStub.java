@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.cassandra.gms;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -43,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.scale.InetAddressStub;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 
 public class GossiperStub implements InetAddressStub, IFailureDetectionEventListener {
 	
@@ -111,7 +113,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
 	GossiperStub(InetAddress broadcastAddress, String clusterId, String dataCenter, int numTokens,
 			Set<InetAddress> seeds, @SuppressWarnings("rawtypes") IPartitioner partitioner) {
 		this(broadcastAddress, clusterId, dataCenter, UUID.randomUUID(), EMPTY_SCHEMA, 
-				new HeartBeatState((int) System.currentTimeMillis()), 
+				new HeartBeatState((int) TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp()), 
 				numTokens, seeds, partitioner);
 	}
 	
@@ -274,7 +276,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
        MessageIn<GossipDigestSyn> message = MessageIn.create(broadcastAddress, digestSynMessage, 
                emptyMap, MessagingService.Verb.GOSSIP_DIGEST_SYN, MessagingService.VERSION_12);
        message.setTo(to);
-       message.createdTime = System.currentTimeMillis();
+       message.createdTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
        return message;
    }
 	
@@ -361,7 +363,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public void doStatusCheck() {
-        long now = System.currentTimeMillis();
+        long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
         Set<InetAddress> eps = endpointStateMap.keySet();
 //        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
@@ -395,7 +397,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public static long computeExpireTime() {
-        return System.currentTimeMillis() + Gossiper.aVeryLongTime;
+        return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + Gossiper.aVeryLongTime;
     }
 
     protected long getExpireTimeForEndpoint(InetAddress endpoint) {
@@ -412,7 +414,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     private void quarantineEndpoint(InetAddress endpoint) {
-        justRemovedEndpoints.put(endpoint, System.currentTimeMillis());
+        justRemovedEndpoints.put(endpoint, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
     
     private Boolean isDeadState(EndpointState epState)
@@ -435,7 +437,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
         flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, System.currentTimeMillis());
+        unreachableEndpoints.put(addr, TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp());
     }
 
     @Override

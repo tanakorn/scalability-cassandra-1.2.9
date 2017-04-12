@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.net;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,7 +38,7 @@ class AsyncResult<T> implements IAsyncResult<T>
     public AsyncResult()
     {
         condition = lock.newCondition();
-        startTime = System.currentTimeMillis();
+        startTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
     }
 
     public T get(long timeout, TimeUnit tu) throws TimeoutException
@@ -51,7 +52,7 @@ class AsyncResult<T> implements IAsyncResult<T>
                 if (!done.get())
                 {
                     timeout = TimeUnit.MILLISECONDS.convert(timeout, tu);
-                    long overall_timeout = timeout - (System.currentTimeMillis() - startTime);
+                    long overall_timeout = timeout - (TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - startTime);
                     bVal = overall_timeout > 0 && condition.await(overall_timeout, TimeUnit.MILLISECONDS);
                 }
             }

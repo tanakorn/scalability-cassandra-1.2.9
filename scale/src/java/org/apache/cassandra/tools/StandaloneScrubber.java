@@ -18,6 +18,7 @@
  */
 package org.apache.cassandra.tools;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -85,7 +86,7 @@ public class StandaloneScrubber
             // Do not load sstables since they might be broken
             Table table = Table.openWithoutSSTables(options.tableName);
             ColumnFamilyStore cfs = table.getColumnFamilyStore(options.cfName);
-            String snapshotName = "pre-scrub-" + System.currentTimeMillis();
+            String snapshotName = "pre-scrub-" + TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
 
             Directories.SSTableLister lister = cfs.directories.sstableLister().skipTemporary(true);
 

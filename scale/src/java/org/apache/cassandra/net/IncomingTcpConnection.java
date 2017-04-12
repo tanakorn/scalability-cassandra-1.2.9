@@ -18,6 +18,7 @@
 package org.apache.cassandra.net;
 
 import java.io.*;
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -33,6 +34,7 @@ import org.xerial.snappy.SnappyInputStream;
 
 import edu.uchicago.cs.ucare.outdated.WorstCaseGossiperStub;
 
+import edu.uchicago.cs.ucare.cassandra.gms.TimeManager;
 public class IncomingTcpConnection extends Thread
 {
     private static final Logger logger = LoggerFactory.getLogger(IncomingTcpConnection.class);
@@ -194,7 +196,7 @@ public class IncomingTcpConnection extends Thread
             input.readInt(); // size of entire message. in 1.0+ this is just a placeholder
 
         String id = input.readUTF();
-        long timestamp = System.currentTimeMillis();;
+        long timestamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();;
         if (version >= MessagingService.VERSION_12)
         {
             // make sure to readInt, even if cross_node_to is not enabled
