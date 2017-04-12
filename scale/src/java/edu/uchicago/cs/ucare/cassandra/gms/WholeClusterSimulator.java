@@ -178,16 +178,6 @@ public class WholeClusterSimulator {
             bootGossipExecRecords[Integer.parseInt(tokens[0])] = Long.parseLong(tokens[1]);
         }
         buffReader.close();
-        // #############################################################
-        // @Cesar: Init the managers
-        // #############################################################
-        MessageManager.instance.initMessageManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
-        TimeManager.instance.initTimeManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
-        if(WholeClusterSimulator.recordEnabled){
-        	TimeManager.instance.saveInitialTime();
-        }
-        // #############################################################
-        
         buffReader = new BufferedReader(new FileReader(args[2]));
         while ((line = buffReader.readLine()) != null) {
             String[] tokens = line.split(" ");
@@ -215,6 +205,17 @@ public class WholeClusterSimulator {
 //        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
+        // #############################################################
+        // @Cesar: Init the managers
+        // #############################################################
+        MessageManager.instance.initMessageManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
+        TimeManager.instance.initTimeManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
+        SynchronizationManager.instance.initSynchronizationManager(addressList);
+        if(WholeClusterSimulator.recordEnabled){
+        	TimeManager.instance.saveInitialTime();
+        }
+        // #############################################################
+        
         stubGroup = stubGroupBuilder.setClusterId("Test Cluster").setDataCenter("")
                 .setNumTokens(32).setSeeds(seeds).setAddressList(addressList)
                 .setPartitioner(new Murmur3Partitioner()).build();
@@ -497,6 +498,8 @@ public class WholeClusterSimulator {
 		                // @Cesar: Record here
 		                // #################################################################
 	                	MessageIn<?> ackMessage = msgQueue.take();
+	                	// lock the host
+	                	SynchronizationManager.instance.lockHost(ackMessage.to);
 	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, System.nanoTime());
 		                MessageManager.instance.getReceivedMessageManager().saveReceivedMessageToFile(newMessage);
 		                // @Cesar: and process
@@ -504,7 +507,9 @@ public class WholeClusterSimulator {
 		                AckProcessor.networkQueuedTime += networkQueuedTime;
 		                AckProcessor.processCount += 1;
 		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
-	                	// #################################################################
+		                // unlock the host
+	                	SynchronizationManager.instance.unlockHost(ackMessage.to);
+		                // #################################################################
 	                }
 	                else if(WholeClusterSimulator.replayEnabled){
 	                	// #################################################################
@@ -513,10 +518,14 @@ public class WholeClusterSimulator {
 	                	ReceivedMessageManager.ReceivedMessage newMessage = MessageManager.instance.getReceivedMessageManager().pollNextReceivedMessage();
 	                	if(newMessage != null){
 	                		MessageIn<?> ackMessage = newMessage.getMessageIn();
+	                		// lock the host
+		                	SynchronizationManager.instance.lockHost(ackMessage.to);
 			                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
 			                AckProcessor.networkQueuedTime += networkQueuedTime;
 			                AckProcessor.processCount += 1;
 			                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+			                // unlock the host
+		                	SynchronizationManager.instance.unlockHost(ackMessage.to);
 	                	}
 	                	else{
 	                		// fail when no more messages to replay
