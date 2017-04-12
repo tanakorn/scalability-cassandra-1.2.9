@@ -176,8 +176,8 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         receiverStub.ackNewVersionBoot.remove(ackId);
         Integer sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
         receiverStub.ackNewVersionNormal.remove(ackId);
-        int allBoot = sendingBoot + bootstrapCount;
-        int allNormal = sendingNormal + normalCount;
+        int allBoot = (sendingBoot == null? 0 : sendingBoot) + bootstrapCount;
+        int allNormal = (sendingNormal == null? 0 : sendingNormal) + normalCount;
 //        if (allBoot != 0 || allNormal != 0) {
 //            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
 //        }
