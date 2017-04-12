@@ -1113,8 +1113,6 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     static private void handleMajorStateChangeStatic(GossiperStub stub, 
     		InetAddress ep, EndpointState epState)
     {
-    	TimeManager.Timer timer = TimeManager.instance.createTimer();
-    	timer.startTimer();
         ConcurrentMap<InetAddress, EndpointState> endpointStateMap = stub.getEndpointStateMap();
         if (!isDeadStateStatic(epState))
         {
@@ -1142,8 +1140,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             subscriber.onJoin(stub, ep, epState);
 //            logger.info("sc_debug: subscriber = " + subscriber.getClass());
         }
-        timer.stopTimer();
-        TimeManager.instance.saveElapsedProcessingTime(timer.getElapsedNanos());
+        
     }
 
     private Boolean isDeadState(EndpointState epState)
@@ -1244,6 +1241,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
     
     static Object[] applyStateLocallyStatic(GossiperStub stub, Map<InetAddress, EndpointState> epStateMap)
     {
+    	TimeManager.Timer timer = TimeManager.instance.createTimer();
+    	timer.startTimer();
         int newNode = 0;
         int newNodeToken = 0;
         int newRestart = 0;
@@ -1345,6 +1344,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 updatedNodes.add(ep);
             }
         }
+        timer.stopTimer();
+        TimeManager.instance.saveElapsedProcessingTime(timer.getElapsedNanos());
         return new Object[] { newNode, newNodeToken, newRestart, newVersion, newVersionTokens, bootstrapCount, normalCount, updatedNodes, updatedNodeInfo, realUpdate };
     }
     
