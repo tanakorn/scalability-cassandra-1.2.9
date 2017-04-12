@@ -141,7 +141,7 @@ public class ReceivedMessageManager{
 			// nothing here
 		}
 		
-		public ReceivedMessage(MessageIn<?> messageIn, int messageId){
+		public ReceivedMessage(MessageIn<?> messageIn, long messageId){
 			this.messageId = messageId;
 			this.messageIn = messageIn;
 			messageRound = ROUND;
