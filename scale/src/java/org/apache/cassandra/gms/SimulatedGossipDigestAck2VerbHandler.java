@@ -172,9 +172,9 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
         long ack2HandlerTime = tmpCurrent - receiveTime;
         long allHandlerTime = tmpCurrent - syncReceivedTime;
         String ackId = from + "_" + message.payload.ackId;
-        int sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
+        Integer sendingBoot = receiverStub.ackNewVersionBoot.get(ackId);
         receiverStub.ackNewVersionBoot.remove(ackId);
-        int sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
+        Integer sendingNormal = receiverStub.ackNewVersionNormal.get(ackId);
         receiverStub.ackNewVersionNormal.remove(ackId);
         int allBoot = sendingBoot + bootstrapCount;
         int allNormal = sendingNormal + normalCount;
