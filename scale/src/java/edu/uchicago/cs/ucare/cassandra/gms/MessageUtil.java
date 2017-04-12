@@ -12,6 +12,7 @@ public class MessageUtil {
 	private static final String RECEIVED_MESSAGE_MAP = "message-mapping";
 	private static final String RECEIVED_MESSAGE__DEP_MAP = "message-dependency-per-host";
 	private static final String MESSAGE_RECEIVED = "message-queue";
+	private static final String MESSAGE_PROCESSING_TIME = "message-processing-time";
 	private static final String TIME = "time";
 	
 	public static String buildTimeFileName(String basePath){
@@ -33,6 +34,11 @@ public class MessageUtil {
 	
 	public static String buildReceivedMessageFilePathForDependencyMap(String basePath){
 		return buildReceivedMessageFilePath(basePath) + File.separator + RECEIVED_MESSAGE__DEP_MAP;
+			   
+	}
+	
+	public static String buildMessageProcessingTimeMap(String basePath){
+		return buildReceivedMessageFilePath(basePath) + File.separator + MESSAGE_PROCESSING_TIME;
 			   
 	}
 }

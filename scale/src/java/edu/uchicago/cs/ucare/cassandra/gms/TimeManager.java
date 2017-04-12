@@ -3,6 +3,7 @@ package edu.uchicago.cs.ucare.cassandra.gms;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -94,5 +95,46 @@ public class TimeManager {
     		}
     	}
     }
+    
+    public Timer createTimer(){
+    	return new Timer();
+    }
+    
+    public void saveElapsedProcessingTime(long elapsed){
+    	PrintWriter pr = null;
+    	try{
+            pr = new PrintWriter(new FileWriter(new File(MessageUtil.buildMessageProcessingTimeMap(baseTimeFilePath)), true));
+            pr.println(elapsed);
+        }
+        catch(IOException e){
+            logger.error("Exception, cannot save  time", e);
+        }
+    	finally{
+    		if(pr != null) pr.close();
+    	}
+    } 
+    
+    public static class Timer{
+	   
+	   private long start = 0L;
+	   private long end = 0L;
+	   private long elapsedNanos = 0L;
+	   
+	   public void startTimer(){
+		   start = System.nanoTime();
+	   }
+	   
+	   public long stopTimer(){
+		   end = System.nanoTime();
+		   elapsedNanos = end - start;
+		   return elapsedNanos;
+	   }
+
+	   public long getElapsedNanos() {
+		   return elapsedNanos;
+	   }
+	   
+	   
+   }
 	
 }
