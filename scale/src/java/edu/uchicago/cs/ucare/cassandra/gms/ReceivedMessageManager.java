@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.cassandra.net.MessageIn;
 import org.slf4j.Logger;
@@ -147,6 +148,7 @@ public class ReceivedMessageManager{
 	public static class ReceivedMessage implements Serializable{
 		
 		private static final AtomicInteger ROUND = new AtomicInteger(-1);
+		private static final AtomicLong MESSAGE_ID = new AtomicLong(-1L);
 		
 		private int messageRound = 0;
 		private MessageIn<?> messageIn = null;
@@ -204,12 +206,7 @@ public class ReceivedMessageManager{
 		public static class MessageLoaderComparator implements Comparator<MessageLoader>{
 			@Override
 			public int compare(MessageLoader o1, MessageLoader o2) {
-				if(o1.messageId != o1.messageId){
-					return (int)(o1.messageId - o2.messageId);
-				}
-				else{
-					return o1.messageRound - o2.messageRound;
-				}
+				return o1.messageRound - o2.messageRound;
 			}
 			
 		}
