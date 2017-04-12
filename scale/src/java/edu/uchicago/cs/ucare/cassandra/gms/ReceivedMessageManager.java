@@ -14,6 +14,8 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Comparator;
 import java.util.Queue;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.cassandra.net.MessageIn;
@@ -69,10 +71,21 @@ public class ReceivedMessageManager{
 			File file = new File(mapFileName);
 			brdr = new BufferedReader(new FileReader(file));
 			String line = null;
+			Set<ReceivedMessage.MessageLoader> orderedMessages = new TreeSet<ReceivedMessage.MessageLoader>(new ReceivedMessage.MessageLoaderComparator());
 			while((line = brdr.readLine()) != null){
 				String [] parsed = line.split(MessageUtil.STATE_FIELD_SEP);
 				int roundId = Integer.valueOf(parsed[0]);
-				msgQueue.add(roundId);
+				long messageId = Long.valueOf(parsed[1]);
+				ReceivedMessage.MessageLoader lrd = new ReceivedMessage.MessageLoader(roundId, messageId);
+				orderedMessages.add(lrd);
+			}
+			int old = 0;
+			for(ReceivedMessage.MessageLoader ordered : orderedMessages){
+				if(old > 0 && old >= ordered.messageRound){
+					logger.error("@Cesar: Error while loading?");
+				}
+				msgQueue.add(ordered.messageRound);
+				old = ordered.messageRound;
 			}
 			brdr.close();
 			logger.info("@Cesar: <" + msgQueue.size() + "> messages loaded  from <" + mapFileName + ">");
@@ -178,10 +191,19 @@ public class ReceivedMessageManager{
 		}
 		
 		
-		public static class ReceivedMessageComparator implements Comparator<ReceivedMessage>{
-
+		public static class MessageLoader{
+			private int messageRound = 0;
+			private long messageId = 0; 
+			
+			public MessageLoader(int messageRound, long messageId){
+				this.messageRound = messageRound;
+				this.messageId = messageId;
+			}
+		}
+		
+		public static class MessageLoaderComparator implements Comparator<MessageLoader>{
 			@Override
-			public int compare(ReceivedMessage o1, ReceivedMessage o2) {
+			public int compare(MessageLoader o1, MessageLoader o2) {
 				if(o1.messageId != o1.messageId){
 					return (int)(o1.messageId - o2.messageId);
 				}
