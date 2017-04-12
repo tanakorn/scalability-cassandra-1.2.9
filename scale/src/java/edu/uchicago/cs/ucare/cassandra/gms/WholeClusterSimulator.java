@@ -210,7 +210,7 @@ public class WholeClusterSimulator {
         // #############################################################
         MessageManager.instance.initMessageManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
         TimeManager.instance.initTimeManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder);
-        SynchronizationManager.instance.initSynchronizationManager(addressList);
+        SynchronizationManager.instance.initSynchronizationManager(WholeClusterSimulator.replayEnabled, WholeClusterSimulator.baseMessageFolder, addressList);
         if(WholeClusterSimulator.recordEnabled){
         	TimeManager.instance.saveInitialTime();
         }
@@ -507,6 +507,8 @@ public class WholeClusterSimulator {
 		                AckProcessor.networkQueuedTime += networkQueuedTime;
 		                AckProcessor.processCount += 1;
 		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+		                // save dependency
+		                SynchronizationManager.instance.saveDependencyToFile(newMessage.getMessageRound(), ackMessage.to.toString());
 		                // unlock the host
 	                	SynchronizationManager.instance.unlockHost(ackMessage.to);
 		                // #################################################################
@@ -520,7 +522,7 @@ public class WholeClusterSimulator {
 	                		MessageIn<?> ackMessage = newMessage.getMessageIn();
 	                		// lock the host
 		                	SynchronizationManager.instance.lockHost(ackMessage.to);
-			                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+		                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
 			                AckProcessor.networkQueuedTime += networkQueuedTime;
 			                AckProcessor.processCount += 1;
 			                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");

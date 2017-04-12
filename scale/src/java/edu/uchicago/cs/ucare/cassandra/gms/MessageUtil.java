@@ -10,6 +10,7 @@ public class MessageUtil {
 	public static final String STATE_FIELD_SEP = ",";
 	
 	private static final String RECEIVED_MESSAGE_MAP = "message-mapping";
+	private static final String RECEIVED_MESSAGE__DEP_MAP = "message-dependency-per-host";
 	private static final String MESSAGE_RECEIVED = "message-queue";
 	private static final String TIME = "time";
 	
@@ -30,4 +31,8 @@ public class MessageUtil {
 			   
 	}
 	
+	public static String buildReceivedMessageFilePathForDependencyMap(String basePath){
+		return buildReceivedMessageFilePath(basePath) + File.separator + RECEIVED_MESSAGE__DEP_MAP;
+			   
+	}
 }
