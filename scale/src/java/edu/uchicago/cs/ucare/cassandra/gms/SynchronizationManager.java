@@ -54,6 +54,37 @@ public class SynchronizationManager {
 		if(hostLock != null) hostLock.unlock();
 	}
 	
+	public boolean determineNextMessageForHost(int messageRound, String host){
+		ArrayList<Integer> hostQueue = processingOrderPerHost.get(host);
+		if(hostQueue.size() > 0){
+			if(hostQueue.get(0) != messageRound){
+				// is not the next
+				if(hostQueue.contains(messageRound)){
+					// is in the list
+					// so, if its here, remove all previous messages
+					while(hostQueue.contains(messageRound)){
+						hostQueue.remove(0);
+					}
+					// now its not there anymore, but we continue
+					return true;
+				}
+				else{
+					// is not even in the list, discard
+					return false;
+				}
+				
+			}
+			else{
+				// excellent, is the next
+				hostQueue.remove(0);
+				return true;
+			}
+		}
+		else{
+			return false;
+		}
+	}
+	
 	public void loadDependencyMapFromFile(){
 		String mapFileName = MessageUtil.buildReceivedMessageFilePathForDependencyMap(basePath);
 		BufferedReader brdr = null;

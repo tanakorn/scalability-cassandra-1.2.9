@@ -522,10 +522,13 @@ public class WholeClusterSimulator {
 	                		MessageIn<?> ackMessage = newMessage.getMessageIn();
 	                		// lock the host
 		                	SynchronizationManager.instance.lockHost(ackMessage.to);
-		                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-			                AckProcessor.networkQueuedTime += networkQueuedTime;
-			                AckProcessor.processCount += 1;
-			                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+		                	// only process if this is the next message
+		                	if(SynchronizationManager.instance.determineNextMessageForHost(newMessage.getMessageRound(), ackMessage.to.toString())){
+			                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+				                AckProcessor.networkQueuedTime += networkQueuedTime;
+				                AckProcessor.processCount += 1;
+				                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, "");
+		                	}
 			                // unlock the host
 		                	SynchronizationManager.instance.unlockHost(ackMessage.to);
 	                	}
