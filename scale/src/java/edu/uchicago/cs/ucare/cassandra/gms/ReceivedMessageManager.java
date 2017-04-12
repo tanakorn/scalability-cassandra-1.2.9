@@ -17,6 +17,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.net.MessageIn;
 import org.slf4j.Logger;
@@ -120,7 +121,7 @@ public class ReceivedMessageManager{
 			return reconstructed;
 		}
 		catch(Exception e){
-			logger.error("@Cesar: Skipped a message <" + nextMessageId + ">since cannot load", e);
+			logger.error("@Cesar: Skipped a message <" + nextMessageId + "> since cannot load", e);
 			return null;
 		}
 		finally{
@@ -145,7 +146,7 @@ public class ReceivedMessageManager{
 	
 	public static class ReceivedMessage implements Serializable{
 		
-		private static int ROUND = 0;
+		private static final AtomicInteger ROUND = new AtomicInteger(-1);
 		
 		private int messageRound = 0;
 		private MessageIn<?> messageIn = null;
@@ -158,8 +159,7 @@ public class ReceivedMessageManager{
 		public ReceivedMessage(MessageIn<?> messageIn, long messageId){
 			this.messageId = messageId;
 			this.messageIn = messageIn;
-			messageRound = ROUND;
-			++ROUND;
+			messageRound = ROUND.incrementAndGet();
 		}
 
 		public ReceivedMessage(int messageRound){
