@@ -91,7 +91,7 @@ public class WholeClusterSimulator {
     public static final GossipProtocolStateSnaphotManager stateManager = new GossipProtocolStateSnaphotManager(); 
     // ##########################################################################
     
-    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
+    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     public static final Set<InetAddress> observedNodes;
     static {
@@ -229,12 +229,15 @@ public class WholeClusterSimulator {
         timers = new Timer[numGossiper];
         tasks = new MyGossiperTask[numGossiper];
         LinkedList<GossiperStub>[] subStub = new LinkedList[numGossiper];
+        LinkedBlockingQueue<MessageIn<?>>[] subQueue = new LinkedBlockingQueue[numGossiper];
         for (int i = 0; i < numGossiper; ++i) {
             subStub[i] = new LinkedList<GossiperStub>();
+            subQueue[i] = new LinkedBlockingQueue<MessageIn<?>>();
         }
         int ii = 0;
         for (GossiperStub stub : stubGroup) {
             subStub[ii].add(stub);
+            msgQueues.put(stub.getInetAddress(), subQueue[ii]);
             ii = (ii + 1) % numGossiper;
         }
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
@@ -359,15 +362,15 @@ public class WholeClusterSimulator {
 	                	assert toUnreachableMember == null;
 	                	GossipMessage toSeed = round.getToSeed();
 	                	if(toLiveMember != null){
-//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toLiveMember.getToWho());
 	                		msgQueue.add(toLiveMember.getMessage());
 	                	}
 	                	if(toUnreachableMember != null){
-//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toUnreachableMember.getToWho());
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toUnreachableMember.getToWho());
 	                		msgQueue.add(toUnreachableMember.getMessage());
 	                	}
 	                	if(toSeed != null){
-//	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toSeed.getToWho());
+	                		LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(toSeed.getToWho());
 	                		msgQueue.add(toSeed.getMessage());
 	                	}
 	                	// do status check
@@ -392,7 +395,7 @@ public class WholeClusterSimulator {
                     InetAddress liveReceiver = GossiperStub.getRandomAddress(liveEndpoints);
                     gossipToSeed = seeds.contains(liveReceiver);
                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(liveReceiver);
-//                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
+                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -452,7 +455,7 @@ public class WholeClusterSimulator {
                             if (liveEndpoints.size() == 0) {
                                 InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                 MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-//                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -471,7 +474,7 @@ public class WholeClusterSimulator {
                                 if (randDbl <= probability) {
                                     InetAddress seed = GossiperStub.getRandomAddress(seeds);
                                     MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(seed);
-//                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -525,7 +528,6 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-//            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
 	                MessageIn<?> ackMessage = null;
@@ -534,27 +536,30 @@ public class WholeClusterSimulator {
 	                // @Cesar: in here, we save the received message
 	            	// ##########################################################################
 	                if(WholeClusterSimulator.isSerializationEnabled){
-	                	// how much time did we wait?
-	                	long startWaiting = System.currentTimeMillis();
-	                	// take from queue
-	                	ackMessage = msgQueue.take();
-	                	// finish waiting
-	                	long endWaiting = System.currentTimeMillis();
-	                	InetAddress address = ackMessage.to;
-	                	// save
-	                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
-	                	received.setMessageIn(ackMessage);
-	                	received.setWaitForNext(endWaiting - startWaiting);
-	                	received.setGeneratedId(messageId);
-	                	if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
-	                	// time things
-	                	long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-		                AckProcessor.networkQueuedTime += networkQueuedTime;
-		                AckProcessor.processCount += 1;
-	                	messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
-	                	// normal
-		                MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
-		                continue;
+	                    for (GossiperStub stub: stubs) {
+                            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(stub.getInetAddress());
+                            // take from queue
+                            ackMessage = msgQueue.take();
+                            // how much time did we wait?
+                            long startWaiting = System.currentTimeMillis();
+                            // finish waiting
+                            long endWaiting = System.currentTimeMillis();
+                            InetAddress address = ackMessage.to;
+                            // save
+                            ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
+                            received.setMessageIn(ackMessage);
+                            received.setWaitForNext(endWaiting - startWaiting);
+                            received.setGeneratedId(messageId);
+                            if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+                            // time things
+                            long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+                            AckProcessor.networkQueuedTime += networkQueuedTime;
+                            AckProcessor.processCount += 1;
+                            messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
+                            // normal
+                            MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
+                            continue;
+	                    }
 	                }
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message

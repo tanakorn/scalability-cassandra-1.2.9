@@ -204,7 +204,7 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         // @Cesar: Only if we are not replaying
     	// ##########################################################################
         if(!WholeClusterSimulator.isReplayEnabled){
-        	WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
+        	WholeClusterSimulator.msgQueues.get(gDigestAck2Message.getTo()).add(gDigestAck2Message);
         }
      // ##########################################################################
 //        WholeClusterSimulator.msgQueue.add(gDigestAck2Message);
