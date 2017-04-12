@@ -245,7 +245,7 @@ public class WholeClusterSimulator {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
-            Thread t = new Thread(new AckProcessor(subStub[i]));
+            Thread t = new Thread(new AckProcessor(subStub[i], subQueue[i]));
             ackProcessThreadPool.add(t);
             t.start();
         }
@@ -518,12 +518,14 @@ public class WholeClusterSimulator {
     public static class AckProcessor implements Runnable {
         
         List<GossiperStub> stubs;
+        LinkedBlockingQueue<MessageIn<?>> msgQueue;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
-        public AckProcessor(List<GossiperStub> stubs) {
+        public AckProcessor(List<GossiperStub> stubs, LinkedBlockingQueue<MessageIn<?>> msgQueue) {
             this.stubs = stubs;
+            this.msgQueue = msgQueue;
         }
 
         @Override
@@ -536,30 +538,27 @@ public class WholeClusterSimulator {
 	                // @Cesar: in here, we save the received message
 	            	// ##########################################################################
 	                if(WholeClusterSimulator.isSerializationEnabled){
-	                    for (GossiperStub stub: stubs) {
-                            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(stub.getInetAddress());
-                            // take from queue
-                            ackMessage = msgQueue.take();
-                            // how much time did we wait?
-                            long startWaiting = System.currentTimeMillis();
-                            // finish waiting
-                            long endWaiting = System.currentTimeMillis();
-                            InetAddress address = ackMessage.to;
-                            // save
-                            ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
-                            received.setMessageIn(ackMessage);
-                            received.setWaitForNext(endWaiting - startWaiting);
-                            received.setGeneratedId(messageId);
-                            if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
-                            // time things
-                            long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
-                            AckProcessor.networkQueuedTime += networkQueuedTime;
-                            AckProcessor.processCount += 1;
-                            messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
-                            // normal
-                            MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
-                            continue;
-	                    }
+                        // take from queue
+                        ackMessage = msgQueue.take();
+                        // how much time did we wait?
+                        long startWaiting = System.currentTimeMillis();
+                        // finish waiting
+                        long endWaiting = System.currentTimeMillis();
+                        InetAddress address = ackMessage.to;
+                        // save
+                        ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
+                        received.setMessageIn(ackMessage);
+                        received.setWaitForNext(endWaiting - startWaiting);
+                        received.setGeneratedId(messageId);
+                        if(logger.isDebugEnabled()) logger.debug("@Cesar: Recording message <"  + received.getMessageRound() + ">");
+                        // time things
+                        long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
+                        AckProcessor.networkQueuedTime += networkQueuedTime;
+                        AckProcessor.processCount += 1;
+                        messageManager.saveMessageToFile(received, WholeClusterSimulator.serializationFilePrefix, address);
+                        // normal
+                        MessagingService.instance().getVerbHandler(ackMessage.verb).doVerb(ackMessage, Integer.toString(messageId));
+                        continue;
 	                }
 	                // ##########################################################################
 	                // @Cesar: in here, we load the received message
