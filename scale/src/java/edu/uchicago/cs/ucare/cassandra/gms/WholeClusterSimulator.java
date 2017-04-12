@@ -528,9 +528,14 @@ public class WholeClusterSimulator {
 		                	SynchronizationManager.instance.unlockHost(ackMessage.to);
 	                	}
 	                	else{
-	                		// fail when no more messages to replay
-	                		logger.error("@Cesar: Failing cause there are no more messages to replay");
-	                		System.exit(0);
+	                		// When no more messages to replay, just log, but stay
+	                		logger.info("@Cesar: No more messages to replay, sleeping 10 secs");
+	                		try{
+	                			Thread.sleep(10000);
+	                		}
+	                		catch(InterruptedException ie){
+	                			// nothing to do...
+	                		}
 	                	}
 	                	// #################################################################
 	                }
