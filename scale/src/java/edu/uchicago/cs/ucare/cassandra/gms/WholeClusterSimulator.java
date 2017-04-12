@@ -497,7 +497,7 @@ public class WholeClusterSimulator {
 		                // @Cesar: Record here
 		                // #################################################################
 	                	MessageIn<?> ackMessage = msgQueue.take();
-	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, ackMessage.ackId);
+	                	ReceivedMessageManager.ReceivedMessage newMessage = new ReceivedMessageManager.ReceivedMessage(ackMessage, ackMessage.payload.ackId);
 		                MessageManager.instance.getReceivedMessageManager().saveReceivedMessageToFile(newMessage);
 		                // @Cesar: and process
 		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
