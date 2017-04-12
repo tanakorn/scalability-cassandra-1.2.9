@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Comparator;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -176,6 +177,20 @@ public class ReceivedMessageManager{
 			this.messageId = messageId;
 		}
 		
+		
+		public static class ReceivedMessageComparator implements Comparator<ReceivedMessage>{
+
+			@Override
+			public int compare(ReceivedMessage o1, ReceivedMessage o2) {
+				if(o1.messageId != o1.messageId){
+					return (int)(o1.messageId - o2.messageId);
+				}
+				else{
+					return o1.messageRound - o2.messageRound;
+				}
+			}
+			
+		}
 		
 	}
 	
