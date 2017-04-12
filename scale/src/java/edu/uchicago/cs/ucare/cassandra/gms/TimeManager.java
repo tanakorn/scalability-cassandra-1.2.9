@@ -21,7 +21,7 @@ public class TimeManager {
     
     public void initTimeManager(boolean isReplayEnabled, String baseTimeFilePath){
     	this.isReplayEnabled = isReplayEnabled;
-    	this.relativeTimeStamp = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+    	this.relativeTimeStamp = System.currentTimeMillis();
     	this.baseTimeFilePath = baseTimeFilePath;
     	if(this.isReplayEnabled) {
     		if(this.baseTimeFilePath != null){
@@ -39,11 +39,11 @@ public class TimeManager {
     
 	public long getCurrentTimeMillisFromBaseTimeStamp(){
     	if(isReplayEnabled ){
-    		long elapsed = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - relativeTimeStamp;
+    		long elapsed = System.currentTimeMillis() - relativeTimeStamp;
     		return elapsed > 0? baseTimeStamp + elapsed : baseTimeStamp;
     	}
     	else{
-    		return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+    		return System.currentTimeMillis();
     	}
     	
     }
@@ -53,14 +53,14 @@ public class TimeManager {
     		return relativeTimeStamp + afterHowLong;
     	}
     	else{
-    		return TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+    		return System.currentTimeMillis();
     	}
     	
     }
 	
     public void saveInitialTime(){
     	PrintWriter pr = null;
-    	long now = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+    	long now = System.currentTimeMillis();
     	try{
             pr = new PrintWriter(new File(MessageUtil.buildTimeFileName(baseTimeFilePath)));
             pr.println(now);
