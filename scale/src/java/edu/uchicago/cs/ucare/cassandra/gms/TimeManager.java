@@ -22,8 +22,8 @@ public class TimeManager {
     public void initTimeManager(boolean isReplayEnabled, String baseTimeFilePath){
     	this.isReplayEnabled = isReplayEnabled;
     	this.relativeTimeStamp = System.currentTimeMillis();
+    	this.baseTimeFilePath = baseTimeFilePath;
     	if(this.isReplayEnabled) {
-    		this.baseTimeFilePath = baseTimeFilePath;
     		if(this.baseTimeFilePath != null){
     			loadInitialTime();
     		}
@@ -67,7 +67,7 @@ public class TimeManager {
             logger.debug("@Cesar: Saved timestamp <" + now + ">");
         }
         catch(IOException e){
-            logger.error("Exception, cannot serialize time", e);
+            logger.error("Exception, cannot save  time", e);
         }
     	finally{
     		if(pr != null) pr.close();
