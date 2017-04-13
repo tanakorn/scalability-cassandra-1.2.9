@@ -1184,7 +1184,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // @Cesar: are we replaying?
         // ###################################################################
     	if(WholeClusterSimulator.isReplayEnabled){
-    		logger.info("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", iterationCounter=" + iterationCounter);
+//    		logger.info("<" + myId + "> is looking out inputId=" + inputId + ", from=" + fromId + ", iterationCounter=" + iterationCounter);
     		handleRecordedMajorStateChangeStatic(myId, inputId, fromId, ep, stub, iterationCounter);
     		// this ends here
     		return;
@@ -1203,7 +1203,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         // ###################################################################
         if(WholeClusterSimulator.isSerializationEnabled){
         	float elapsedMillis = System.currentTimeMillis() - startTime;  
-        	logger.info("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", it=" + iterationCounter);
+//        	logger.info("<" + myId + "> is recording inputId=" + inputId + ", from=" + fromId + ", it=" + iterationCounter);
         	// take a picture
         	edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot gSnapshot = edu.uchicago.cs.ucare.cassandra.gms.GossipProtocolStateSnapshot.buildFromInstance(stub);
         	// id plus host

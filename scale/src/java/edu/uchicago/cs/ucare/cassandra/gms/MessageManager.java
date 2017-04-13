@@ -278,6 +278,14 @@ public class MessageManager {
         } finally {
             if (pr != null)
                 pr.close();
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
         }
 
     }
