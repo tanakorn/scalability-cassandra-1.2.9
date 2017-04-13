@@ -538,10 +538,10 @@ public class WholeClusterSimulator {
 	                // @Cesar: in here, we save the received message
 	            	// ##########################################################################
 	                if(WholeClusterSimulator.isSerializationEnabled){
-                        // take from queue
-                        ackMessage = msgQueue.take();
                         // how much time did we wait?
                         long startWaiting = System.currentTimeMillis();
+                        // take from queue
+                        ackMessage = msgQueue.take();
                         // finish waiting
                         long endWaiting = System.currentTimeMillis();
                         InetAddress address = ackMessage.to;
