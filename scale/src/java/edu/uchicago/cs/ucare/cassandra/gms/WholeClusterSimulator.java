@@ -87,8 +87,8 @@ public class WholeClusterSimulator {
 //        }
 //
 //    });
-    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
-//    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
+//    public static LinkedBlockingQueue<MessageIn<?>> msgQueue = new LinkedBlockingQueue<MessageIn<?>>();
+    public static Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> msgQueues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
     
     
     // #############################################################
@@ -168,9 +168,7 @@ public class WholeClusterSimulator {
         }
         numStubs = Integer.parseInt(args[0]);
         bootGossipExecRecords = new long[1024];
-//        normalGossipExecRecords = new double[MAX_NODE];
         normalGossipExecRecords = new HashMap<Integer, Map<Integer,Long>>();
-//        normalGossipExecSdRecords = new double[MAX_NODE];
         System.out.println("Started! " + numStubs);
         BufferedReader buffReader = new BufferedReader(new FileReader(args[1]));
         String line;
@@ -201,9 +199,9 @@ public class WholeClusterSimulator {
             int b = (i - 1) % 255 + 1;
             addressList.add(InetAddress.getByName("127.0." + a + "." + b));
         }
-//        for (InetAddress address : addressList) {
-//            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
-//        }
+        for (InetAddress address : addressList) {
+            msgQueues.put(address, new LinkedBlockingQueue<MessageIn<?>>());
+        }
         logger.info("Simulate " + numStubs + " nodes = " + addressList);
 
         // #############################################################
@@ -234,19 +232,19 @@ public class WholeClusterSimulator {
             subStub[i] = new LinkedList<GossiperStub>();
         }
         int ii = 0;
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (GossiperStub stub : stubGroup) {
             subStub[ii].add(stub);
             ii = (ii + 1) % numGossiper;
+            Thread t = new Thread(new AckProcessor(stub.getInetAddress()));
+            ackProcessThreadPool.add(t);
+            t.start();
         }
-        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         for (int i = 0; i < numGossiper; ++i) {
             timers[i] = new Timer();
             tasks[i] = new MyGossiperTask(subStub[i]);
             timers[i].schedule(tasks[i], 0, 1000);
 //            Thread t = new Thread(new AckProcessor(subStub[i]));
-            Thread t = new Thread(new AckProcessor());
-            ackProcessThreadPool.add(t);
-            t.start();
         }
 //        timer.schedule(new MyGossiperTask(), 0, 1000);
 //        for (InetAddress address : addressList) {
@@ -378,7 +376,7 @@ public class WholeClusterSimulator {
                     // #############################################################################################
                     synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                     // #############################################################################################
-//                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
+                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(liveReceiver);
                     if (!msgQueue.add(synMsg)) {
                         logger.error("Cannot add more message to message queue");
                     } else {
@@ -414,7 +412,7 @@ public class WholeClusterSimulator {
                                 // #############################################################################################
                                 synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                                 // #############################################################################################
-//                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+                                LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                 if (!msgQueue.add(synMsg)) {
                                     logger.error("Cannot add more message to message queue");
                                 } else {
@@ -431,7 +429,7 @@ public class WholeClusterSimulator {
                                     // #############################################################################################
                                     synMsg.createdAfter = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - TimeManager.instance.getRelativeTimeStamp();
                                     // #############################################################################################
-                                    //                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
+                                    LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(seed);
                                     if (!msgQueue.add(synMsg)) {
                                         logger.error("Cannot add more message to message queue");
                                     } else {
@@ -477,21 +475,20 @@ public class WholeClusterSimulator {
     
     public static class AckProcessor implements Runnable {
         
-//        InetAddress address;
-//        List<GossiperStub> stubs;
+        InetAddress address;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
 //        public static Object notification = new Object();
         
-//        public AckProcessor(List<GossiperStub> stubs) {
-//            this.stubs = stubs;
-//        }
+        public AckProcessor(InetAddress address) {
+            this.address = address;
+        }
 
         @Override
         public void run() {
-//            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+            LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
             while (true) {
                 try {
 	                if(WholeClusterSimulator.recordEnabled){
