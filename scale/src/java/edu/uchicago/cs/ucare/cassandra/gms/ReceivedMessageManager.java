@@ -62,6 +62,13 @@ public class ReceivedMessageManager{
 		}
 		finally{
 			if(pr != null) pr.close();
+			if (out != null) {
+			    try {
+                    out.close();
+                } catch (IOException e) {
+                    logger.error("Cannot close received message file");
+                }
+			}
 		}
 
 	}
