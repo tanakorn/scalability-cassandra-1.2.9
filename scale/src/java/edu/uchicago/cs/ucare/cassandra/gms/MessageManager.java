@@ -228,9 +228,9 @@ public class MessageManager {
                     pr = new PrintWriter(new FileWriter(new File(mapFileName),
                             true));
                     pr.println(round.getGossipRound());
-                    logger.debug("@Cesar: Round <" + round.getGossipRound()
-                            + "> saved to <" + fileName + ", " + mapFileName
-                            + ">");
+                    //logger.debug("@Cesar: Round <" + round.getGossipRound()
+                    //        + "> saved to <" + fileName + ", " + mapFileName
+                    //        + ">");
                 } catch (Exception ioe) {
                     logger.error("@Cesar: Exception while saving <" + fileName
                             + ">", ioe);
@@ -270,8 +270,8 @@ public class MessageManager {
             pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
             pr.println(message.getMessageRound() + MessageUtils.STATE_FIELD_SEP
                     + message.getWaitForNext());
-            logger.debug("@Cesar: Message <" + message.getMessageRound()
-                    + "> saved to <" + fileName + ", " + mapFileName + ">");
+            //logger.debug("@Cesar: Message <" + message.getMessageRound()
+            //        + "> saved to <" + fileName + ", " + mapFileName + ">");
         } catch (Exception ioe) {
             logger.error("@Cesar: Exception while saving <" + fileName + ">",
                     ioe);
