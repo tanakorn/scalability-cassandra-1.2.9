@@ -609,12 +609,12 @@ public class WholeClusterSimulator {
                     logger.info("stable status yes " + flapping +
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval +
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; network lateness " + (AckProcessor.processCount == 0 ? 0 : (AckProcessor.networkQueuedTime / AckProcessor.processCount)));
                 } else {
                     logger.info("stable status no " + flapping + 
                             " ; proc lateness " + avgProcLateness + " " + maxProcLateness + " " + percentLateness +
                             " ; send lateness " + interval + 
-                            " ; network lateness " + (AckProcessor.networkQueuedTime / AckProcessor.processCount));
+                            " ; network lateness " + (AckProcessor.processCount == 0 ? 0 : (AckProcessor.networkQueuedTime / AckProcessor.processCount)));
                 }
 //                for (GossiperStub stub : stubGroup) {
 //                    LinkedBlockingQueue<MessageIn<?>> queue = msgQueues.get(stub.getInetAddress());
