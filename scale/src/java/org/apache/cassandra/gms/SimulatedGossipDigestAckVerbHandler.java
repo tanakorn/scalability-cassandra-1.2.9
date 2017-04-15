@@ -45,15 +45,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         long receiveTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
         InetAddress from = message.from;
         InetAddress to = message.to;
-//        logger.info(to + " doVerb ack");
         if (logger.isTraceEnabled())
             logger.trace("Received a GossipDigestAckMessage from {}", from);
-//        if (!Gossiper.instance.isEnabled())
-//        {
-//            if (logger.isTraceEnabled())
-//                logger.trace("Ignoring GossipDigestAckMessage because gossip is disabled");
-//            return;
-//        }
 
         GossipDigestAck gDigestAckMessage = message.payload;
         long transmissionTime = receiveTime - message.createdTime;
@@ -80,71 +73,8 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
         	updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), 
         	        epStateMap, receiverStub.getFailureDetector());
             result = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
-//            result = Gossiper.determineApplyStateLocallyStatic(receiverStub, epStateMap);
-//            try {
-//                realUpdate = (int) result[9];
-//                int roundCurrentVersion = (receiverCurrentVersion / 8) * 8 + 1;
-//                long sleepTime = 0;
-//                if (realUpdate != 0) {
-//                    int floorNormalVersion = (realUpdate / 4) * 4;
-//                    int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
-//                    long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
-//                    long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
-//                    sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-//                    long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//                    if (sleepTime > 0) {
-//                        Thread.sleep(sleepTime);
-//                    }
-//                    realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
-//                    long lateness = realSleep - sleepTime;
-//                    lateness = lateness < 0 ? 0 : lateness;
-//                    WholeClusterSimulator.totalRealSleep += realSleep;
-//                    WholeClusterSimulator.totalExpectedSleep += sleepTime;
-//                    WholeClusterSimulator.totalProcLateness += lateness;
-//                    WholeClusterSimulator.numProc++;
-//                    WholeClusterSimulator.procLatenessList.add(lateness);
-//                    if (sleepTime != 0) {
-//                        WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
-//                    } else {
-//                        WholeClusterSimulator.percentProcLatenessList.add(0.0);
-//                    }
-//                    if (lateness > WholeClusterSimulator.maxProcLateness) {
-//                        WholeClusterSimulator.maxProcLateness = lateness;
-//                    }
-////                    logger.info("Processing lateness " + lateness);
-//                }
-//                long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//                Thread.sleep(sleepTime);
-//                realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
-//                long lateness = realSleep - sleepTime;
-//                lateness = lateness < 0 ? 0 : lateness;
-//                logger.info("Processing lateness " + lateness);
-//            } catch (InterruptedException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//            long mockExecTime = message.getWakeUpTime() - TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//            if (mockExecTime >= 0) {
-//                try {
-////                    Thread.sleep(mockExecTime);
-//                    Thread.sleep(message.getSleepTime());
-//                } catch (InterruptedException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//            } else if (mockExecTime < -10) {
-//                logger.debug(to + " executing past message " + mockExecTime);
-//            }
             
         }
-//        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, epStateMap);
-//        if (result != null) {
-//            for (int i = 0; i < result.length; ++i) {
-//                if (!result[i].equals(result2[i])) {
-//                    System.out.println(i + " index is not the same");
-//                }
-//            }
-//        }
 
         Gossiper.instance.checkSeedContact(from);
 
@@ -189,13 +119,6 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             }
         }
         
-//        int roundCurrentVersion = (int) (Math.round(senderCurrentVersion / 8.0) * 8 + 1);
-//        int roundNormalVersion = (int) (Math.round(normalNodeNum / 4.0) * 4 + 1);
-
-//        long sleepTime = normalNodeNum == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//        long wakeUpTime = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() + sleepTime;
-//        gDigestAck2Message.setWakeUpTime(wakeUpTime);
-//        gDigestAck2Message.setSleepTime(sleepTime);
         gDigestAck2Message.setTo(from);
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
@@ -208,45 +131,11 @@ public class SimulatedGossipDigestAckVerbHandler implements IVerbHandler<GossipD
             normalCount = (int) result[6];
             Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
             realUpdate = (int) result[9];
-//            if (!updatedNodes.isEmpty()) {
-//                StringBuilder sb = new StringBuilder(to.toString());
-//                sb.append(" hop ");
-//                for (InetAddress receivingAddress : updatedNodes) {
-//                    EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-//                    sb.append(ep.hopNum);
-//                    sb.append(",");
-//                }
-//                logger.info(sb.toString());
-//            }
-//            if (updatedNodeInfo != null && !updatedNodeInfo.isEmpty()) {
-//                StringBuilder sb = new StringBuilder(to.toString());
-//                sb.append(" t_silence ");
-//                for (InetAddress address : updatedNodeInfo.keySet()) {
-//                    double[] updatedInfo = updatedNodeInfo.get(address); 
-//                    sb.append(updatedInfo[0]);
-//                    sb.append(":");
-//                    sb.append(updatedInfo[1]);
-//                    sb.append(",");
-//                }
-//                logger.info(sb.toString());
-//            }
             updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
-//            if (!updatedNodeInfo.isEmpty()) {
-//                StringBuilder sb = new StringBuilder(to.toString());
-//                sb.append(" t_silence ");
-//                for (InetAddress address : updatedNodeInfo.keySet()) {
-//                    double[] updatedInfo = updatedNodeInfo.get(address); 
-//                    sb.append(updatedInfo[0]);
-//                    sb.append(":");
-//                    sb.append(updatedInfo[1]);
-//                    sb.append(",");
-//                }
-//                logger.info(sb.toString());
-//            }
             if (bootstrapCount != 0 || normalCount != 0) {
-//                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
-//                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-//                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
+                logger.info(to + " executes gossip_ack took " + ackHandlerTime + " ms ; apply boot " + bootstrapCount 
+                        + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                        + receiverCurrentVersion + " ; transmission " + transmissionTime);
             }
         }
     }

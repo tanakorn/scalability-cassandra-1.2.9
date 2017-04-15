@@ -62,110 +62,12 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        Gossiper.instance.notifyFailureDetector(remoteEpStateMap);
 //        Gossiper.instance.applyStateLocally(remoteEpStateMap);
         Map<InetAddress, double[]> updatedNodeInfo = Gossiper.notifyFailureDetectorStatic(receiverStub, receiverStub.getEndpointStateMap(), remoteEpStateMap, receiverStub.getFailureDetector());
-//        Object[] result = Gossiper.determineApplyStateLocallyStatic(receiverStub, remoteEpStateMap);
-//        int tmpNormalCount = (int) result[6];
-//        try {
-//            int realUpdate = (int) result[9];
-//            int roundCurrentVersion = (int) (Math.round(receiverCurrentVersion / 8.0) * 8 + 1);
-////            int roundNormalVersion = (int) (Math.round(realUpdate / 4.0) * 4 + 1);
-//            long sleepTime = 0;
-//            if (realUpdate != 0) {
-//                int floorNormalVersion = (realUpdate / 4) * 4;
-//                int ceilingNormalVersion = (realUpdate / 4 + 1) * 4;
-//                long floorSleepTime = floorNormalVersion == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, floorNormalVersion);
-//                long ceilingSleepTime = WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, ceilingNormalVersion);
-//                sleepTime = (floorSleepTime + ceilingSleepTime) / 2;
-//                long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//                if (sleepTime > 0) {
-//                    Thread.sleep(sleepTime);
-//                }
-//                realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
-//                long lateness = realSleep - sleepTime;
-//                lateness = lateness < 0 ? 0 : lateness;
-//                WholeClusterSimulator.totalRealSleep += realSleep;
-//                WholeClusterSimulator.totalExpectedSleep += sleepTime;
-//                WholeClusterSimulator.totalProcLateness += lateness;
-//                WholeClusterSimulator.numProc++;
-//                WholeClusterSimulator.procLatenessList.add(lateness);
-//                if (sleepTime != 0) {
-//                    WholeClusterSimulator.percentProcLatenessList.add(((((double) realSleep) / (double) sleepTime) - 1) * 100);
-//                } else {
-//                    WholeClusterSimulator.percentProcLatenessList.add(0.0);
-//                }
-//                if (lateness > WholeClusterSimulator.maxProcLateness) {
-//                    WholeClusterSimulator.maxProcLateness = lateness;
-//                }
-//            }
-//            Thread.sleep(message.getSleepTime());
-//            long sleepTime = realUpdate == 0 ? 0 : WholeClusterSimulator.getExecTimeNormal(roundCurrentVersion, roundNormalVersion);
-//            long realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//            Thread.sleep(sleepTime);
-//            realSleep = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - realSleep;
-//            long lateness = realSleep - sleepTime;
-//            lateness = lateness < 0 ? 0 : lateness;
-//            logger.info("Processing lateness " + lateness);
-//        } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        Object[] result2 = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
         Object[] result = Gossiper.applyStateLocallyStatic(receiverStub, remoteEpStateMap);
-//        for (int i = 0; i < result.length; ++i) {
-//            if (!result[i].equals(result2[i])) {
-//                System.out.println(i + " index is not the same");
-//            }
-//        }
-//        long mockExecTime = message.getWakeUpTime() - TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
-//        if (mockExecTime >= 0) {
-//            try {
-////                Thread.sleep(mockExecTime);
-//                Thread.sleep(message.getSleepTime());
-//            } catch (InterruptedException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//        } else if (mockExecTime < -10) {
-//            logger.debug(to + " executing past message " + mockExecTime);
-//        }
         int bootstrapCount = (int) result[5];
         int normalCount = (int) result[6];
         Set<InetAddress> updatedNodes = (Set<InetAddress>) result[7];
         int realUpdate = (int) result[9];
-//        if (!updatedNodes.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" hop ");
-//            for (InetAddress receivingAddress : updatedNodes) {
-//                EndpointState ep = receiverStub.getEndpointStateMap().get(receivingAddress);
-//                sb.append(ep.hopNum);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
-//        }
-//        if (!updatedNodeInfo.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" t_silence ");
-//            for (InetAddress address : updatedNodeInfo.keySet()) {
-//                double[] updatedInfo = updatedNodeInfo.get(address); 
-//                sb.append(updatedInfo[0]);
-//                sb.append(":");
-//                sb.append(updatedInfo[1]);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
-//        }
         updatedNodeInfo = (Map<InetAddress, double[]>) result[8];
-//        if (!updatedNodeInfo.isEmpty()) {
-//            StringBuilder sb = new StringBuilder(to.toString());
-//            sb.append(" t_silence ");
-//            for (InetAddress address : updatedNodeInfo.keySet()) {
-//                double[] updatedInfo = updatedNodeInfo.get(address); 
-//                sb.append(updatedInfo[0]);
-//                sb.append(":");
-//                sb.append(updatedInfo[1]);
-//                sb.append(",");
-//            }
-//            logger.info(sb.toString());
-//        }
         String syncId = from + "_" + message.payload.syncId;
         Long syncReceivedTime = receiverStub.syncReceivedTime.get(syncId);
         receiverStub.syncReceivedTime.remove(syncId);
@@ -182,10 +84,10 @@ public class SimulatedGossipDigestAck2VerbHandler implements IVerbHandler<Gossip
 //        if (allBoot != 0 || allNormal != 0) {
 //            logger.info(to + " executes gossip_all took " + allHandlerTime + " ms ; apply boot " + allBoot + " normal " + allNormal);
 //        }
-//        if (bootstrapCount != 0 || normalCount != 0) {
-//            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
-//                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
-//                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
-//        }
+        if (bootstrapCount != 0 || normalCount != 0) {
+            logger.info(to + " executes gossip_ack2 took " + ack2HandlerTime + " ms ; apply boot " + bootstrapCount 
+                    + " normal " + normalCount + " realUpdate " + realUpdate + " currentVersion " 
+                    + receiverCurrentVersion + " ; transmission " + transmissionTime);
+        }
     }
 }
