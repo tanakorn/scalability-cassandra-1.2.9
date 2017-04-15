@@ -1723,7 +1723,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         for (InetAddress ep : endpointsToRemove) {
             removeEndpointStatic(stub, ep);
         }
-        String stubAddress = stub.getInetAddress().toString().replace('.', '_');
+        String stubAddress = stub.getInetAddress().toString().replace('.', 'a');
         if (!tokensToUpdateInSystemTable.isEmpty()) {
 //            System.out.println("hello 2");
             final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
