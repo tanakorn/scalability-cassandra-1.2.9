@@ -323,6 +323,23 @@ public class SystemTable
 //        System.out.println(s);
 //        logger.info("WT " + s);
     }
+    
+    public static void updateTokens(String stubAddress, InetAddress ep, Collection<Token> tokens)
+    {
+        if (ep.equals(FBUtilities.getBroadcastAddress()))
+        {
+            removeEndpoint(ep);
+            return;
+        }
+
+        String req = "INSERT INTO system.%s (peer, tokens) VALUES ('%s', %s)";
+        processInternal(String.format(req, PEERS_CF + stubAddress, ep.getHostAddress(), tokensAsSet(tokens)));
+        final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
+        forceBlockingFlush(PEERS_CF + stubAddress);
+        long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
+//        System.out.println(s);
+//        logger.info("WT " + s);
+    }
 
     public static void updatePeerInfo(InetAddress ep, String columnName, String value)
     {
@@ -391,6 +408,14 @@ public class SystemTable
         processInternal(String.format(req, LOCAL_CF, LOCAL_KEY, tokensAsSet(tokens)));
         forceBlockingFlush(LOCAL_CF);
     }
+    
+    public static synchronized void updateTokens(String stubAddress, Collection<Token> tokens)
+    {
+        assert !tokens.isEmpty() : "removeEndpoint should be used instead";
+        String req = "INSERT INTO system.%s (key, tokens) VALUES ('%s', %s)";
+        processInternal(String.format(req, LOCAL_CF + stubAddress, LOCAL_KEY, tokensAsSet(tokens)));
+        forceBlockingFlush(LOCAL_CF + stubAddress);
+    }
 
     /**
      * Convenience method to update the list of tokens in the local system table.
@@ -405,6 +430,15 @@ public class SystemTable
         tokens.removeAll(rmTokens);
         tokens.addAll(addTokens);
         updateTokens(tokens);
+        return tokens;
+    }
+    
+    public static synchronized Collection<Token> updateLocalTokens(String stubAddress, Collection<Token> addTokens, Collection<Token> rmTokens)
+    {
+        Collection<Token> tokens = getSavedTokens();
+        tokens.removeAll(rmTokens);
+        tokens.addAll(addTokens);
+        updateTokens(stubAddress, tokens);
         return tokens;
     }
 

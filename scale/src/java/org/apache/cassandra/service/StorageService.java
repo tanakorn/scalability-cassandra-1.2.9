@@ -1727,13 +1727,13 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
 //            System.out.println("hello 2");
             final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             synchronized (stub) {
-                SystemTable.updateTokens(endpoint, tokensToUpdateInSystemTable);
+                SystemTable.updateTokens(stub.getInetAddress().toString(), endpoint, tokensToUpdateInSystemTable);
             }
 //            long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            System.out.println(s);
         }
         if (!localTokensToRemove.isEmpty()) {
-            SystemTable.updateLocalTokens(Collections.<Token>emptyList(), localTokensToRemove);
+            SystemTable.updateLocalTokens(stub.getInetAddress().toString(), Collections.<Token>emptyList(), localTokensToRemove);
         }
 
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
