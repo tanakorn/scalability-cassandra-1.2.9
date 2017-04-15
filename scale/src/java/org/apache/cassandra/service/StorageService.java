@@ -1723,17 +1723,18 @@ public class StorageService extends NotificationBroadcasterSupport implements IS
         for (InetAddress ep : endpointsToRemove) {
             removeEndpointStatic(stub, ep);
         }
+        String stubAddress = stub.getInetAddress().toString().replace('.', '_');
         if (!tokensToUpdateInSystemTable.isEmpty()) {
 //            System.out.println("hello 2");
             final long e = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp();
             synchronized (stub) {
-                SystemTable.updateTokens(stub.getInetAddress().toString(), endpoint, tokensToUpdateInSystemTable);
+                SystemTable.updateTokens(stubAddress, endpoint, tokensToUpdateInSystemTable);
             }
 //            long s = TimeManager.instance.getCurrentTimeMillisFromBaseTimeStamp() - e;
 //            System.out.println(s);
         }
         if (!localTokensToRemove.isEmpty()) {
-            SystemTable.updateLocalTokens(stub.getInetAddress().toString(), Collections.<Token>emptyList(), localTokensToRemove);
+            SystemTable.updateLocalTokens(stubAddress, Collections.<Token>emptyList(), localTokensToRemove);
         }
 
         if (tokenMetadata.isMoving(endpoint)) // if endpoint was moving to a new token
