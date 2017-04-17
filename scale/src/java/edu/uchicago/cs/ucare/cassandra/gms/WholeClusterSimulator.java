@@ -599,6 +599,7 @@ public class WholeClusterSimulator {
         
         public AckProcessor(Set<InetAddress> addresses) {
             this.addresses = addresses;
+            this.queues = new HashMap<InetAddress, LinkedBlockingQueue<MessageIn<?>>>();
             for(InetAddress address : addresses){
             	queues.put(address, msgQueues.get(address));
             }
