@@ -279,7 +279,7 @@ public class WholeClusterSimulator {
         }*/
         LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         List<Set<InetAddress>> ackProcessorGroup = new ArrayList<Set<InetAddress>>();
-        int numGroups = numGossiper / 2;
+        int numGroups = numGossiper;
         for(int i = 0; i < numGroups; ++i){
         	ackProcessorGroup.add(new HashSet<InetAddress>());
         }
