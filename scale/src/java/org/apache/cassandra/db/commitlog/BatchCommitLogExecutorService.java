@@ -225,7 +225,8 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
 
     public void add(CommitLog.LogRecordAdder adder)
     {
-        try
+    	submit((Callable)adder);
+        /*try
         {
             submit((Callable)adder).get();
         }
@@ -236,7 +237,7 @@ class BatchCommitLogExecutorService extends AbstractCommitLogExecutorService
         catch (ExecutionException e)
         {
             throw new RuntimeException(e);
-        }
+        }*/
     }
 
     public void shutdown()
