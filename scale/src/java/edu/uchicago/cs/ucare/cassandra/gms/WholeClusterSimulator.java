@@ -276,8 +276,9 @@ public class WholeClusterSimulator {
             ackProcessThreadPool.add(t);
             t.start();
         }*/
+        LinkedList<Thread> ackProcessThreadPool = new LinkedList<Thread>();
         List<Set<InetAddress>> ackProcessorGroup = new ArrayList<Set<InetAddress>>();
-        int numGroups = numGossiper;
+        int numGroups = numGossiper / 2;
         for(int i = 0; i < numGroups; ++i){
         	ackProcessorGroup.add(new HashSet<InetAddress>());
         }
@@ -288,10 +289,11 @@ public class WholeClusterSimulator {
         }
         for(int i = 0; i < numGroups; ++i){
         	Thread t = new Thread(new AckProcessor(ackProcessorGroup.get(i)));
+        	ackProcessThreadPool.add(t);
         	t.start();
         }
+        
         Thread seedThread = new Thread(new Runnable() {
-            
             @Override
             public void run() {
                 for (InetAddress seed : seeds) {
@@ -622,7 +624,8 @@ public class WholeClusterSimulator {
 		                	// how much time did we wait?
 		                	long startWaiting = System.currentTimeMillis();
 		                	// take from queue
-		                	ackMessage = msgQueue.take();
+		                	ackMessage = msgQueue.poll();
+		                	if(ackMessage == null) continue;
 		                	// finish waiting
 		                	long endWaiting = System.currentTimeMillis();
 		                	// save
