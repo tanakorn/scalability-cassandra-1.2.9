@@ -602,7 +602,8 @@ public class WholeClusterSimulator {
 
         @Override
         public void run() {
-            
+        	logger.info("@Cesar: Thread <" + Thread.currentThread().getName() + "> on group "
+        				+ this.addresses);
             while (true) {
             	for(InetAddress address : addresses){
                 	LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
