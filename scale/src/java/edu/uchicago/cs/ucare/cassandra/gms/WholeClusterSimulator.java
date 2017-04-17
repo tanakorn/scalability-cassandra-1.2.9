@@ -617,7 +617,7 @@ public class WholeClusterSimulator {
                 	LinkedBlockingQueue<MessageIn<?>> msgQueue = queues.get(address);
                 	try {
 		                MessageIn<?> ackMessage = null;
-		                int messageId = idGen.incrementAndGet();
+		                int messageId = 0;
 		                // ##########################################################################
 		                // @Cesar: in here, we save the received message
 		            	// ##########################################################################
@@ -630,6 +630,7 @@ public class WholeClusterSimulator {
 		                	// finish waiting
 		                	long endWaiting = System.currentTimeMillis();
 		                	// save
+		                	messageId = idGen.incrementAndGet();
 		                	ReceivedMessage received = new ReceivedMessage(messageManager.getNextReceivedFor(address));
 		                	received.setMessageIn(ackMessage);
 		                	received.setWaitForNext(endWaiting - startWaiting);
@@ -688,6 +689,7 @@ public class WholeClusterSimulator {
 		                	}
 		                	continue;
 		                }
+		                messageId = idGen.incrementAndGet();
 		                // operate normally
 		                long networkQueuedTime = System.currentTimeMillis() - ackMessage.createdTime;
 		                AckProcessor.networkQueuedTime += networkQueuedTime;
