@@ -21,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -624,7 +625,7 @@ public class WholeClusterSimulator {
 		                	// how much time did we wait?
 		                	long startWaiting = System.currentTimeMillis();
 		                	// take from queue
-		                	ackMessage = msgQueue.poll();
+		                	ackMessage = msgQueue.poll(100, TimeUnit.MILLISECONDS);
 		                	if(ackMessage == null) continue;
 		                	// finish waiting
 		                	long endWaiting = System.currentTimeMillis();
