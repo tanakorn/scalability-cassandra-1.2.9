@@ -277,7 +277,7 @@ public class WholeClusterSimulator {
             t.start();
         }*/
         List<Set<InetAddress>> ackProcessorGroup = new ArrayList<Set<InetAddress>>();
-        int numGroups = (int)Math.ceil(numStubs / numGossiper);
+        int numGroups = numGossiper;
         for(int i = 0; i < numGroups; ++i){
         	ackProcessorGroup.add(new HashSet<InetAddress>());
         }
