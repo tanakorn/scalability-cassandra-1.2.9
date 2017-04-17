@@ -592,12 +592,16 @@ public class WholeClusterSimulator {
     public static class AckProcessor implements Runnable {
         
         Set<InetAddress> addresses;
+        Map<InetAddress, LinkedBlockingQueue<MessageIn<?>>> queues = null;
         
         public static long networkQueuedTime = 0;
         public static int processCount = 0;
         
         public AckProcessor(Set<InetAddress> addresses) {
             this.addresses = addresses;
+            for(InetAddress address : addresses){
+            	queues.put(address, msgQueues.get(address));
+            }
         }
 
         @Override
@@ -606,7 +610,7 @@ public class WholeClusterSimulator {
         				+ this.addresses);
             while (true) {
             	for(InetAddress address : addresses){
-                	LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(address);
+                	LinkedBlockingQueue<MessageIn<?>> msgQueue = queues.get(address);
                 	try {
 		                MessageIn<?> ackMessage = null;
 		                int messageId = idGen.incrementAndGet();
