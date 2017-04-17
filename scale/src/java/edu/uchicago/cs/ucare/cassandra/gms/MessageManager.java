@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.cassandra.net.MessageIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,9 @@ public class MessageManager{
 	
 	private Map<InetAddress, Integer> receivedPerHost =
 			new ConcurrentHashMap<InetAddress, Integer>();
+	
+	private Map<InetAddress, ReentrantLock> locksPerHost =
+			new ConcurrentHashMap<InetAddress, ReentrantLock>();
 	
 	public boolean sentMessageQueuesLeft(){
 		return queuesLeft(sentMessagesPerHost);
@@ -224,40 +229,38 @@ public class MessageManager{
 	public void saveRoundToFile(final GossipRound round, 
 							    final String basePath, 
 							    final InetAddress id){
-		new Thread(){
-			@Override
-			public void run(){
-				String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
-				String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
-				PrintWriter pr = null;
-				ObjectOutputStream out = null;
-				FileOutputStream fopt = null;
-				try{
-					File file = new File(fileName);
-					if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
-					fopt = new FileOutputStream(fileName);
-					out = new ObjectOutputStream(fopt);
-					out.writeObject(round);
-					// also, print and concat the id to a file
-					pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
-					pr.println(round.getGossipRound());
-					logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
-				}
-				catch(Exception ioe){
-					logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
-				}
-				finally{
-					try{
-						if(pr != null) pr.close();
-						if(fopt != null) fopt.close();
-						if(out != null) out.close();
-					}
-					catch(IOException ioe){
-						// nothing here
-					}
-				}
+		if(locksPerHost.get(id) == null) locksPerHost.put(id, new ReentrantLock());
+		locksPerHost.get(id).lock();
+		String fileName = MessageUtils.buildSentGossipFilePathForRound(round, basePath, id);
+		String mapFileName = MessageUtils.buildSentGossipFilePathForMap(basePath, id);
+		PrintWriter pr = null;
+		ObjectOutputStream out = null;
+		FileOutputStream fopt = null;
+		try{
+			File file = new File(fileName);
+			if(!file.getParentFile().exists()) file.getParentFile().mkdirs(); 
+			fopt = new FileOutputStream(fileName);
+			out = new ObjectOutputStream(fopt);
+			out.writeObject(round);
+			// also, print and concat the id to a file
+			pr = new PrintWriter(new FileWriter(new File(mapFileName), true));
+			pr.println(round.getGossipRound());
+			logger.debug("@Cesar: Round <" + round.getGossipRound() + "> saved to <" + fileName + ", " + mapFileName + ">");
+		}
+		catch(Exception ioe){
+			logger.error("@Cesar: Exception while saving <" + fileName + ">", ioe);
+		}
+		finally{
+			try{
+				if(pr != null) pr.close();
+				if(fopt != null) fopt.close();
+				if(out != null) out.close();
+				if(locksPerHost.get(id).isLocked()) locksPerHost.get(id).unlock();
 			}
-		}.start();
+			catch(IOException ioe){
+				// nothing here
+			}
+		}
 	}
 	
 	public void saveMessageToFile(final ReceivedMessage message, 
