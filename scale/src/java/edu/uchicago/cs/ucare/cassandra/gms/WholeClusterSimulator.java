@@ -507,6 +507,8 @@ public class WholeClusterSimulator {
                         	logger.error("@Cesar: Exception " + e);
                         	logger.error("@Cesar: msg=" + synMsg);
                         	logger.error("@Cesar: msgQueue=" + msgQueue);
+                        	logger.error("@Cesar: unr=" + unreachableReceiver);
+                        	logger.error("@Cesar: isThere?=" + msgQueues.containsKey(unreachableReceiver));
                         	logger.error("@Cesar: unr=" + unreachableEndpoints.keySet());
                         	throw e;
                         }
