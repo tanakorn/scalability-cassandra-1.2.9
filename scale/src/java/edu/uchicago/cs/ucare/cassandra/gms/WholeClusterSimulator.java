@@ -485,33 +485,35 @@ public class WholeClusterSimulator {
                 Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
                     InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
-                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
-                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
-                    if (prob > random.nextDouble()) {
-                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
-                        try{
-	                        if (!msgQueue.add(synMsg)) {
-	                            logger.error("Cannot add more message to message queue");
-	                        } else {
-	                        	// ##########################################################################
-	                            // @Cesar: gossip to unreachable member
-	                        	// ##########################################################################
-	                        	if(WholeClusterSimulator.isSerializationEnabled){
-	    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
-	    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
-	                        	}
-	                        	// ##########################################################################
+                    if(unreachableReceiver != null){
+	                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
+	                    double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
+	                    if (prob > random.nextDouble()) {
+	                        LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
+	                        try{
+		                        if (!msgQueue.add(synMsg)) {
+		                            logger.error("Cannot add more message to message queue");
+		                        } else {
+		                        	// ##########################################################################
+		                            // @Cesar: gossip to unreachable member
+		                        	// ##########################################################################
+		                        	if(WholeClusterSimulator.isSerializationEnabled){
+		    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
+		    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
+		                        	}
+		                        	// ##########################################################################
+		                        }
 	                        }
-                        }
-                        catch(RuntimeException e){
-                        	logger.error("@Cesar: Exception " + e);
-                        	logger.error("@Cesar: msg=" + synMsg);
-                        	logger.error("@Cesar: msgQueue=" + msgQueue);
-                        	logger.error("@Cesar: unr=" + unreachableReceiver);
-                        	logger.error("@Cesar: isThere?=" + msgQueues.containsKey(unreachableReceiver));
-                        	logger.error("@Cesar: unr=" + unreachableEndpoints.keySet());
-                        	throw e;
-                        }
+	                        catch(RuntimeException e){
+	                        	logger.error("@Cesar: Exception " + e);
+	                        	logger.error("@Cesar: msg=" + synMsg);
+	                        	logger.error("@Cesar: msgQueue=" + msgQueue);
+	                        	logger.error("@Cesar: unr=" + unreachableReceiver);
+	                        	logger.error("@Cesar: isThere?=" + msgQueues.containsKey(unreachableReceiver));
+	                        	logger.error("@Cesar: unr=" + unreachableEndpoints.keySet());
+	                        	throw e;
+	                        }
+	                    }
                     }
                 }
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
