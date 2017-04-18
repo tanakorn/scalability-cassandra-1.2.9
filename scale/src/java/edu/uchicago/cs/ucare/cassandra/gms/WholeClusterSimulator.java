@@ -489,17 +489,26 @@ public class WholeClusterSimulator {
                     double prob = ((double) unreachableEndpoints.size()) / (liveEndpoints.size() + 1.0);
                     if (prob > random.nextDouble()) {
                         LinkedBlockingQueue<MessageIn<?>> msgQueue = msgQueues.get(unreachableReceiver);
-                        if (!msgQueue.add(synMsg)) {
-                            logger.error("Cannot add more message to message queue");
-                        } else {
-                        	// ##########################################################################
-                            // @Cesar: gossip to unreachable member
-                        	// ##########################################################################
-                        	if(WholeClusterSimulator.isSerializationEnabled){
-    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
-    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
-                        	}
-                        	// ##########################################################################
+                        try{
+	                        if (!msgQueue.add(synMsg)) {
+	                            logger.error("Cannot add more message to message queue");
+	                        } else {
+	                        	// ##########################################################################
+	                            // @Cesar: gossip to unreachable member
+	                        	// ##########################################################################
+	                        	if(WholeClusterSimulator.isSerializationEnabled){
+	    	                    	GossipMessage toUnreachableMember = GossipMessage.build(GossipType.TO_UNREACHABLE_MEMBER, synMsg, unreachableReceiver);
+	    	                    	currentRound.setToUnreachableMember(toUnreachableMember);
+	                        	}
+	                        	// ##########################################################################
+	                        }
+                        }
+                        catch(RuntimeException e){
+                        	logger.error("@Cesar: Exception " + e);
+                        	logger.error("@Cesar: msg=" + synMsg);
+                        	logger.error("@Cesar: msgQueue=" + msgQueue);
+                        	logger.error("@Cesar: unr=" + unreachableEndpoints.keySet());
+                        	throw e;
                         }
                     }
                 }
