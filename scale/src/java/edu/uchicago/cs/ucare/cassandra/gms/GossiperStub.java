@@ -362,7 +362,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
 
     public void doStatusCheck() {
-        long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
+        /*long now = TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled);
 
         Set<InetAddress> eps = endpointStateMap.keySet();
 //        StringBuilder sb = new StringBuilder(broadcastAddress + " allphi : ");
@@ -392,7 +392,7 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
                     justRemovedEndpoints.remove(entry.getKey());
                 }
             }
-        }
+        }*/
     }
 
     public static long computeExpireTime() {
