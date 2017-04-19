@@ -433,10 +433,10 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     
     private void markDead(InetAddress addr, EndpointState localState, double phi) {
 //        logger.info(broadcastAddress + " convict " + addr + " with phi " + phi);
-        flapping++;
+        /*flapping++;
         localState.markDead();
         liveEndpoints.remove(addr);
-        unreachableEndpoints.put(addr, TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled));
+        unreachableEndpoints.put(addr, TimePreservingService.getCurrentTimeMillis(WholeClusterSimulator.isReplayEnabled));*/
     }
 
     @Override
@@ -452,11 +452,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     public void markAlive(InetAddress addr, EndpointState localState) {
-        localState.markAlive();
+        /*localState.markAlive();
         localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
         liveEndpoints.add(addr);
         unreachableEndpoints.remove(addr);
-        expireTimeEndpointMap.remove(addr);
+        expireTimeEndpointMap.remove(addr);*/
     }
     
     @Override
