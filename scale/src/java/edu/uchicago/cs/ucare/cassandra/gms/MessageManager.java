@@ -287,6 +287,19 @@ public class MessageManager{
 		}
 		finally{
 			if(pr != null) pr.close();
+			try{
+				if(fopt != null) fopt.close();
+			}
+			catch(IOException ioe){
+				// nothing here
+			}
+			try{
+				if(out != null) out.close();
+			}
+			catch(IOException ioe){
+				// nothing here
+			}
+			
 		}
 		
 	}
