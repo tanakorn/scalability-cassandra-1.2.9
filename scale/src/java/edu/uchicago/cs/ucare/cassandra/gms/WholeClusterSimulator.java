@@ -482,8 +482,8 @@ public class WholeClusterSimulator {
                 } else {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
-                /*Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
-                if (!unreachableEndpoints.isEmpty()) {
+                Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
+                /*if (!unreachableEndpoints.isEmpty()) {
                     InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
                     if(unreachableReceiver != null){
 	                    MessageIn<GossipDigestSyn> synMsg = performer.genGossipDigestSyncMsgIn(unreachableReceiver);
@@ -516,7 +516,7 @@ public class WholeClusterSimulator {
 	                    }
                     }
                 }*/
-                /*if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
+                if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     int size = seeds.size();
                     if (size > 0) {
                         if (size == 1 && seeds.contains(performerAddress)) {
@@ -561,7 +561,7 @@ public class WholeClusterSimulator {
                             }
                         }
                     }
-                }*/
+                }
                 performer.doStatusCheck();
                 // ##########################################################################
                 // @Cesar: save the round
