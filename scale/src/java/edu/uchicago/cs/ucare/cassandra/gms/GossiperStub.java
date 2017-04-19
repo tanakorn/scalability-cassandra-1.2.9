@@ -452,11 +452,11 @@ public class GossiperStub implements InetAddressStub, IFailureDetectionEventList
     }
     
     public void markAlive(InetAddress addr, EndpointState localState) {
-        /*localState.markAlive();
-        localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
+        //localState.markAlive();
+        //localState.updateTimestamp(); // prevents doStatusCheck from racing us and evicting if it was down > aVeryLongTime
         liveEndpoints.add(addr);
-        unreachableEndpoints.remove(addr);
-        expireTimeEndpointMap.remove(addr);*/
+        //unreachableEndpoints.remove(addr);
+        //expireTimeEndpointMap.remove(addr);
     }
     
     @Override
