@@ -482,7 +482,7 @@ public class WholeClusterSimulator {
                 } else {
 //                    logger.debug(performerAddress + " does not have live endpoint");
                 }
-                Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
+                /*Map<InetAddress, Long> unreachableEndpoints = performer.getUnreachableEndpoints();
                 if (!unreachableEndpoints.isEmpty()) {
                     InetAddress unreachableReceiver = GossiperStub.getRandomAddress(unreachableEndpoints.keySet());
                     if(unreachableReceiver != null){
@@ -515,7 +515,7 @@ public class WholeClusterSimulator {
 	                        }
 	                    }
                     }
-                }
+                }*/
                 if (!gossipToSeed || liveEndpoints.size() < seeds.size()) {
                     int size = seeds.size();
                     if (size > 0) {
